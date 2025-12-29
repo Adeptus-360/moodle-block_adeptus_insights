@@ -45,13 +45,11 @@
 
     {{! Toolbar }}
     <div class="block-adeptus-toolbar">
-        <div class="block-adeptus-report-title">
-            <span class="report-name">{{#str}}loading, block_adeptus_insights{{/str}}</span>
-            {{#context_name}}
-            <span class="block-adeptus-context-badge small" title="{{#str}}filteringby, block_adeptus_insights{{/str}}">
-                <i class="fa fa-filter"></i> {{context_name}}
-            </span>
-            {{/context_name}}
+        <div class="block-adeptus-category-filter">
+            <select class="form-select form-select-sm category-filter-select" aria-label="Filter by category">
+                <option value="">All Categories</option>
+                {{! Options will be populated by JavaScript }}
+            </select>
         </div>
 
         <div class="block-adeptus-toolbar-actions">
@@ -101,16 +99,19 @@
 
     {{! Content container }}
     <div class="block-adeptus-content {{#loading}}d-none{{/loading}}">
-        {{! Chart area }}
-        {{#show_chart}}
-        <div class="block-adeptus-chart-container" style="height: {{chart_height}}px;">
+        {{! Report title bar }}
+        <div class="embedded-report-header mb-2">
+            <span class="report-name font-weight-bold">{{#str}}loading, block_adeptus_insights{{/str}}</span>
+            <span class="report-category badge bg-secondary ms-2"></span>
+        </div>
+
+        {{! Chart area - always render, JS controls visibility }}
+        <div class="block-adeptus-chart-container {{^show_chart}}d-none{{/show_chart}}" style="height: {{chart_height}}px;">
             <canvas class="block-adeptus-chart"></canvas>
         </div>
-        {{/show_chart}}
 
-        {{! Table area }}
-        {{#show_table}}
-        <div class="block-adeptus-table-container mt-3">
+        {{! Table area - always render, JS controls visibility }}
+        <div class="block-adeptus-table-container mt-3 {{^show_table}}d-none{{/show_table}}">
             <div class="table-responsive">
                 <table class="table table-sm table-striped block-adeptus-table">
                     <thead></thead>
@@ -121,7 +122,6 @@
                 <span class="block-adeptus-row-count text-muted small"></span>
             </div>
         </div>
-        {{/show_table}}
     </div>
 
     {{! Empty state }}

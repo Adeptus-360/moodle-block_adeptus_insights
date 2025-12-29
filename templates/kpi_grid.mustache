@@ -40,11 +40,12 @@
 
     {{! Toolbar }}
     <div class="block-adeptus-toolbar">
-        {{#context_name}}
-        <span class="block-adeptus-context-badge" title="{{#str}}filteringby, block_adeptus_insights{{/str}}">
-            <i class="fa fa-filter"></i> {{context_name}}
-        </span>
-        {{/context_name}}
+        <div class="block-adeptus-category-filter">
+            <select class="form-select form-select-sm category-filter-select" aria-label="Filter by category">
+                <option value="">All Categories</option>
+                {{! Options will be populated by JavaScript }}
+            </select>
+        </div>
 
         <div class="block-adeptus-toolbar-actions">
             {{#show_refresh_button}}

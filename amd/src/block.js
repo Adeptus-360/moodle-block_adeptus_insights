@@ -786,7 +786,6 @@ define([
          * @param {Array} data
          */
         renderEmbeddedContent: function(report, data) {
-            var self = this;
             var contentArea = this.container.find('.block-adeptus-content');
 
             if (!data || data.length === 0) {
@@ -794,14 +793,32 @@ define([
                 return;
             }
 
+            // Update report header
+            var reportName = report.name || report.title || report.display_name || report.slug || 'Report';
+            this.container.find('.report-name').text(reportName);
+
+            // Update category badge
+            var category = report.category_info || {name: 'General', color: '#6c757d'};
+            this.container.find('.report-category')
+                .text(category.name)
+                .css('background-color', category.color)
+                .css('color', '#fff')
+                .removeClass('d-none');
+
             // Render chart if enabled
             if (this.config.showChart) {
                 this.renderEmbeddedChart(report, data);
+                this.container.find('.block-adeptus-chart-container').removeClass('d-none');
+            } else {
+                this.container.find('.block-adeptus-chart-container').addClass('d-none');
             }
 
             // Render table if enabled
             if (this.config.showTable) {
                 this.renderEmbeddedTable(data);
+                this.container.find('.block-adeptus-table-container').removeClass('d-none');
+            } else {
+                this.container.find('.block-adeptus-table-container').addClass('d-none');
             }
 
             contentArea.removeClass('d-none');
