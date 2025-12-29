@@ -1,0 +1,1168 @@
+/**
+ * Adeptus Insights Block - Styles
+ *
+ * @package    block_adeptus_insights
+ * @copyright  2025 Adeptus360
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+/* ==========================================================================
+   Variables & Base Styles
+   ========================================================================== */
+
+.block_adeptus_insights {
+    --adeptus-primary: #0066cc;
+    --adeptus-secondary: #6c757d;
+    --adeptus-success: #28a745;
+    --adeptus-warning: #ffc107;
+    --adeptus-danger: #dc3545;
+    --adeptus-info: #17a2b8;
+    --adeptus-light: #f8f9fa;
+    --adeptus-dark: #343a40;
+    --adeptus-border: #dee2e6;
+    --adeptus-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    --adeptus-radius: 0.375rem;
+    --adeptus-transition: 0.2s ease-in-out;
+}
+
+.block-adeptus-insights {
+    position: relative;
+    min-height: 100px;
+}
+
+/* ==========================================================================
+   Toolbar
+   ========================================================================== */
+
+.block-adeptus-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    margin-bottom: 0.75rem;
+    border-bottom: 1px solid var(--adeptus-border);
+}
+
+.block-adeptus-toolbar-actions {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.block-adeptus-context-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    background-color: var(--adeptus-light);
+    border: 1px solid var(--adeptus-border);
+    border-radius: var(--adeptus-radius);
+    color: var(--adeptus-secondary);
+}
+
+.block-adeptus-context-badge i {
+    font-size: 0.625rem;
+    opacity: 0.7;
+}
+
+/* Category filter dropdown */
+.block-adeptus-category-filter {
+    flex: 1;
+    max-width: 200px;
+}
+
+.block-adeptus-category-filter .category-filter-select {
+    font-size: 0.8125rem;
+    padding: 0.35rem 2rem 0.35rem 0.75rem;
+    border-radius: var(--adeptus-radius);
+    border-color: var(--adeptus-border);
+    background-color: #fff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.block-adeptus-category-filter .category-filter-select:hover {
+    border-color: var(--adeptus-primary);
+}
+
+.block-adeptus-category-filter .category-filter-select:focus {
+    border-color: var(--adeptus-primary);
+    box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.15);
+    outline: none;
+}
+
+.block-adeptus-refresh,
+.block-adeptus-retry {
+    color: var(--adeptus-secondary);
+    transition: color var(--adeptus-transition);
+}
+
+.block-adeptus-refresh:hover,
+.block-adeptus-retry:hover {
+    color: var(--adeptus-primary);
+}
+
+.block-adeptus-refresh.refreshing i {
+    animation: spin 1s linear infinite;
+}
+
+/* ==========================================================================
+   Loading States & Skeletons
+   ========================================================================== */
+
+.block-adeptus-loading {
+    padding: 1rem 0;
+}
+
+@keyframes skeleton-pulse {
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.4;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Skeleton for links mode */
+.block-adeptus-skeleton-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.skeleton-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    background-color: var(--adeptus-light);
+    border-radius: var(--adeptus-radius);
+    animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+.skeleton-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+    background-color: #e0e0e0;
+    border-radius: 50%;
+}
+
+.skeleton-text {
+    flex: 1;
+    height: 1rem;
+    background-color: #e0e0e0;
+    border-radius: 0.25rem;
+}
+
+.skeleton-text.short {
+    width: 60%;
+}
+
+/* Skeleton for embedded mode */
+.block-adeptus-skeleton-chart {
+    height: 200px;
+    background-color: var(--adeptus-light);
+    border-radius: var(--adeptus-radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+.skeleton-chart-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+}
+
+.skeleton-chart-placeholder i {
+    opacity: 0.3;
+}
+
+.skeleton-table {
+    margin-top: 0.75rem;
+}
+
+.skeleton-table-row {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    border-bottom: 1px solid #e0e0e0;
+    animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+.skeleton-table-cell {
+    flex: 1;
+    height: 1rem;
+    background-color: #e0e0e0;
+    border-radius: 0.25rem;
+}
+
+/* Skeleton for tabs mode */
+.block-adeptus-skeleton-tabs .skeleton-tab-bar {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--adeptus-border);
+    margin-bottom: 1rem;
+}
+
+.skeleton-tab {
+    width: 80px;
+    height: 2rem;
+    background-color: #e0e0e0;
+    border-radius: var(--adeptus-radius);
+    animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+.skeleton-tab-content {
+    background-color: var(--adeptus-light);
+    border-radius: var(--adeptus-radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+/* ==========================================================================
+   Report List Mode (Links)
+   ========================================================================== */
+
+.block-adeptus-report-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.block-adeptus-report-item {
+    background: #fff;
+    border: 1px solid var(--adeptus-border);
+    border-radius: var(--adeptus-radius);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.block-adeptus-report-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: transparent;
+    transition: background 0.2s ease;
+}
+
+.block-adeptus-report-item:hover {
+    border-color: var(--adeptus-primary);
+    box-shadow: 0 2px 8px rgba(0, 102, 204, 0.12);
+    transform: translateY(-1px);
+}
+
+.block-adeptus-report-item:hover::before {
+    background: var(--adeptus-primary);
+}
+
+.block-adeptus-report-item:focus {
+    outline: none;
+    border-color: var(--adeptus-primary);
+    box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.15);
+}
+
+.block-adeptus-report-item:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 4px rgba(0, 102, 204, 0.1);
+}
+
+.report-item-content {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+}
+
+.report-item-icon-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    background: linear-gradient(135deg, #e8f4fd 0%, #dbeafe 100%);
+    border-radius: 0.5rem;
+    flex-shrink: 0;
+    color: var(--adeptus-primary);
+    transition: all 0.2s ease;
+}
+
+.report-item-icon-wrapper i {
+    font-size: 0.9rem;
+}
+
+.block-adeptus-report-item:hover .report-item-icon-wrapper {
+    background: linear-gradient(135deg, var(--adeptus-primary) 0%, #0052a3 100%);
+    color: #fff;
+}
+
+.report-item-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.report-item-name {
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--adeptus-dark);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 0.125rem;
+    transition: color 0.2s ease;
+}
+
+.block-adeptus-report-item:hover .report-item-name {
+    color: var(--adeptus-primary);
+}
+
+.report-item-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.25rem;
+}
+
+.report-item-category {
+    font-size: 0.6875rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 0.25rem;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+}
+
+.report-item-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    color: #c0c5cc;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.report-item-arrow i {
+    font-size: 0.75rem;
+}
+
+.block-adeptus-report-item:hover .report-item-arrow {
+    color: var(--adeptus-primary);
+    transform: translateX(3px);
+}
+
+/* Legacy classes kept for compatibility */
+.block-adeptus-report-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.625rem 0.5rem;
+    color: var(--adeptus-dark);
+    text-decoration: none;
+    border-radius: var(--adeptus-radius);
+    transition: background-color var(--adeptus-transition);
+}
+
+.block-adeptus-report-link:hover {
+    background-color: var(--adeptus-light);
+    color: var(--adeptus-primary);
+    text-decoration: none;
+}
+
+.report-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.report-icon i {
+    font-size: 0.875rem;
+}
+
+.report-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.report-name {
+    font-weight: 500;
+    font-size: 0.875rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.report-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.125rem;
+}
+
+.report-category {
+    font-size: 0.6875rem;
+    padding: 0.125rem 0.375rem;
+    border-radius: 0.25rem;
+}
+
+.report-arrow {
+    color: var(--adeptus-secondary);
+    opacity: 0;
+    transition: opacity var(--adeptus-transition), transform var(--adeptus-transition);
+}
+
+.block-adeptus-report-link:hover .report-arrow {
+    opacity: 1;
+    transform: translateX(2px);
+}
+
+/* ==========================================================================
+   Embedded Report Mode
+   ========================================================================== */
+
+.block-adeptus-embedded .embedded-report-container {
+    padding: 0.5rem 0;
+}
+
+.embedded-report-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.75rem;
+}
+
+.embedded-report-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0;
+    color: var(--adeptus-dark);
+}
+
+.embedded-report-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+    margin-top: 0.25rem;
+}
+
+.embedded-report-actions {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.embedded-chart-container {
+    position: relative;
+    margin-bottom: 1rem;
+}
+
+.embedded-chart-container canvas {
+    max-width: 100%;
+}
+
+.embedded-table-container {
+    margin-top: 0.75rem;
+}
+
+.embedded-table-container .table {
+    font-size: 0.8125rem;
+    margin-bottom: 0;
+}
+
+.embedded-table-container .table th {
+    background-color: var(--adeptus-light);
+    border-top: none;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.embedded-table-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    margin-top: 0.5rem;
+}
+
+.row-count {
+    font-size: 0.75rem;
+}
+
+.embedded-pagination .pagination {
+    margin-bottom: 0;
+}
+
+/* ==========================================================================
+   KPI Grid Mode
+   ========================================================================== */
+
+.block-adeptus-kpi-grid {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.block-adeptus-kpi-grid.kpi-cols-1 {
+    grid-template-columns: 1fr;
+}
+
+.block-adeptus-kpi-grid.kpi-cols-2 {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+.block-adeptus-kpi-grid.kpi-cols-3 {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.block-adeptus-kpi-grid.kpi-cols-4 {
+    grid-template-columns: repeat(4, 1fr);
+}
+
+.block-adeptus-kpi-card {
+    position: relative;
+    padding: 1rem;
+    background-color: #fff;
+    border: 1px solid var(--adeptus-border);
+    border-radius: var(--adeptus-radius);
+    box-shadow: var(--adeptus-shadow);
+    transition: transform var(--adeptus-transition), box-shadow var(--adeptus-transition);
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.block-adeptus-kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.block-adeptus-kpi-card.skeleton {
+    cursor: default;
+    animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+.block-adeptus-kpi-card.skeleton:hover {
+    transform: none;
+    box-shadow: var(--adeptus-shadow);
+}
+
+.skeleton-value {
+    width: 60%;
+    height: 1.75rem;
+    background-color: #e0e0e0;
+    border-radius: 0.25rem;
+    margin-bottom: 0.5rem;
+}
+
+.skeleton-label {
+    width: 80%;
+    height: 0.875rem;
+    background-color: #e0e0e0;
+    border-radius: 0.25rem;
+}
+
+.kpi-card-icon {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--adeptus-light);
+    border-radius: 50%;
+    color: var(--adeptus-secondary);
+    font-size: 0.875rem;
+}
+
+.kpi-card-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--adeptus-dark);
+    line-height: 1.2;
+    margin-bottom: 0.25rem;
+}
+
+.kpi-card-label {
+    font-size: 0.8125rem;
+    color: var(--adeptus-secondary);
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.kpi-card-trend {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-top: 0.5rem;
+    font-size: 0.75rem;
+}
+
+.kpi-card-trend .trend-icon {
+    font-size: 0.625rem;
+}
+
+.kpi-card-trend.trend-up {
+    color: var(--adeptus-success);
+}
+
+.kpi-card-trend.trend-down {
+    color: var(--adeptus-danger);
+}
+
+.kpi-card-trend.trend-neutral {
+    color: var(--adeptus-secondary);
+}
+
+.kpi-card-sparkline {
+    margin-top: 0.5rem;
+}
+
+.sparkline-chart {
+    width: 100%;
+    height: 30px;
+}
+
+/* ==========================================================================
+   Tabbed Reports Mode
+   ========================================================================== */
+
+.block-adeptus-tabs-container {
+    margin-top: 0.5rem;
+}
+
+.block-adeptus-tab-nav {
+    border-bottom: 2px solid var(--adeptus-border);
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: thin;
+}
+
+.block-adeptus-tab-nav .nav-item {
+    flex-shrink: 0;
+}
+
+.block-adeptus-tab-nav .nav-link {
+    padding: 0.5rem 1rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--adeptus-secondary);
+    border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    white-space: nowrap;
+    transition: color var(--adeptus-transition), border-color var(--adeptus-transition);
+}
+
+.block-adeptus-tab-nav .nav-link:hover {
+    color: var(--adeptus-primary);
+    border-bottom-color: var(--adeptus-primary);
+}
+
+.block-adeptus-tab-nav .nav-link.active {
+    color: var(--adeptus-primary);
+    border-bottom-color: var(--adeptus-primary);
+    background-color: transparent;
+}
+
+.block-adeptus-tab-content {
+    padding: 1rem 0;
+}
+
+.block-adeptus-tab-content .tab-pane-loading {
+    padding: 2rem;
+}
+
+.tab-chart-container {
+    position: relative;
+}
+
+.tab-chart-container canvas {
+    max-width: 100%;
+}
+
+.tab-table-container .table {
+    font-size: 0.8125rem;
+    margin-bottom: 0;
+}
+
+/* ==========================================================================
+   Modal Styles
+   ========================================================================== */
+
+.block-adeptus-modal-content {
+    padding: 0;
+}
+
+.block-adeptus-modal-content .modal-loading,
+.block-adeptus-modal-content .modal-error {
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Report meta bar */
+.block-adeptus-modal-content .report-meta-bar {
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--adeptus-border);
+}
+
+.block-adeptus-modal-content .report-badges {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.block-adeptus-modal-content .report-badges .badge {
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.35em 0.65em;
+}
+
+/* View toggle buttons - matching Generated Reports page */
+.block-adeptus-modal-content .view-toggle {
+    display: inline-flex;
+}
+
+.block-adeptus-modal-content .view-toggle .view-toggle-btn {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    color: #495057;
+    padding: 0.35rem 0.75rem;
+    font-size: 13px;
+    transition: all 0.2s ease;
+    margin: 0;
+}
+
+.block-adeptus-modal-content .view-toggle .view-toggle-btn:first-child {
+    border-radius: 6px 0 0 6px;
+    border-right: none;
+}
+
+.block-adeptus-modal-content .view-toggle .view-toggle-btn:last-child {
+    border-radius: 0 6px 6px 0;
+}
+
+.block-adeptus-modal-content .view-toggle .view-toggle-btn:hover {
+    background: #e9ecef;
+}
+
+.block-adeptus-modal-content .view-toggle .view-toggle-btn.active {
+    background: #2563eb;
+    border-color: #2563eb;
+    color: white;
+}
+
+.block-adeptus-modal-content .view-toggle .view-toggle-btn i {
+    margin-right: 5px;
+}
+
+/* Chart controls */
+.block-adeptus-modal-content .chart-controls-wrapper {
+    padding: 0.75rem;
+    background-color: var(--adeptus-light);
+    border-radius: var(--adeptus-radius);
+}
+
+.block-adeptus-modal-content .chart-controls {
+    gap: 1rem;
+}
+
+.block-adeptus-modal-content .chart-controls .control-group {
+    flex: 1;
+    min-width: 120px;
+    max-width: 200px;
+}
+
+.block-adeptus-modal-content .chart-controls .form-label {
+    font-weight: 500;
+    color: var(--adeptus-secondary);
+    margin-bottom: 0.25rem;
+}
+
+.block-adeptus-modal-content .chart-controls .form-select {
+    font-size: 0.8125rem;
+}
+
+/* Chart container */
+.block-adeptus-modal-content .chart-container {
+    background-color: #fff;
+    border-radius: var(--adeptus-radius);
+    padding: 0.5rem;
+}
+
+/* Table styles */
+.block-adeptus-modal-content .modal-table-container {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.block-adeptus-modal-content .modal-table {
+    font-size: 0.8125rem;
+    margin-bottom: 0;
+}
+
+.block-adeptus-modal-content .modal-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.block-adeptus-modal-content .modal-table th {
+    background-color: var(--adeptus-light);
+    border-top: none;
+    font-weight: 600;
+    white-space: nowrap;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+    color: var(--adeptus-secondary);
+}
+
+.block-adeptus-modal-content .modal-table td {
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.block-adeptus-modal-content .modal-table-footer {
+    padding: 0.5rem 0;
+}
+
+/* Footer link */
+.block-adeptus-modal-content .modal-footer-link {
+    text-align: center;
+}
+
+.block-adeptus-modal-content .modal-footer-link a {
+    color: var(--adeptus-primary);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.block-adeptus-modal-content .modal-footer-link a:hover {
+    text-decoration: underline;
+}
+
+/* ==========================================================================
+   Pagination Controls
+   ========================================================================== */
+
+.block-adeptus-pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    margin-top: 0.5rem;
+    border-top: 1px solid var(--adeptus-border);
+}
+
+.block-adeptus-pagination .pagination-info {
+    font-size: 0.75rem;
+    color: var(--adeptus-secondary);
+}
+
+.block-adeptus-pagination .pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.block-adeptus-pagination .pagination-pages {
+    font-size: 0.75rem;
+    color: var(--adeptus-secondary);
+    padding: 0 0.5rem;
+}
+
+.block-adeptus-pagination .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+}
+
+/* Table pagination in modal */
+.block-adeptus-modal-content .table-pagination {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.block-adeptus-modal-content .table-pagination .btn {
+    padding: 0.2rem 0.4rem;
+    font-size: 0.75rem;
+}
+
+.block-adeptus-modal-content .table-pagination-info {
+    font-size: 0.75rem;
+}
+
+/* ==========================================================================
+   Empty & Error States
+   ========================================================================== */
+
+.block-adeptus-empty,
+.block-adeptus-error,
+.block-adeptus-error-state {
+    text-align: center;
+    padding: 2rem 1rem;
+}
+
+.block-adeptus-empty i,
+.block-adeptus-error i,
+.block-adeptus-error-state i {
+    display: block;
+    margin-bottom: 0.75rem;
+}
+
+.block-adeptus-empty p,
+.block-adeptus-error p,
+.block-adeptus-error-state p {
+    margin-bottom: 0.75rem;
+}
+
+/* ==========================================================================
+   Timestamp
+   ========================================================================== */
+
+.block-adeptus-timestamp {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--adeptus-border);
+}
+
+.block-adeptus-timestamp i {
+    font-size: 0.75rem;
+}
+
+/* ==========================================================================
+   Block Footer Link
+   ========================================================================== */
+
+.block-adeptus-footer-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--adeptus-primary);
+    text-decoration: none;
+    border-radius: var(--adeptus-radius);
+    transition: all 0.2s ease;
+}
+
+.block-adeptus-footer-link:hover {
+    background-color: rgba(0, 102, 204, 0.08);
+    color: #0052a3;
+    text-decoration: none;
+}
+
+.block-adeptus-footer-link::after {
+    content: '\f054';
+    font-family: 'Font Awesome 5 Free', 'FontAwesome';
+    font-weight: 900;
+    font-size: 0.625rem;
+    opacity: 0.7;
+    transition: transform 0.2s ease;
+}
+
+.block-adeptus-footer-link:hover::after {
+    transform: translateX(2px);
+}
+
+/* ==========================================================================
+   Category Colors
+   ========================================================================== */
+
+.category-general {
+    background-color: #6c757d;
+    color: #fff;
+}
+
+.category-student-performance {
+    background-color: #007bff;
+    color: #fff;
+}
+
+.category-engagement {
+    background-color: #28a745;
+    color: #fff;
+}
+
+.category-completion {
+    background-color: #17a2b8;
+    color: #fff;
+}
+
+.category-activity {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.category-administrative {
+    background-color: #6f42c1;
+    color: #fff;
+}
+
+.category-custom {
+    background-color: #20c997;
+    color: #fff;
+}
+
+/* Default category styling from backend */
+.report-category[style*="background-color"] {
+    color: #fff;
+}
+
+/* ==========================================================================
+   Source Badge Colors
+   ========================================================================== */
+
+.source-wizard {
+    background-color: #e9ecef;
+    color: #495057;
+}
+
+.source-ai {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+/* ==========================================================================
+   Utilities
+   ========================================================================== */
+
+.block-adeptus-insights .fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.block-adeptus-insights .d-none {
+    display: none !important;
+}
+
+/* ==========================================================================
+   Responsive Design
+   ========================================================================== */
+
+@media (max-width: 767.98px) {
+    .block-adeptus-kpi-grid.kpi-cols-3,
+    .block-adeptus-kpi-grid.kpi-cols-4 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .kpi-card-value {
+        font-size: 1.5rem;
+    }
+
+    .block-adeptus-tab-nav .nav-link {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.75rem;
+    }
+
+    .modal-chart-container {
+        height: 200px;
+    }
+
+    .block-adeptus-modal-footer {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .block-adeptus-modal-footer .btn {
+        width: 100%;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .block-adeptus-kpi-grid.kpi-cols-2,
+    .block-adeptus-kpi-grid.kpi-cols-3,
+    .block-adeptus-kpi-grid.kpi-cols-4 {
+        grid-template-columns: 1fr;
+    }
+
+    .block-adeptus-toolbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .embedded-report-header {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .embedded-table-footer {
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: flex-start;
+    }
+}
+
+/* ==========================================================================
+   Print Styles
+   ========================================================================== */
+
+@media print {
+    .block-adeptus-toolbar-actions,
+    .block-adeptus-refresh,
+    .block-adeptus-retry,
+    .embedded-report-actions,
+    .modal-header-actions,
+    .block-adeptus-modal-footer {
+        display: none !important;
+    }
+
+    .block-adeptus-kpi-card {
+        break-inside: avoid;
+        box-shadow: none;
+        border: 1px solid #000;
+    }
+
+    .block-adeptus-tab-content .tab-pane {
+        display: block !important;
+        opacity: 1 !important;
+    }
+}
