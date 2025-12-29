@@ -83,14 +83,9 @@ define([
          * Initialize the block.
          */
         init: function() {
-            var self = this;
-            console.log('[AdeptusBlock] Initializing block', this.blockId, 'API key:', this.apiKey ? 'present' : 'missing');
-
             // Find the block container.
             this.container = $('[data-blockid="' + this.blockId + '"]');
-            console.log('[AdeptusBlock] Container found:', this.container.length > 0);
             if (!this.container.length) {
-                console.warn('[AdeptusBlock] No container found for blockid:', this.blockId);
                 return;
             }
 
@@ -399,19 +394,14 @@ define([
          */
         fetchReports: function() {
             var self = this;
-            // Use direct API key first, fallback to global auth data
             var token = this.apiKey || (window.adeptusAuthData ? window.adeptusAuthData.api_key : null);
-            console.log('[AdeptusBlock] fetchReports - token present:', !!token, 'source:', this.config.reportSource);
 
             if (!token) {
-                console.error('[AdeptusBlock] No authentication token available');
                 this.showError('No authentication token');
                 return;
             }
 
             var promises = [];
-
-            // Determine what to fetch based on config.
             var source = this.config.reportSource || 'all';
 
             if (source === 'all' || source === 'wizard') {
@@ -422,27 +412,17 @@ define([
                 promises.push(this.fetchFromApi('/ai-reports', token));
             }
 
-            console.log('[AdeptusBlock] Making', promises.length, 'API request(s)');
             $.when.apply($, promises).then(function() {
-                console.log('[AdeptusBlock] API responses received');
                 var allReports = [];
 
-                // $.when returns [data, statusText, jqXHR] for each promise
-                // With multiple promises, arguments[i] is [data, statusText, jqXHR]
-                // With single promise, arguments[0] is data, arguments[1] is statusText, etc.
                 for (var i = 0; i < promises.length; i++) {
                     var result;
                     if (promises.length === 1) {
-                        // Single promise: arguments = [data, statusText, jqXHR]
                         result = arguments[0];
                     } else {
-                        // Multiple promises: arguments[i] = [data, statusText, jqXHR]
-                        result = arguments[i][0];  // Get the data part
+                        result = arguments[i][0];
                     }
 
-                    console.log('[AdeptusBlock] Result', i, ':', result);
-
-                    // Handle both {reports: [...]} and {data: [...]} response formats
                     var reports = result.reports || result.data || [];
                     if (reports && reports.length) {
                         var reportSource = (source === 'ai' || (i === 1 && source === 'all')) ? 'ai' : 'wizard';
@@ -453,14 +433,8 @@ define([
                     }
                 }
 
-                // Debug: Log first report structure to identify name field
-                if (allReports.length > 0) {
-                    console.log('[AdeptusBlock] Sample report structure:', JSON.stringify(allReports[0], null, 2));
-                }
-
                 self.reports = allReports;
                 self.lastUpdated = new Date();
-                // Save to cache for faster subsequent loads
                 self.saveToCache(allReports);
                 self.renderReports();
             }).fail(function() {
@@ -495,7 +469,6 @@ define([
          */
         renderReports: function() {
             var mode = this.config.displayMode || 'links';
-            console.log('[AdeptusBlock] renderReports - mode:', mode, 'config:', this.config);
 
             if (this.reports.length === 0) {
                 this.showEmpty();
@@ -505,9 +478,8 @@ define([
             // Extract and populate category filter
             this.populateCategoryFilter();
 
-            // Filter reports if category is specified.
+            // Filter reports based on selected category
             var reports = this.filterReports();
-            console.log('[AdeptusBlock] Filtered reports count:', reports.length);
 
             switch (mode) {
                 case 'embedded':
@@ -1180,8 +1152,7 @@ define([
                     } else {
                         modalBody.find('.modal-error').removeClass('d-none');
                     }
-                }).fail(function(xhr, status, error) {
-                    console.error('[AdeptusBlock] Failed to load AI report:', error);
+                }).fail(function() {
                     modalBody.find('.modal-loading').addClass('d-none');
                     modalBody.find('.modal-error').removeClass('d-none');
                 });
@@ -1206,11 +1177,6 @@ define([
 
             var contentArea = modalBody.find('.modal-content-area');
             contentArea.removeClass('d-none');
-
-            console.log('[AdeptusBlock] Rendering modal content:', {
-                report: report.name,
-                dataCount: this.modalData.length
-            });
 
             // Set report metadata
             var category = report.category_info || {name: 'General', color: '#6c757d'};
@@ -1333,7 +1299,6 @@ define([
 
             var canvas = modalBody.find('.modal-chart')[0];
             if (!canvas) {
-                console.error('[AdeptusBlock] Canvas element not found');
                 return;
             }
 
@@ -1354,8 +1319,6 @@ define([
                 labelKey = labelKey || headers[0];
                 valueKey = valueKey || headers[headers.length - 1];
             }
-
-            console.log('[AdeptusBlock] Rendering chart:', {type: chartType, xAxis: labelKey, yAxis: valueKey});
 
             // Format value key for display
             var valueKeyFormatted = valueKey.replace(/_/g, ' ').replace(/\b\w/g, function(l) { return l.toUpperCase(); });
@@ -1380,11 +1343,9 @@ define([
 
             try {
                 this.chartInstance = new Chart(canvas.getContext('2d'), config);
-                console.log('[AdeptusBlock] Chart created successfully');
             } catch (error) {
-                console.error('[AdeptusBlock] Error creating chart:', error);
                 modalBody.find('.chart-container').html(
-                    '<div class="alert alert-danger"><i class="fa fa-exclamation-triangle"></i> Error rendering chart: ' + error.message + '</div>'
+                    '<div class="alert alert-danger"><i class="fa fa-exclamation-triangle"></i> Error rendering chart</div>'
                 );
             }
         },
