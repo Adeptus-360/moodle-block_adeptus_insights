@@ -674,85 +674,236 @@ define([
 
             // For embedded mode, show the first report.
             var report = reports[0];
-            this.container.find('.report-name').text(report.name);
+            var reportName = report.name || report.title || report.display_name || report.slug || 'Report';
+            this.container.find('.report-name').text(reportName);
+
+            // Store current embedded report
+            this.embeddedReport = report;
+            this.embeddedData = null;
+            this.embeddedChartInstance = null;
 
             // Load and render the report data.
-            this.loadReportData(report.slug, report.source);
+            this.loadEmbeddedReport(report.slug, report.source);
         },
 
         /**
-         * Load report data for embedded/modal display.
+         * Load report data for embedded display.
          *
          * @param {string} slug
          * @param {string} source
          */
-        loadReportData: function(slug, source) {
+        loadEmbeddedReport: function(slug, source) {
             var self = this;
-            var token = this.apiKey || (window.adeptusAuthData ? window.adeptusAuthData.api_key : null);
+            var cacheKey = slug + '_' + source;
 
-            if (!token) {
+            // Check cache first for instant loading
+            if (this.reportDataCache[cacheKey]) {
+                var cached = this.reportDataCache[cacheKey];
+                this.embeddedData = cached.results;
+                this.renderEmbeddedContent(cached.report, cached.results);
                 return;
             }
 
-            var endpoint = source === 'ai' ? '/ai-reports/' : '/wizard-reports/';
-
-            $.ajax({
-                url: 'https://a360backend.stagingwithswift.com/api/v1' + endpoint + slug,
-                method: 'GET',
-                headers: {
-                    'Authorization': 'Bearer ' + token,
-                    'Accept': 'application/json'
-                }
-            }).done(function(response) {
-                if (response.success && response.report) {
-                    self.renderReportData(response.report, response.data || []);
-                }
-            }).fail(function() {
-                self.showError();
+            // Find the report from our cached list
+            var report = this.reports.find(function(r) {
+                return r.slug === slug;
             });
+
+            if (!report) {
+                this.showError('Report not found');
+                return;
+            }
+
+            // For wizard reports, execute locally via generate_report.php
+            if (source === 'wizard') {
+                $.ajax({
+                    url: M.cfg.wwwroot + '/report/adeptus_insights/ajax/generate_report.php',
+                    method: 'POST',
+                    data: {
+                        reportid: report.name || report.report_template_id,
+                        sesskey: M.cfg.sesskey
+                    },
+                    dataType: 'json',
+                    timeout: 30000
+                }).done(function(response) {
+                    if (response.success) {
+                        // Cache the result
+                        self.reportDataCache[cacheKey] = {
+                            report: report,
+                            results: response.results || [],
+                            chartData: response.chart_data,
+                            chartType: response.chart_type
+                        };
+                        self.embeddedData = response.results || [];
+                        self.renderEmbeddedContent(report, response.results || []);
+                    } else {
+                        self.showError(response.message || 'Failed to load report');
+                    }
+                }).fail(function() {
+                    self.showError('Connection error');
+                });
+            } else {
+                // AI reports - fetch from backend API
+                var token = this.apiKey || (window.adeptusAuthData ? window.adeptusAuthData.api_key : null);
+
+                if (!token) {
+                    this.showError('No authentication token');
+                    return;
+                }
+
+                $.ajax({
+                    url: 'https://a360backend.stagingwithswift.com/api/v1/ai-reports/' + slug,
+                    method: 'GET',
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'Accept': 'application/json'
+                    },
+                    timeout: 15000
+                }).done(function(response) {
+                    if (response.success && response.report) {
+                        // Cache the result
+                        self.reportDataCache[cacheKey] = {
+                            report: response.report,
+                            results: response.data || [],
+                            chartData: null,
+                            chartType: null
+                        };
+                        self.embeddedData = response.data || [];
+                        self.renderEmbeddedContent(response.report, response.data || []);
+                    } else {
+                        self.showError('Failed to load report');
+                    }
+                }).fail(function() {
+                    self.showError('Connection error');
+                });
+            }
         },
 
         /**
-         * Render report data (chart and table).
+         * Render embedded content with report data.
          *
          * @param {Object} report
          * @param {Array} data
          */
-        renderReportData: function(report, data) {
+        renderEmbeddedContent: function(report, data) {
+            var self = this;
             var contentArea = this.container.find('.block-adeptus-content');
 
-            // Render chart if enabled and data available.
-            if (this.config.showChart && data.length > 0) {
-                this.renderChart(report, data);
+            if (!data || data.length === 0) {
+                this.showEmpty();
+                return;
             }
 
-            // Render table if enabled.
-            if (this.config.showTable && data.length > 0) {
-                this.renderTable(data);
+            // Render chart if enabled
+            if (this.config.showChart) {
+                this.renderEmbeddedChart(report, data);
+            }
+
+            // Render table if enabled
+            if (this.config.showTable) {
+                this.renderEmbeddedTable(data);
             }
 
             contentArea.removeClass('d-none');
+            this.hideLoading();
+            this.updateTimestamp();
         },
 
         /**
-         * Render chart.
+         * Render chart in embedded mode.
          *
          * @param {Object} report
          * @param {Array} data
          */
-        renderChart: function(report, data) {
-            // Chart rendering will be implemented with Chart.js
-            // This is a placeholder for Phase 1.
+        renderEmbeddedChart: function(report, data) {
+            var self = this;
             var chartContainer = this.container.find('.block-adeptus-chart-container');
-            chartContainer.html('<div class="text-center text-muted py-4"><i class="fa fa-bar-chart fa-2x"></i><p class="mt-2">Chart visualization</p></div>');
+            var canvas = chartContainer.find('.block-adeptus-chart')[0];
+
+            if (!canvas || !data || data.length === 0) {
+                chartContainer.addClass('d-none');
+                return;
+            }
+
+            // Destroy existing chart
+            if (this.embeddedChartInstance) {
+                this.embeddedChartInstance.destroy();
+                this.embeddedChartInstance = null;
+            }
+
+            var headers = Object.keys(data[0]);
+            var numericCols = this.detectNumericColumns(data, headers);
+
+            // Auto-detect best columns for chart
+            var labelKey = headers[0]; // First column for labels
+            var valueKey = numericCols.length > 0 ? numericCols[numericCols.length - 1] : headers[headers.length - 1];
+
+            // Format value key for display
+            var valueKeyFormatted = valueKey.replace(/_/g, ' ').replace(/\b\w/g, function(l) { return l.toUpperCase(); });
+
+            // Limit data for chart readability (max 20 items for embedded)
+            var chartData = data.slice(0, 20);
+            var labels = chartData.map(function(row) {
+                var label = row[labelKey];
+                if (label === null || label === undefined) return 'Unknown';
+                var labelStr = String(label);
+                return labelStr.length > 20 ? labelStr.substring(0, 20) + '...' : labelStr;
+            });
+            var values = chartData.map(function(row) {
+                return parseFloat(row[valueKey]) || 0;
+            });
+
+            // Generate colors
+            var colors = this.generateChartColors(values.length, 'bar');
+
+            // Create chart config
+            var config = {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: valueKeyFormatted,
+                        data: values,
+                        backgroundColor: colors[0],
+                        borderColor: colors[0].replace('0.7', '1'),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        },
+                        x: {
+                            display: data.length <= 10 // Hide labels if too many
+                        }
+                    }
+                }
+            };
+
+            try {
+                this.embeddedChartInstance = new Chart(canvas.getContext('2d'), config);
+                chartContainer.removeClass('d-none');
+            } catch (error) {
+                chartContainer.html(
+                    '<div class="alert alert-warning text-center"><i class="fa fa-exclamation-circle"></i> Could not render chart</div>'
+                );
+            }
         },
 
         /**
-         * Render data table.
+         * Render data table in embedded mode.
          *
          * @param {Array} data
          */
-        renderTable: function(data) {
+        renderEmbeddedTable: function(data) {
             var table = this.container.find('.block-adeptus-table');
             var thead = table.find('thead');
             var tbody = table.find('tbody');
@@ -761,30 +912,39 @@ define([
             thead.empty();
             tbody.empty();
 
-            if (data.length === 0) {
+            if (!data || data.length === 0) {
+                this.container.find('.block-adeptus-table-container').addClass('d-none');
                 return;
             }
 
-            // Build headers from first row.
+            // Build headers from first row
             var headers = Object.keys(data[0]);
             var headerRow = $('<tr>');
             headers.forEach(function(h) {
-                headerRow.append($('<th>').text(h));
+                var formatted = h.replace(/_/g, ' ').replace(/\b\w/g, function(l) { return l.toUpperCase(); });
+                headerRow.append($('<th>').text(formatted));
             });
             thead.append(headerRow);
 
-            // Build rows.
+            // Build rows
             data.slice(0, maxRows).forEach(function(row) {
                 var tr = $('<tr>');
                 headers.forEach(function(h) {
-                    tr.append($('<td>').text(row[h] !== null ? row[h] : ''));
+                    var val = row[h];
+                    if (val === null || val === undefined) val = '';
+                    var displayVal = String(val);
+                    if (displayVal.length > 50) {
+                        displayVal = displayVal.substring(0, 50) + '...';
+                    }
+                    tr.append($('<td>').attr('title', val).text(displayVal));
                 });
                 tbody.append(tr);
             });
 
-            // Update row count.
-            var countText = 'Showing ' + Math.min(data.length, maxRows) + ' of ' + data.length;
+            // Update row count
+            var countText = 'Showing ' + Math.min(data.length, maxRows) + ' of ' + data.length + ' rows';
             this.container.find('.block-adeptus-row-count').text(countText);
+            this.container.find('.block-adeptus-table-container').removeClass('d-none');
         },
 
         /**
@@ -796,23 +956,169 @@ define([
             var self = this;
             var gridContainer = this.container.find('.block-adeptus-kpi-grid');
             var template = $('#block-adeptus-kpi-card-template-' + this.blockId);
-            var maxCards = 4;
+            var maxCards = parseInt(this.config.kpiColumns, 10) || 2;
+            maxCards = Math.min(maxCards * 2, 4); // Max 4 KPI cards
 
             gridContainer.empty();
 
-            reports.slice(0, maxCards).forEach(function(report) {
+            var kpiReports = reports.slice(0, maxCards);
+
+            kpiReports.forEach(function(report, index) {
                 var card = template.html();
                 var $card = $(card);
 
+                var reportName = report.name || report.title || report.display_name || report.slug || 'Metric';
                 $card.attr('data-slug', report.slug);
                 $card.attr('data-source', report.source);
-                $card.find('.kpi-card-label').text(report.name);
-                $card.find('.kpi-card-value').text('--');
+                $card.find('.kpi-card-label').text(reportName);
+                $card.find('.kpi-card-value').html('<i class="fa fa-spinner fa-spin"></i>');
+                $card.find('.kpi-card-trend').addClass('d-none');
+                $card.find('.kpi-card-sparkline').addClass('d-none');
+
+                // Set different icons based on index
+                var icons = ['fa-users', 'fa-graduation-cap', 'fa-clock', 'fa-check-circle'];
+                $card.find('.kpi-card-icon i').removeClass('fa-chart-line').addClass(icons[index % icons.length]);
 
                 gridContainer.append($card);
+
+                // Load KPI data for this card
+                self.loadKpiData(report, $card);
             });
 
             gridContainer.removeClass('d-none');
+        },
+
+        /**
+         * Load KPI data for a single card.
+         *
+         * @param {Object} report
+         * @param {jQuery} $card
+         */
+        loadKpiData: function(report, $card) {
+            var self = this;
+            var cacheKey = report.slug + '_' + report.source;
+
+            // Check cache first
+            if (this.reportDataCache[cacheKey]) {
+                var cached = this.reportDataCache[cacheKey];
+                this.renderKpiValue($card, cached.results);
+                return;
+            }
+
+            // Load data based on source
+            if (report.source === 'wizard') {
+                $.ajax({
+                    url: M.cfg.wwwroot + '/report/adeptus_insights/ajax/generate_report.php',
+                    method: 'POST',
+                    data: {
+                        reportid: report.name || report.report_template_id,
+                        sesskey: M.cfg.sesskey
+                    },
+                    dataType: 'json',
+                    timeout: 15000
+                }).done(function(response) {
+                    if (response.success) {
+                        self.reportDataCache[cacheKey] = {
+                            report: report,
+                            results: response.results || []
+                        };
+                        self.renderKpiValue($card, response.results || []);
+                    } else {
+                        $card.find('.kpi-card-value').text('--');
+                    }
+                }).fail(function() {
+                    $card.find('.kpi-card-value').text('--');
+                });
+            } else {
+                // AI reports
+                var token = this.apiKey || (window.adeptusAuthData ? window.adeptusAuthData.api_key : null);
+                if (!token) {
+                    $card.find('.kpi-card-value').text('--');
+                    return;
+                }
+
+                $.ajax({
+                    url: 'https://a360backend.stagingwithswift.com/api/v1/ai-reports/' + report.slug,
+                    method: 'GET',
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'Accept': 'application/json'
+                    },
+                    timeout: 15000
+                }).done(function(response) {
+                    if (response.success && response.data) {
+                        self.reportDataCache[cacheKey] = {
+                            report: response.report || report,
+                            results: response.data || []
+                        };
+                        self.renderKpiValue($card, response.data || []);
+                    } else {
+                        $card.find('.kpi-card-value').text('--');
+                    }
+                }).fail(function() {
+                    $card.find('.kpi-card-value').text('--');
+                });
+            }
+        },
+
+        /**
+         * Render KPI value on card.
+         *
+         * @param {jQuery} $card
+         * @param {Array} data
+         */
+        renderKpiValue: function($card, data) {
+            if (!data || data.length === 0) {
+                $card.find('.kpi-card-value').text('0');
+                return;
+            }
+
+            // Find numeric column for KPI value
+            var headers = Object.keys(data[0]);
+            var numericCols = this.detectNumericColumns(data, headers);
+
+            var value;
+            var formattedValue;
+
+            if (numericCols.length > 0) {
+                // Use sum or count of the last numeric column
+                var valueCol = numericCols[numericCols.length - 1];
+
+                // If it's a count/total column, sum all values
+                if (valueCol.toLowerCase().includes('count') ||
+                    valueCol.toLowerCase().includes('total') ||
+                    data.length === 1) {
+                    value = data.reduce(function(sum, row) {
+                        return sum + (parseFloat(row[valueCol]) || 0);
+                    }, 0);
+                } else {
+                    // Otherwise show row count
+                    value = data.length;
+                }
+            } else {
+                // No numeric columns, show row count
+                value = data.length;
+            }
+
+            // Format the value nicely
+            if (value >= 1000000) {
+                formattedValue = (value / 1000000).toFixed(1) + 'M';
+            } else if (value >= 1000) {
+                formattedValue = (value / 1000).toFixed(1) + 'K';
+            } else if (Number.isInteger(value)) {
+                formattedValue = value.toLocaleString();
+            } else {
+                formattedValue = value.toFixed(1);
+            }
+
+            $card.find('.kpi-card-value').text(formattedValue);
+
+            // Add a simple trend indicator (placeholder - would need historical data)
+            var trendContainer = $card.find('.kpi-card-trend');
+            trendContainer.removeClass('d-none trend-up trend-down trend-neutral');
+            trendContainer.addClass('trend-neutral');
+            trendContainer.find('.trend-icon').html('<i class="fa fa-minus"></i>');
+            trendContainer.find('.trend-value').text('vs previous');
         },
 
         /**
@@ -831,15 +1137,19 @@ define([
             tabNav.empty();
             tabContent.empty();
 
+            // Store tab chart instances
+            this.tabChartInstances = {};
+
             reports.slice(0, maxTabs).forEach(function(report, index) {
                 var tabId = 'tab-' + self.blockId + '-' + index;
+                var reportName = report.name || report.title || report.display_name || report.slug || 'Report';
 
-                // Create tab.
+                // Create tab
                 var tab = $(tabTemplate.html());
                 tab.find('a')
                     .attr('href', '#' + tabId)
                     .attr('aria-controls', tabId);
-                tab.find('.tab-name').text(report.name);
+                tab.find('.tab-name').text(reportName);
 
                 if (index === 0) {
                     tab.find('a').addClass('active').attr('aria-selected', 'true');
@@ -847,7 +1157,7 @@ define([
 
                 tabNav.append(tab);
 
-                // Create pane.
+                // Create pane
                 var pane = $(paneTemplate.html());
                 pane.attr('id', tabId);
                 pane.attr('data-slug', report.slug);
@@ -860,7 +1170,7 @@ define([
                 tabContent.append(pane);
             });
 
-            // Load first tab content.
+            // Load first tab content
             if (reports.length > 0) {
                 var firstPane = tabContent.find('.tab-pane').first();
                 this.loadTabContent(firstPane, reports[0].slug, reports[0].source);
@@ -878,13 +1188,261 @@ define([
          */
         loadTabContent: function(pane, slug, source) {
             var self = this;
+            var cacheKey = slug + '_' + source;
             pane.data('loaded', true);
 
-            // TODO: Implement tab content loading.
+            // Check cache first
+            if (this.reportDataCache[cacheKey]) {
+                var cached = this.reportDataCache[cacheKey];
+                this.renderTabContent(pane, cached.report, cached.results);
+                return;
+            }
+
+            // Find the report from our cached list
+            var report = this.reports.find(function(r) {
+                return r.slug === slug;
+            });
+
+            if (!report) {
+                pane.find('.tab-pane-loading').addClass('d-none');
+                pane.find('.tab-pane-content')
+                    .removeClass('d-none')
+                    .html('<div class="text-center text-muted py-4"><i class="fa fa-exclamation-circle"></i><p class="mt-2">Report not found</p></div>');
+                return;
+            }
+
+            // Load data based on source
+            if (source === 'wizard') {
+                $.ajax({
+                    url: M.cfg.wwwroot + '/report/adeptus_insights/ajax/generate_report.php',
+                    method: 'POST',
+                    data: {
+                        reportid: report.name || report.report_template_id,
+                        sesskey: M.cfg.sesskey
+                    },
+                    dataType: 'json',
+                    timeout: 30000
+                }).done(function(response) {
+                    if (response.success) {
+                        self.reportDataCache[cacheKey] = {
+                            report: report,
+                            results: response.results || []
+                        };
+                        self.renderTabContent(pane, report, response.results || []);
+                    } else {
+                        pane.find('.tab-pane-loading').addClass('d-none');
+                        pane.find('.tab-pane-content')
+                            .removeClass('d-none')
+                            .html('<div class="text-center text-muted py-4"><i class="fa fa-exclamation-circle"></i><p class="mt-2">' + (response.message || 'Failed to load') + '</p></div>');
+                    }
+                }).fail(function() {
+                    pane.find('.tab-pane-loading').addClass('d-none');
+                    pane.find('.tab-pane-content')
+                        .removeClass('d-none')
+                        .html('<div class="text-center text-muted py-4"><i class="fa fa-exclamation-circle"></i><p class="mt-2">Connection error</p></div>');
+                });
+            } else {
+                // AI reports
+                var token = this.apiKey || (window.adeptusAuthData ? window.adeptusAuthData.api_key : null);
+                if (!token) {
+                    pane.find('.tab-pane-loading').addClass('d-none');
+                    pane.find('.tab-pane-content')
+                        .removeClass('d-none')
+                        .html('<div class="text-center text-muted py-4"><i class="fa fa-exclamation-circle"></i><p class="mt-2">Authentication required</p></div>');
+                    return;
+                }
+
+                $.ajax({
+                    url: 'https://a360backend.stagingwithswift.com/api/v1/ai-reports/' + slug,
+                    method: 'GET',
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'Accept': 'application/json'
+                    },
+                    timeout: 15000
+                }).done(function(response) {
+                    if (response.success) {
+                        self.reportDataCache[cacheKey] = {
+                            report: response.report || report,
+                            results: response.data || []
+                        };
+                        self.renderTabContent(pane, response.report || report, response.data || []);
+                    } else {
+                        pane.find('.tab-pane-loading').addClass('d-none');
+                        pane.find('.tab-pane-content')
+                            .removeClass('d-none')
+                            .html('<div class="text-center text-muted py-4"><i class="fa fa-exclamation-circle"></i><p class="mt-2">Failed to load report</p></div>');
+                    }
+                }).fail(function() {
+                    pane.find('.tab-pane-loading').addClass('d-none');
+                    pane.find('.tab-pane-content')
+                        .removeClass('d-none')
+                        .html('<div class="text-center text-muted py-4"><i class="fa fa-exclamation-circle"></i><p class="mt-2">Connection error</p></div>');
+                });
+            }
+        },
+
+        /**
+         * Render tab content with report data.
+         *
+         * @param {jQuery} pane
+         * @param {Object} report
+         * @param {Array} data
+         */
+        renderTabContent: function(pane, report, data) {
+            var self = this;
             pane.find('.tab-pane-loading').addClass('d-none');
-            pane.find('.tab-pane-content')
-                .removeClass('d-none')
-                .html('<div class="text-center text-muted py-4"><i class="fa fa-bar-chart fa-2x"></i><p class="mt-2">Tab content</p></div>');
+            var contentArea = pane.find('.tab-pane-content');
+
+            if (!data || data.length === 0) {
+                contentArea.removeClass('d-none')
+                    .html('<div class="text-center text-muted py-4"><i class="fa fa-inbox"></i><p class="mt-2">No data available</p></div>');
+                return;
+            }
+
+            // Create content HTML
+            var html = '';
+
+            // Chart container
+            if (this.config.showChart) {
+                html += '<div class="tab-chart-container" style="height: ' + (this.config.chartHeight || 200) + 'px;">' +
+                    '<canvas class="tab-chart"></canvas></div>';
+            }
+
+            // Table container
+            if (this.config.showTable) {
+                html += '<div class="tab-table-container mt-2"><div class="table-responsive">' +
+                    '<table class="table table-sm table-striped"><thead></thead><tbody></tbody></table>' +
+                    '</div></div>';
+            }
+
+            contentArea.html(html).removeClass('d-none');
+
+            // Render chart
+            if (this.config.showChart) {
+                this.renderTabChart(pane, report, data);
+            }
+
+            // Render table
+            if (this.config.showTable) {
+                this.renderTabTable(pane, data);
+            }
+        },
+
+        /**
+         * Render chart in tab pane.
+         *
+         * @param {jQuery} pane
+         * @param {Object} report
+         * @param {Array} data
+         */
+        renderTabChart: function(pane, report, data) {
+            var tabId = pane.attr('id');
+            var canvas = pane.find('.tab-chart')[0];
+
+            if (!canvas || !data || data.length === 0) {
+                return;
+            }
+
+            // Destroy existing chart for this tab
+            if (this.tabChartInstances && this.tabChartInstances[tabId]) {
+                this.tabChartInstances[tabId].destroy();
+            }
+
+            var headers = Object.keys(data[0]);
+            var numericCols = this.detectNumericColumns(data, headers);
+
+            var labelKey = headers[0];
+            var valueKey = numericCols.length > 0 ? numericCols[numericCols.length - 1] : headers[headers.length - 1];
+            var valueKeyFormatted = valueKey.replace(/_/g, ' ').replace(/\b\w/g, function(l) { return l.toUpperCase(); });
+
+            // Limit data
+            var chartData = data.slice(0, 15);
+            var labels = chartData.map(function(row) {
+                var label = row[labelKey];
+                if (label === null || label === undefined) return 'Unknown';
+                var labelStr = String(label);
+                return labelStr.length > 15 ? labelStr.substring(0, 15) + '...' : labelStr;
+            });
+            var values = chartData.map(function(row) {
+                return parseFloat(row[valueKey]) || 0;
+            });
+
+            var colors = this.generateChartColors(values.length, 'bar');
+
+            var config = {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: valueKeyFormatted,
+                        data: values,
+                        backgroundColor: colors[0],
+                        borderColor: colors[0].replace('0.7', '1'),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true },
+                        x: { display: data.length <= 8 }
+                    }
+                }
+            };
+
+            try {
+                this.tabChartInstances = this.tabChartInstances || {};
+                this.tabChartInstances[tabId] = new Chart(canvas.getContext('2d'), config);
+            } catch (error) {
+                pane.find('.tab-chart-container').html(
+                    '<div class="alert alert-warning text-center"><i class="fa fa-exclamation-circle"></i> Could not render chart</div>'
+                );
+            }
+        },
+
+        /**
+         * Render table in tab pane.
+         *
+         * @param {jQuery} pane
+         * @param {Array} data
+         */
+        renderTabTable: function(pane, data) {
+            var table = pane.find('table');
+            var thead = table.find('thead');
+            var tbody = table.find('tbody');
+            var maxRows = this.config.tableMaxRows || 10;
+
+            thead.empty();
+            tbody.empty();
+
+            if (!data || data.length === 0) {
+                return;
+            }
+
+            var headers = Object.keys(data[0]);
+            var headerRow = $('<tr>');
+            headers.forEach(function(h) {
+                var formatted = h.replace(/_/g, ' ').replace(/\b\w/g, function(l) { return l.toUpperCase(); });
+                headerRow.append($('<th>').text(formatted));
+            });
+            thead.append(headerRow);
+
+            data.slice(0, maxRows).forEach(function(row) {
+                var tr = $('<tr>');
+                headers.forEach(function(h) {
+                    var val = row[h];
+                    if (val === null || val === undefined) val = '';
+                    var displayVal = String(val);
+                    if (displayVal.length > 40) {
+                        displayVal = displayVal.substring(0, 40) + '...';
+                    }
+                    tr.append($('<td>').attr('title', val).text(displayVal));
+                });
+                tbody.append(tr);
+            });
         },
 
         /**
