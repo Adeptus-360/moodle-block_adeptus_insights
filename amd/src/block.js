@@ -68,6 +68,10 @@ define([
         this.selectedCategory = '';
         this.availableCategories = [];
 
+        // Report selector state (for embedded mode)
+        this.selectedReportSlug = this.config.defaultReport || '';
+        this.selectedReportSource = '';
+
         // Cache settings
         this.cacheKey = 'adeptus_block_reports_' + this.blockId;
         this.cacheTTL = 5 * 60 * 1000; // 5 minutes
@@ -178,7 +182,25 @@ define([
             this.container.on('change', '.category-filter-select', function() {
                 self.selectedCategory = $(this).val();
                 self.listCurrentPage = 1; // Reset to first page
-                self.renderReports();
+                // For embedded mode, update the report selector based on new category
+                if (self.config.displayMode === 'embedded') {
+                    self.populateReportSelector();
+                } else {
+                    self.renderReports();
+                }
+            });
+
+            // Report selector change (for embedded mode).
+            this.container.on('change', '.report-selector-select', function() {
+                var selectedValue = $(this).val();
+                if (selectedValue) {
+                    var parts = selectedValue.split('::');
+                    var slug = parts[0];
+                    var source = parts[1] || 'wizard';
+                    self.selectedReportSlug = slug;
+                    self.selectedReportSource = source;
+                    self.loadEmbeddedReport(slug, source);
+                }
             });
 
             // Preload report data on hover (300ms delay to avoid unnecessary loads).
@@ -546,6 +568,60 @@ define([
         },
 
         /**
+         * Populate the report selector dropdown (for embedded mode).
+         * Filters reports based on selected category.
+         */
+        populateReportSelector: function() {
+            var self = this;
+            var select = this.container.find('.report-selector-select');
+
+            if (!select.length) {
+                return;
+            }
+
+            // Get filtered reports based on category
+            var reports = this.filterReports();
+
+            // Clear existing options except first
+            select.find('option:not(:first)').remove();
+
+            // Add report options
+            reports.forEach(function(report) {
+                var reportName = report.name || report.title || report.display_name || report.slug || 'Untitled';
+                var value = report.slug + '::' + report.source;
+                var categoryLabel = report.category_info ? ' [' + report.category_info.name + ']' : '';
+                var selected = (self.selectedReportSlug === report.slug) ? ' selected' : '';
+                select.append('<option value="' + value + '"' + selected + '>' + reportName + categoryLabel + '</option>');
+            });
+
+            // If we have a default report configured and it's in the list, select it
+            if (this.selectedReportSlug && !select.val()) {
+                var defaultOption = select.find('option[value^="' + this.selectedReportSlug + '::"]');
+                if (defaultOption.length) {
+                    defaultOption.prop('selected', true);
+                }
+            }
+
+            // If no report selected and we have reports, auto-select the first one
+            if (!select.val() && reports.length > 0) {
+                var firstReport = reports[0];
+                var firstValue = firstReport.slug + '::' + firstReport.source;
+                select.val(firstValue);
+                this.selectedReportSlug = firstReport.slug;
+                this.selectedReportSource = firstReport.source;
+                // Load the first report
+                this.loadEmbeddedReport(firstReport.slug, firstReport.source);
+            } else if (select.val()) {
+                // A report is selected, load it
+                var parts = select.val().split('::');
+                this.loadEmbeddedReport(parts[0], parts[1] || 'wizard');
+            } else {
+                // No reports available
+                this.showEmpty();
+            }
+        },
+
+        /**
          * Filter reports based on configuration and selected category.
          *
          * @return {Array}
@@ -667,23 +743,19 @@ define([
          * @param {Array} reports
          */
         renderEmbedded: function(reports) {
-            if (reports.length === 0) {
-                this.showEmpty();
-                return;
-            }
-
-            // For embedded mode, show the first report.
-            var report = reports[0];
-            var reportName = report.name || report.title || report.display_name || report.slug || 'Report';
-            this.container.find('.report-name').text(reportName);
-
-            // Store current embedded report
-            this.embeddedReport = report;
+            // Initialize embedded report state
+            this.embeddedReport = null;
             this.embeddedData = null;
             this.embeddedChartInstance = null;
 
-            // Load and render the report data.
-            this.loadEmbeddedReport(report.slug, report.source);
+            // Populate the report selector dropdown
+            // This will also auto-load the first/default report
+            this.populateReportSelector();
+
+            // Hide loading state if no reports
+            if (this.reports.length === 0) {
+                this.showEmpty();
+            }
         },
 
         /**

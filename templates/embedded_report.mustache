@@ -44,12 +44,23 @@
      data-context-id="{{context_id}}">
 
     {{! Toolbar }}
-    <div class="block-adeptus-toolbar">
-        <div class="block-adeptus-category-filter">
-            <select class="form-select form-select-sm category-filter-select" aria-label="Filter by category">
-                <option value="">All Categories</option>
-                {{! Options will be populated by JavaScript }}
-            </select>
+    <div class="block-adeptus-toolbar embedded-toolbar">
+        <div class="block-adeptus-filters d-flex gap-2 flex-grow-1">
+            {{! Category filter }}
+            <div class="block-adeptus-category-filter">
+                <select class="form-select form-select-sm category-filter-select" aria-label="Filter by category">
+                    <option value="">All Categories</option>
+                    {{! Options will be populated by JavaScript }}
+                </select>
+            </div>
+
+            {{! Report selector - searchable dropdown for embedded mode }}
+            <div class="block-adeptus-report-selector flex-grow-1">
+                <select class="form-select form-select-sm report-selector-select" aria-label="Select report">
+                    <option value="">-- Select a Report --</option>
+                    {{! Options will be populated by JavaScript based on category filter }}
+                </select>
+            </div>
         </div>
 
         <div class="block-adeptus-toolbar-actions">
