@@ -87,6 +87,10 @@ define([
         this.preloadTimeout = null;
         this.preloadingSlug = null;
 
+        // Tabs mode state (per-pane state for view toggle, pagination, chart)
+        this.tabPaneStates = {};
+        this.tabChartInstances = {};
+
         this.init();
     };
 
@@ -338,6 +342,85 @@ define([
                 e.preventDefault();
                 var format = $(this).data('format');
                 self.exportEmbeddedReport(format);
+            });
+
+            // Tabs mode - View toggle (Table/Chart).
+            this.container.on('click', '.tab-view-toggle-btn', function(e) {
+                e.preventDefault();
+                var pane = $(this).closest('.tab-pane');
+                var view = $(this).data('view');
+                self.switchTabView(pane, view);
+            });
+
+            // Tabs mode - Table pagination.
+            this.container.on('click', '.tab-pagination-prev', function(e) {
+                e.preventDefault();
+                var pane = $(this).closest('.tab-pane');
+                var tabId = pane.attr('id');
+                var state = self.tabPaneStates[tabId];
+                if (state && state.tablePage > 1) {
+                    state.tablePage--;
+                    self.renderTabTablePage(pane, state);
+                }
+            });
+
+            this.container.on('click', '.tab-pagination-next', function(e) {
+                e.preventDefault();
+                var pane = $(this).closest('.tab-pane');
+                var tabId = pane.attr('id');
+                var state = self.tabPaneStates[tabId];
+                if (state) {
+                    var totalPages = Math.ceil(state.data.length / state.rowsPerPage);
+                    if (state.tablePage < totalPages) {
+                        state.tablePage++;
+                        self.renderTabTablePage(pane, state);
+                    }
+                }
+            });
+
+            // Tabs mode - Chart type change.
+            this.container.on('change', '.tab-chart-type', function() {
+                var pane = $(this).closest('.tab-pane');
+                var tabId = pane.attr('id');
+                var state = self.tabPaneStates[tabId];
+                if (state) {
+                    state.chartType = $(this).val();
+                    self.renderTabChart(pane, state);
+                }
+            });
+
+            // Tabs mode - X-Axis change.
+            this.container.on('change', '.tab-chart-x-axis', function() {
+                var pane = $(this).closest('.tab-pane');
+                var tabId = pane.attr('id');
+                var state = self.tabPaneStates[tabId];
+                if (state) {
+                    state.xAxis = $(this).val();
+                    self.renderTabChart(pane, state);
+                }
+            });
+
+            // Tabs mode - Y-Axis change.
+            this.container.on('change', '.tab-chart-y-axis', function() {
+                var pane = $(this).closest('.tab-pane');
+                var tabId = pane.attr('id');
+                var state = self.tabPaneStates[tabId];
+                if (state) {
+                    state.yAxis = $(this).val();
+                    self.renderTabChart(pane, state);
+                }
+            });
+
+            // Tabs mode - Export.
+            this.container.on('click', '.tab-export', function(e) {
+                e.preventDefault();
+                var pane = $(this).closest('.tab-pane');
+                var tabId = pane.attr('id');
+                var state = self.tabPaneStates[tabId];
+                var format = $(this).data('format');
+                if (state) {
+                    self.exportTabReport(state, format);
+                }
             });
 
             // Preload report data on hover (300ms delay to avoid unnecessary loads).
@@ -634,8 +717,10 @@ define([
                 return;
             }
 
-            // Extract and populate category filter
-            this.populateCategoryFilter();
+            // Extract and populate category filter (only for modes that use it)
+            if (mode === 'embedded' || mode === 'links') {
+                this.populateCategoryFilter();
+            }
 
             // Filter reports based on selected category
             var reports = this.filterReports();
@@ -645,10 +730,14 @@ define([
                     this.renderEmbedded(reports);
                     break;
                 case 'kpi':
-                    this.renderKpi(reports);
+                    // For KPI mode, use specifically selected reports if configured
+                    var kpiReports = this.getSelectedReportsForMode('kpi', reports);
+                    this.renderKpi(kpiReports);
                     break;
                 case 'tabs':
-                    this.renderTabs(reports);
+                    // For Tabs mode, use specifically selected reports if configured
+                    var tabsReports = this.getSelectedReportsForMode('tabs', reports);
+                    this.renderTabs(tabsReports);
                     break;
                 case 'links':
                 default:
@@ -658,6 +747,43 @@ define([
 
             this.hideLoading();
             this.updateTimestamp();
+        },
+
+        /**
+         * Get reports filtered by the selected reports configuration for a specific mode.
+         *
+         * @param {string} mode - 'kpi' or 'tabs'
+         * @param {Array} allReports - All available reports
+         * @return {Array} Filtered reports in configured order
+         */
+        getSelectedReportsForMode: function(mode, allReports) {
+            var selectedConfig = [];
+
+            if (mode === 'kpi' && this.config.kpiSelectedReports && this.config.kpiSelectedReports.length > 0) {
+                selectedConfig = this.config.kpiSelectedReports;
+            } else if (mode === 'tabs' && this.config.tabsSelectedReports && this.config.tabsSelectedReports.length > 0) {
+                selectedConfig = this.config.tabsSelectedReports;
+            }
+
+            // If no specific reports configured, return all reports
+            if (selectedConfig.length === 0) {
+                return allReports;
+            }
+
+            // Filter and order reports according to selection
+            var result = [];
+            selectedConfig.forEach(function(item) {
+                var slug = item.slug || item;
+                var source = item.source || 'wizard';
+                var report = allReports.find(function(r) {
+                    return r.slug === slug && (r.source === source || !item.source);
+                });
+                if (report) {
+                    result.push(report);
+                }
+            });
+
+            return result;
         },
 
         /**
@@ -1691,14 +1817,14 @@ define([
         },
 
         /**
-         * Render tab content with report data.
+         * Render tab content with report data - consistent with embedded/modal design.
          *
          * @param {jQuery} pane
          * @param {Object} report
          * @param {Array} data
          */
         renderTabContent: function(pane, report, data) {
-            var self = this;
+            var tabId = pane.attr('id');
             pane.find('.tab-pane-loading').addClass('d-none');
             var contentArea = pane.find('.tab-pane-content');
 
@@ -1708,47 +1834,205 @@ define([
                 return;
             }
 
-            // Create content HTML
-            var html = '';
+            // Detect headers and numeric columns
+            var headers = Object.keys(data[0]);
+            var numericCols = this.detectNumericColumns(data, headers);
 
-            // Chart container
-            if (this.config.showChart) {
-                html += '<div class="tab-chart-container" style="height: ' + (this.config.chartHeight || 200) + 'px;">' +
-                    '<canvas class="tab-chart"></canvas></div>';
-            }
+            // Initialize state for this tab pane
+            var state = {
+                data: data,
+                report: report,
+                headers: headers,
+                numericCols: numericCols,
+                currentView: 'table',
+                tablePage: 1,
+                rowsPerPage: 25,
+                chartType: 'bar',
+                xAxis: headers[0],
+                yAxis: numericCols.length > 0 ? numericCols[numericCols.length - 1] : headers[headers.length - 1]
+            };
+            this.tabPaneStates[tabId] = state;
 
-            // Table container
-            if (this.config.showTable) {
-                html += '<div class="tab-table-container mt-2"><div class="table-responsive">' +
-                    '<table class="table table-sm table-striped"><thead></thead><tbody></tbody></table>' +
-                    '</div></div>';
-            }
+            // Show content area
+            contentArea.removeClass('d-none');
 
-            contentArea.html(html).removeClass('d-none');
+            // Update meta bar
+            this.updateTabMetaBar(pane, report, data);
 
-            // Render chart
-            if (this.config.showChart) {
-                this.renderTabChart(pane, report, data);
-            }
+            // Populate chart axis selectors
+            this.populateTabChartControls(pane, state);
 
-            // Render table
-            if (this.config.showTable) {
-                this.renderTabTable(pane, data);
-            }
+            // Render table (default view)
+            this.renderTabTablePage(pane, state);
+
+            // Reset view toggle to table
+            pane.find('.tab-view-toggle-btn').removeClass('active');
+            pane.find('.tab-view-toggle-btn[data-view="table"]').addClass('active');
+            pane.find('.tab-table-view').removeClass('d-none');
+            pane.find('.tab-chart-view').addClass('d-none');
         },
 
         /**
-         * Render chart in tab pane.
+         * Update tab meta bar with report info.
          *
          * @param {jQuery} pane
          * @param {Object} report
          * @param {Array} data
          */
-        renderTabChart: function(pane, report, data) {
+        updateTabMetaBar: function(pane, report, data) {
+            // Category badge
+            var category = report.category || report.category_name || '';
+            var categoryBadge = pane.find('.report-category');
+            if (category) {
+                categoryBadge.text(category).removeClass('d-none');
+                // Add category color if available
+                if (report.category_color) {
+                    categoryBadge.css('background-color', report.category_color);
+                } else {
+                    categoryBadge.addClass('bg-primary');
+                }
+            } else {
+                categoryBadge.addClass('d-none');
+            }
+
+            // Row count
+            pane.find('.row-count-num').text(data.length);
+
+            // Report date
+            var dateStr = report.updated_at || report.created_at || '';
+            if (dateStr) {
+                var date = new Date(dateStr);
+                pane.find('.report-date').text(date.toLocaleDateString());
+            }
+        },
+
+        /**
+         * Populate chart control selectors for a tab.
+         *
+         * @param {jQuery} pane
+         * @param {Object} state
+         */
+        populateTabChartControls: function(pane, state) {
+            var xAxisSelect = pane.find('.tab-chart-x-axis');
+            var yAxisSelect = pane.find('.tab-chart-y-axis');
+
+            xAxisSelect.empty();
+            yAxisSelect.empty();
+
+            state.headers.forEach(function(header) {
+                var formatted = header.replace(/_/g, ' ').replace(/\b\w/g, function(l) { return l.toUpperCase(); });
+                xAxisSelect.append($('<option>').val(header).text(formatted));
+                yAxisSelect.append($('<option>').val(header).text(formatted));
+            });
+
+            // Set default selections
+            xAxisSelect.val(state.xAxis);
+            yAxisSelect.val(state.yAxis);
+        },
+
+        /**
+         * Switch view in a tab pane (table/chart).
+         *
+         * @param {jQuery} pane
+         * @param {string} view - 'table' or 'chart'
+         */
+        switchTabView: function(pane, view) {
+            var tabId = pane.attr('id');
+            var state = this.tabPaneStates[tabId];
+            if (!state) return;
+
+            state.currentView = view;
+
+            // Update toggle buttons
+            pane.find('.tab-view-toggle-btn').removeClass('active');
+            pane.find('.tab-view-toggle-btn[data-view="' + view + '"]').addClass('active');
+
+            // Show/hide views
+            if (view === 'table') {
+                pane.find('.tab-table-view').removeClass('d-none');
+                pane.find('.tab-chart-view').addClass('d-none');
+            } else {
+                pane.find('.tab-table-view').addClass('d-none');
+                pane.find('.tab-chart-view').removeClass('d-none');
+                // Render chart if not already rendered
+                this.renderTabChart(pane, state);
+            }
+        },
+
+        /**
+         * Render table page in tab pane with pagination.
+         *
+         * @param {jQuery} pane
+         * @param {Object} state
+         */
+        renderTabTablePage: function(pane, state) {
+            var table = pane.find('.tab-table');
+            var thead = table.find('thead');
+            var tbody = table.find('tbody');
+            var data = state.data;
+            var headers = state.headers;
+
+            thead.empty();
+            tbody.empty();
+
+            // Build header row
+            var headerRow = $('<tr>');
+            headers.forEach(function(h) {
+                var formatted = h.replace(/_/g, ' ').replace(/\b\w/g, function(l) { return l.toUpperCase(); });
+                headerRow.append($('<th>').text(formatted));
+            });
+            thead.append(headerRow);
+
+            // Calculate pagination
+            var totalRows = data.length;
+            var totalPages = Math.ceil(totalRows / state.rowsPerPage);
+            var startIndex = (state.tablePage - 1) * state.rowsPerPage;
+            var endIndex = Math.min(startIndex + state.rowsPerPage, totalRows);
+            var pageData = data.slice(startIndex, endIndex);
+
+            // Render rows
+            pageData.forEach(function(row) {
+                var tr = $('<tr>');
+                headers.forEach(function(h) {
+                    var val = row[h];
+                    if (val === null || val === undefined) val = '';
+                    var displayVal = String(val);
+                    if (displayVal.length > 50) {
+                        displayVal = displayVal.substring(0, 50) + '...';
+                    }
+                    tr.append($('<td>').attr('title', val).text(displayVal));
+                });
+                tbody.append(tr);
+            });
+
+            // Update pagination info
+            var showingText = 'Showing ' + (startIndex + 1) + '-' + endIndex + ' of ' + totalRows;
+            pane.find('.row-count').text(showingText);
+            pane.find('.tab-pagination-info').text('Page ' + state.tablePage + ' of ' + totalPages);
+
+            // Update pagination buttons
+            pane.find('.tab-pagination-prev').prop('disabled', state.tablePage <= 1);
+            pane.find('.tab-pagination-next').prop('disabled', state.tablePage >= totalPages);
+
+            // Show/hide pagination
+            if (totalPages > 1) {
+                pane.find('.tab-table-pagination').removeClass('d-none');
+            } else {
+                pane.find('.tab-table-pagination').addClass('d-none');
+            }
+        },
+
+        /**
+         * Render chart in tab pane with current settings.
+         *
+         * @param {jQuery} pane
+         * @param {Object} state
+         */
+        renderTabChart: function(pane, state) {
             var tabId = pane.attr('id');
             var canvas = pane.find('.tab-chart')[0];
 
-            if (!canvas || !data || data.length === 0) {
+            if (!canvas || !state.data || state.data.length === 0) {
                 return;
             }
 
@@ -1757,46 +2041,52 @@ define([
                 this.tabChartInstances[tabId].destroy();
             }
 
-            var headers = Object.keys(data[0]);
-            var numericCols = this.detectNumericColumns(data, headers);
+            var chartType = state.chartType;
+            var xAxis = state.xAxis;
+            var yAxis = state.yAxis;
+            var data = state.data;
 
-            var labelKey = headers[0];
-            var valueKey = numericCols.length > 0 ? numericCols[numericCols.length - 1] : headers[headers.length - 1];
-            var valueKeyFormatted = valueKey.replace(/_/g, ' ').replace(/\b\w/g, function(l) { return l.toUpperCase(); });
-
-            // Limit data
-            var chartData = data.slice(0, 15);
+            // Limit data for chart
+            var chartData = data.slice(0, 20);
             var labels = chartData.map(function(row) {
-                var label = row[labelKey];
+                var label = row[xAxis];
                 if (label === null || label === undefined) return 'Unknown';
                 var labelStr = String(label);
-                return labelStr.length > 15 ? labelStr.substring(0, 15) + '...' : labelStr;
+                return labelStr.length > 20 ? labelStr.substring(0, 20) + '...' : labelStr;
             });
             var values = chartData.map(function(row) {
-                return parseFloat(row[valueKey]) || 0;
+                return parseFloat(row[yAxis]) || 0;
             });
 
-            var colors = this.generateChartColors(values.length, 'bar');
+            var colors = this.generateChartColors(values.length, chartType);
+            var yAxisFormatted = yAxis.replace(/_/g, ' ').replace(/\b\w/g, function(l) { return l.toUpperCase(); });
 
             var config = {
-                type: 'bar',
+                type: chartType,
                 data: {
                     labels: labels,
                     datasets: [{
-                        label: valueKeyFormatted,
+                        label: yAxisFormatted,
                         data: values,
-                        backgroundColor: colors[0],
-                        borderColor: colors[0].replace('0.7', '1'),
-                        borderWidth: 1
+                        backgroundColor: chartType === 'pie' || chartType === 'doughnut' ? colors : colors[0],
+                        borderColor: chartType === 'line' ? colors[0] : (chartType === 'pie' || chartType === 'doughnut' ? '#fff' : colors[0]),
+                        borderWidth: chartType === 'pie' || chartType === 'doughnut' ? 2 : 1,
+                        fill: chartType === 'line' ? false : undefined,
+                        tension: chartType === 'line' ? 0.1 : undefined
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
+                    plugins: {
+                        legend: {
+                            display: chartType === 'pie' || chartType === 'doughnut',
+                            position: 'right'
+                        }
+                    },
+                    scales: chartType === 'pie' || chartType === 'doughnut' ? {} : {
                         y: { beginAtZero: true },
-                        x: { display: data.length <= 8 }
+                        x: { display: data.length <= 10 }
                     }
                 }
             };
@@ -1812,7 +2102,51 @@ define([
         },
 
         /**
-         * Render table in tab pane.
+         * Export report data from a tab.
+         *
+         * @param {Object} state - Tab pane state
+         * @param {string} format - Export format (csv)
+         */
+        exportTabReport: function(state, format) {
+            if (!state || !state.data || state.data.length === 0) {
+                return;
+            }
+
+            if (format === 'csv') {
+                var headers = state.headers;
+                var csvRows = [];
+
+                // Header row
+                csvRows.push(headers.map(function(h) {
+                    return '"' + h.replace(/"/g, '""') + '"';
+                }).join(','));
+
+                // Data rows
+                state.data.forEach(function(row) {
+                    var rowData = headers.map(function(h) {
+                        var val = row[h];
+                        if (val === null || val === undefined) val = '';
+                        return '"' + String(val).replace(/"/g, '""') + '"';
+                    });
+                    csvRows.push(rowData.join(','));
+                });
+
+                var csvContent = csvRows.join('\n');
+                var blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                var url = URL.createObjectURL(blob);
+                var link = document.createElement('a');
+                var reportName = state.report.name || state.report.slug || 'report';
+                link.href = url;
+                link.download = reportName.replace(/[^a-z0-9]/gi, '_') + '.csv';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            }
+        },
+
+        /**
+         * Render table in tab pane (legacy fallback).
          *
          * @param {jQuery} pane
          * @param {Array} data

@@ -35,7 +35,10 @@ class block_adeptus_insights_edit_form extends block_edit_form {
      * @param MoodleQuickForm $mform
      */
     protected function specific_definition($mform) {
-        global $CFG, $DB;
+        global $CFG, $DB, $PAGE;
+
+        // Initialize the report selector JavaScript.
+        $this->init_report_selector_js();
 
         // =====================================
         // GENERAL SETTINGS
@@ -131,6 +134,40 @@ class block_adeptus_insights_edit_form extends block_edit_form {
         $mform->addElement('select', 'config_kpi_columns', get_string('configkpicolumns', 'block_adeptus_insights'), $kpicolumns);
         $mform->setDefault('config_kpi_columns', 2);
         $mform->hideIf('config_kpi_columns', 'config_display_mode', 'neq', 'kpi');
+
+        // KPI report selection (for KPI mode).
+        $mform->addElement('static', 'config_kpi_reports_label', '',
+            '<div class="alert alert-info small">' .
+            '<i class="fa fa-info-circle"></i> ' .
+            get_string('configkpireports_desc', 'block_adeptus_insights') .
+            '</div>');
+        $mform->hideIf('config_kpi_reports_label', 'config_display_mode', 'neq', 'kpi');
+
+        // KPI selected reports (stored as JSON).
+        $mform->addElement('textarea', 'config_kpi_selected_reports', get_string('configkpireports', 'block_adeptus_insights'),
+            ['rows' => 4, 'class' => 'kpi-reports-selector d-none']);
+        $mform->setType('config_kpi_selected_reports', PARAM_RAW);
+        $mform->hideIf('config_kpi_selected_reports', 'config_display_mode', 'neq', 'kpi');
+
+        // KPI report selector UI (rendered via JavaScript).
+        $mform->addElement('html', '<div id="kpi-report-selector-container" class="kpi-report-selector-ui mb-3" style="display:none;"></div>');
+
+        // Tabs report selection (for tabs mode).
+        $mform->addElement('static', 'config_tabs_reports_label', '',
+            '<div class="alert alert-info small">' .
+            '<i class="fa fa-info-circle"></i> ' .
+            get_string('configtabsreports_desc', 'block_adeptus_insights') .
+            '</div>');
+        $mform->hideIf('config_tabs_reports_label', 'config_display_mode', 'neq', 'tabs');
+
+        // Tabs selected reports (stored as JSON).
+        $mform->addElement('textarea', 'config_tabs_selected_reports', get_string('configtabsreports', 'block_adeptus_insights'),
+            ['rows' => 4, 'class' => 'tabs-reports-selector d-none']);
+        $mform->setType('config_tabs_selected_reports', PARAM_RAW);
+        $mform->hideIf('config_tabs_selected_reports', 'config_display_mode', 'neq', 'tabs');
+
+        // Tabs report selector UI (rendered via JavaScript).
+        $mform->addElement('html', '<div id="tabs-report-selector-container" class="tabs-report-selector-ui mb-3" style="display:none;"></div>');
 
         // Max link items (for links mode).
         $maxitems = [5 => '5', 10 => '10', 15 => '15', 20 => '20'];
@@ -239,6 +276,29 @@ class block_adeptus_insights_edit_form extends block_edit_form {
         }
 
         return $categories;
+    }
+
+    /**
+     * Initialize the JavaScript for the report selector UI.
+     */
+    private function init_report_selector_js() {
+        global $CFG, $PAGE;
+
+        // Get API key from parent plugin.
+        $apikey = '';
+        try {
+            require_once($CFG->dirroot . '/report/adeptus_insights/classes/installation_manager.php');
+            $installationmanager = new \report_adeptus_insights\installation_manager();
+            $apikey = $installationmanager->get_api_key();
+        } catch (\Exception $e) {
+            debugging('Failed to get API key for report selector: ' . $e->getMessage(), DEBUG_DEVELOPER);
+        }
+
+        $PAGE->requires->js_call_amd(
+            'block_adeptus_insights/edit_form',
+            'init',
+            [['apiKey' => $apikey]]
+        );
     }
 
     /**

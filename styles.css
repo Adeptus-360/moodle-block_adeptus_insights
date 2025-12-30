@@ -1156,17 +1156,202 @@
     padding: 2rem;
 }
 
-.tab-chart-container {
+/* Tab pane content - consistent with embedded/modal design */
+.block-adeptus-tabs .tab-pane-content {
+    padding: 0.5rem 0;
+}
+
+/* Tab meta bar */
+.block-adeptus-tabs .tab-meta-bar {
+    padding-bottom: 0.5rem;
+    margin-bottom: 0.5rem;
+    border-bottom: 1px solid var(--adeptus-border);
+}
+
+.block-adeptus-tabs .tab-meta-bar .report-badges {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.block-adeptus-tabs .tab-meta-bar .report-badges .badge {
+    font-size: 0.7rem;
+    font-weight: 500;
+    padding: 0.3em 0.6em;
+}
+
+/* Ensure category badge has readable text */
+.block-adeptus-tabs .tab-meta-bar .report-category {
+    background-color: var(--adeptus-primary, #0d6efd);
+    color: #fff !important;
+}
+
+.block-adeptus-tabs .tab-meta-bar .report-category[style*="background-color"] {
+    color: #fff !important;
+}
+
+.block-adeptus-tabs .tab-meta-bar .report-date {
+    font-size: 0.75rem;
+}
+
+/* Tab action bar - mirrors embedded/modal design */
+.block-adeptus-tabs .tab-action-bar {
+    padding: 0.5rem 0;
+    margin-bottom: 0.5rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.block-adeptus-tabs .tab-action-bar .view-toggle {
+    display: inline-flex;
+}
+
+.block-adeptus-tabs .tab-action-bar .view-toggle .tab-view-toggle-btn {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    color: #495057;
+    padding: 0.35rem 0.75rem;
+    font-size: 13px;
+    transition: all 0.2s ease;
+    margin: 0;
+}
+
+.block-adeptus-tabs .tab-action-bar .view-toggle .tab-view-toggle-btn:first-child {
+    border-radius: 6px 0 0 6px;
+    border-right: none;
+}
+
+.block-adeptus-tabs .tab-action-bar .view-toggle .tab-view-toggle-btn:last-child {
+    border-radius: 0 6px 6px 0;
+}
+
+.block-adeptus-tabs .tab-action-bar .view-toggle .tab-view-toggle-btn:hover {
+    background: #e9ecef;
+}
+
+.block-adeptus-tabs .tab-action-bar .view-toggle .tab-view-toggle-btn.active {
+    background: #2563eb;
+    border-color: #2563eb;
+    color: white;
+}
+
+.block-adeptus-tabs .tab-action-bar .view-toggle .tab-view-toggle-btn i {
+    margin-right: 5px;
+}
+
+.block-adeptus-tabs .tab-action-bar .export-buttons .tab-export {
+    font-size: 0.8125rem;
+    padding: 0.35rem 0.75rem;
+}
+
+/* Tab table view */
+.block-adeptus-tabs .tab-table-view {
     position: relative;
 }
 
-.tab-chart-container canvas {
-    max-width: 100%;
+.block-adeptus-tabs .tab-table-container .table-responsive {
+    max-height: 350px;
+    overflow-y: auto;
 }
 
-.tab-table-container .table {
+.block-adeptus-tabs .tab-table {
     font-size: 0.8125rem;
     margin-bottom: 0;
+}
+
+.block-adeptus-tabs .tab-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: #f8f9fa;
+}
+
+.block-adeptus-tabs .tab-table th {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+    color: #6b7280;
+    padding: 0.5rem 0.75rem;
+    white-space: nowrap;
+    border-bottom: 2px solid var(--adeptus-border);
+}
+
+.block-adeptus-tabs .tab-table td {
+    padding: 0.5rem 0.75rem;
+    vertical-align: middle;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.block-adeptus-tabs .tab-table-footer {
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--adeptus-border);
+}
+
+.block-adeptus-tabs .tab-table-pagination {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.block-adeptus-tabs .tab-table-pagination .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8125rem;
+}
+
+.block-adeptus-tabs .tab-pagination-info {
+    min-width: 80px;
+    text-align: center;
+}
+
+/* Tab chart view */
+.block-adeptus-tabs .tab-chart-view {
+    position: relative;
+}
+
+.block-adeptus-tabs .tab-chart-view .chart-controls-wrapper {
+    padding: 0.5rem 0.75rem;
+    background-color: var(--adeptus-light);
+    border-radius: var(--adeptus-radius);
+    margin-bottom: 0.5rem;
+}
+
+.block-adeptus-tabs .tab-chart-view .chart-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.block-adeptus-tabs .tab-chart-view .chart-controls .control-group {
+    flex: 1;
+    min-width: 100px;
+    max-width: 180px;
+}
+
+.block-adeptus-tabs .tab-chart-view .chart-controls .form-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+    color: #6b7280;
+}
+
+.block-adeptus-tabs .tab-chart-view .chart-controls .form-select {
+    font-size: 0.8125rem;
+    padding: 0.25rem 0.5rem;
+}
+
+.block-adeptus-tabs .tab-chart-container {
+    position: relative;
+    min-height: 200px;
+}
+
+.block-adeptus-tabs .tab-chart-container canvas {
+    max-width: 100%;
 }
 
 /* ==========================================================================
@@ -1702,6 +1887,61 @@
     .block-adeptus-kpi-grid.kpi-cols-4 {
         grid-template-columns: 1fr;
     }
+
+    /* Tabs mode adjustments for narrow containers */
+    .block-adeptus-tabs .tab-action-bar {
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: stretch !important;
+    }
+
+    .block-adeptus-tabs .tab-action-bar .view-toggle {
+        width: 100%;
+        display: flex;
+    }
+
+    .block-adeptus-tabs .tab-action-bar .view-toggle .tab-view-toggle-btn {
+        flex: 1;
+    }
+
+    .block-adeptus-tabs .tab-action-bar .export-buttons {
+        width: 100%;
+    }
+
+    .block-adeptus-tabs .tab-action-bar .export-buttons .tab-export {
+        width: 100%;
+    }
+
+    .block-adeptus-tabs .tab-meta-bar {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 0.25rem;
+    }
+
+    .block-adeptus-tabs .tab-chart-view .chart-controls {
+        flex-direction: column !important;
+    }
+
+    .block-adeptus-tabs .tab-chart-view .chart-controls .control-group {
+        width: 100%;
+        max-width: none;
+    }
+
+    .block-adeptus-tabs .tab-table-footer {
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: stretch !important;
+    }
+
+    .block-adeptus-tabs .tab-table-pagination {
+        justify-content: center;
+    }
+
+    /* Tab navigation on narrow screens */
+    .block-adeptus-tab-nav .nav-link {
+        padding: 0.4rem 0.75rem;
+        font-size: 0.75rem;
+    }
 }
 
 /* Medium container (350px - 500px) */
@@ -1720,6 +1960,11 @@
 
     /* Chart controls on two rows */
     .chart-controls .control-group {
+        min-width: 45%;
+    }
+
+    /* Tabs mode - chart controls on two rows */
+    .block-adeptus-tabs .tab-chart-view .chart-controls .control-group {
         min-width: 45%;
     }
 }
@@ -1815,4 +2060,65 @@
         display: block !important;
         opacity: 1 !important;
     }
+}
+
+/* ==========================================================================
+   Edit Form - Report Selector UI
+   ========================================================================== */
+
+.report-selector-ui {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    padding: 1rem;
+}
+
+.report-selector-header {
+    border-bottom: 1px solid #dee2e6;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.report-selector-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.report-selector-list .list-group-item {
+    transition: background-color 0.15s ease-in-out;
+}
+
+.report-selector-list .list-group-item:hover {
+    background-color: #e9ecef;
+}
+
+.report-selector-list .list-group-item.dragging {
+    opacity: 0.5;
+    background-color: #dee2e6;
+}
+
+.report-selector-list .drag-handle {
+    cursor: move;
+    padding: 0.25rem;
+}
+
+.report-selector-list .drag-handle:hover i {
+    color: #495057;
+}
+
+.report-selector-empty {
+    background: #fff;
+    border: 2px dashed #dee2e6;
+    border-radius: 0.375rem;
+}
+
+.kpi-report-selector-ui,
+.tabs-report-selector-ui {
+    margin-top: 0.5rem;
+}
+
+/* Hide textareas that store JSON data */
+.kpi-reports-selector,
+.tabs-reports-selector {
+    display: none !important;
 }

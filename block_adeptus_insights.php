@@ -329,11 +329,31 @@ class block_adeptus_insights extends block_base {
      * @return array
      */
     private function get_js_config() {
+        // Parse selected reports for KPI mode.
+        $kpiselectedreports = [];
+        if (!empty($this->config->kpi_selected_reports)) {
+            $decoded = json_decode($this->config->kpi_selected_reports, true);
+            if (is_array($decoded)) {
+                $kpiselectedreports = $decoded;
+            }
+        }
+
+        // Parse selected reports for Tabs mode.
+        $tabsselectedreports = [];
+        if (!empty($this->config->tabs_selected_reports)) {
+            $decoded = json_decode($this->config->tabs_selected_reports, true);
+            if (is_array($decoded)) {
+                $tabsselectedreports = $decoded;
+            }
+        }
+
         return [
             'displayMode' => $this->config->display_mode ?? 'links',
             'reportSource' => $this->config->report_source ?? 'all',
             'selectedReports' => $this->config->selected_reports ?? [],
             'reportCategory' => $this->config->report_category ?? '',
+            'kpiSelectedReports' => $kpiselectedreports,
+            'tabsSelectedReports' => $tabsselectedreports,
             'showChart' => $this->config->show_chart ?? true,
             'showTable' => $this->config->show_table ?? true,
             'chartHeight' => $this->config->chart_height ?? 250,
@@ -378,6 +398,16 @@ class block_adeptus_insights extends block_base {
         $data['loading'] = true;
         $data['kpi_columns'] = $this->config->kpi_columns ?? 2;
 
+        // Pass selected reports JSON for the template data attribute.
+        $selectedreports = [];
+        if (!empty($this->config->kpi_selected_reports)) {
+            $decoded = json_decode($this->config->kpi_selected_reports, true);
+            if (is_array($decoded)) {
+                $selectedreports = $decoded;
+            }
+        }
+        $data['selected_reports_json'] = htmlspecialchars(json_encode($selectedreports), ENT_QUOTES, 'UTF-8');
+
         return $OUTPUT->render_from_template('block_adeptus_insights/kpi_grid', $data);
     }
 
@@ -392,6 +422,16 @@ class block_adeptus_insights extends block_base {
 
         $data['is_tabbed'] = true;
         $data['loading'] = true;
+
+        // Pass selected reports JSON for the template data attribute.
+        $selectedreports = [];
+        if (!empty($this->config->tabs_selected_reports)) {
+            $decoded = json_decode($this->config->tabs_selected_reports, true);
+            if (is_array($decoded)) {
+                $selectedreports = $decoded;
+            }
+        }
+        $data['selected_reports_json'] = htmlspecialchars(json_encode($selectedreports), ENT_QUOTES, 'UTF-8');
 
         return $OUTPUT->render_from_template('block_adeptus_insights/report_tabs', $data);
     }

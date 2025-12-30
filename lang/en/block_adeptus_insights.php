@@ -116,8 +116,16 @@ $string['configshowcategorybadges'] = 'Show category badges';
 $string['configshowcategorybadges_desc'] = 'Display category color badges on reports.';
 $string['configkpicolumns'] = 'KPI columns';
 $string['configkpicolumns_desc'] = 'Number of columns for KPI card layout.';
+$string['configkpireports'] = 'KPI reports';
+$string['configkpireports_desc'] = 'Select which reports to display as KPI cards. Drag to reorder.';
+$string['configtabsreports'] = 'Tab reports';
+$string['configtabsreports_desc'] = 'Select which reports to display as tabs. Drag to reorder.';
 $string['configmaxlinkitems'] = 'Max link items';
 $string['configmaxlinkitems_desc'] = 'Maximum number of report links to display.';
+$string['addreport'] = 'Add report';
+$string['removereport'] = 'Remove report';
+$string['noreportsselected'] = 'No reports selected. Click "Add report" to get started.';
+$string['selectareport'] = 'Select a report';
 
 // Block content.
 $string['viewallreports'] = 'View all reports';
