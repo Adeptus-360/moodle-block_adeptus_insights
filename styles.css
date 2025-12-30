@@ -578,6 +578,356 @@
     margin-bottom: 0;
 }
 
+/* Embedded Mode - Modal-style Design */
+
+/* Meta bar in embedded mode */
+.block-adeptus-embedded .embedded-meta-bar {
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--adeptus-border);
+}
+
+.block-adeptus-embedded .report-badges {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.block-adeptus-embedded .report-badges .badge {
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.35em 0.65em;
+}
+
+.block-adeptus-embedded .report-date {
+    font-size: 0.75rem;
+}
+
+/* Action bar with view toggle - matches modal design */
+.block-adeptus-embedded .embedded-action-bar {
+    padding: 0.5rem 0;
+}
+
+.block-adeptus-embedded .view-toggle {
+    display: inline-flex;
+}
+
+.block-adeptus-embedded .view-toggle .embedded-view-toggle-btn {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    color: #495057;
+    padding: 0.35rem 0.75rem;
+    font-size: 13px;
+    transition: all 0.2s ease;
+    margin: 0;
+}
+
+.block-adeptus-embedded .view-toggle .embedded-view-toggle-btn:first-child {
+    border-radius: 6px 0 0 6px;
+    border-right: none;
+}
+
+.block-adeptus-embedded .view-toggle .embedded-view-toggle-btn:last-child {
+    border-radius: 0 6px 6px 0;
+}
+
+.block-adeptus-embedded .view-toggle .embedded-view-toggle-btn:hover {
+    background: #e9ecef;
+}
+
+.block-adeptus-embedded .view-toggle .embedded-view-toggle-btn.active {
+    background: #2563eb;
+    border-color: #2563eb;
+    color: white;
+}
+
+.block-adeptus-embedded .view-toggle .embedded-view-toggle-btn i {
+    margin-right: 5px;
+}
+
+/* Export button styling */
+.block-adeptus-embedded .export-buttons .embedded-export {
+    font-size: 0.8125rem;
+    padding: 0.35rem 0.75rem;
+}
+
+/* Chart controls wrapper - matches modal design */
+.block-adeptus-embedded .chart-controls-wrapper {
+    padding: 0.75rem;
+    background-color: var(--adeptus-light);
+    border-radius: var(--adeptus-radius);
+}
+
+.block-adeptus-embedded .chart-controls {
+    gap: 1rem;
+}
+
+.block-adeptus-embedded .chart-controls .control-group {
+    flex: 1;
+    min-width: 100px;
+    max-width: 180px;
+}
+
+.block-adeptus-embedded .chart-controls .form-label {
+    font-weight: 500;
+    color: var(--adeptus-secondary);
+    margin-bottom: 0.25rem;
+}
+
+.block-adeptus-embedded .chart-controls .form-select {
+    font-size: 0.8125rem;
+}
+
+/* Chart container */
+.block-adeptus-embedded .embedded-chart-container {
+    background-color: #fff;
+    border-radius: var(--adeptus-radius);
+    padding: 0.5rem;
+}
+
+/* Table styles - matches modal table */
+.block-adeptus-embedded .embedded-table-container .table-responsive {
+    max-height: 350px;
+    overflow-y: auto;
+}
+
+.block-adeptus-embedded .embedded-table {
+    font-size: 0.8125rem;
+    margin-bottom: 0;
+}
+
+.block-adeptus-embedded .embedded-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.block-adeptus-embedded .embedded-table th {
+    background-color: var(--adeptus-light);
+    border-top: none;
+    font-weight: 600;
+    white-space: nowrap;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+    color: var(--adeptus-secondary);
+}
+
+.block-adeptus-embedded .embedded-table td {
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Table footer and pagination - matches modal */
+.block-adeptus-embedded .embedded-table-footer {
+    padding: 0.5rem 0;
+    border-top: 1px solid var(--adeptus-border);
+}
+
+.block-adeptus-embedded .embedded-table-pagination {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.block-adeptus-embedded .embedded-table-pagination .btn {
+    padding: 0.2rem 0.5rem;
+    font-size: 0.8125rem;
+}
+
+.block-adeptus-embedded .embedded-pagination-info {
+    font-size: 0.75rem;
+}
+
+/* ==========================================================================
+   Searchable Dropdown
+   ========================================================================== */
+
+.searchable-dropdown {
+    position: relative;
+    width: 100%;
+}
+
+.searchable-dropdown-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0.35rem 0.75rem;
+    font-size: 0.8125rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #212529;
+    background-color: #fff;
+    border: 1px solid var(--adeptus-border);
+    border-radius: var(--adeptus-radius);
+    cursor: pointer;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    text-align: left;
+}
+
+.searchable-dropdown-toggle:hover {
+    border-color: var(--adeptus-primary);
+}
+
+.searchable-dropdown-toggle:focus {
+    border-color: var(--adeptus-primary);
+    box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.15);
+    outline: none;
+}
+
+.searchable-dropdown.open .searchable-dropdown-toggle {
+    border-color: var(--adeptus-primary);
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.searchable-dropdown-text {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #212529;
+}
+
+.searchable-dropdown-arrow {
+    font-size: 0.625rem;
+    color: var(--adeptus-secondary);
+    transition: transform 0.2s ease;
+    margin-left: 0.5rem;
+}
+
+.searchable-dropdown.open .searchable-dropdown-arrow {
+    transform: rotate(180deg);
+}
+
+/* Dropdown menu */
+.searchable-dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 1050;
+    background-color: #fff;
+    border: 1px solid var(--adeptus-primary);
+    border-top: none;
+    border-bottom-left-radius: var(--adeptus-radius);
+    border-bottom-right-radius: var(--adeptus-radius);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    max-height: 300px;
+    overflow: hidden;
+}
+
+.searchable-dropdown.open .searchable-dropdown-menu {
+    display: block;
+}
+
+/* Search input */
+.searchable-dropdown-search {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid var(--adeptus-border);
+    background-color: var(--adeptus-light);
+}
+
+.searchable-dropdown-search i {
+    color: var(--adeptus-secondary);
+    font-size: 0.75rem;
+    margin-right: 0.5rem;
+}
+
+.searchable-dropdown-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-size: 0.8125rem;
+    color: #212529;
+    outline: none;
+}
+
+.searchable-dropdown-input::placeholder {
+    color: #adb5bd;
+}
+
+/* Dropdown list */
+.searchable-dropdown-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 220px;
+    overflow-y: auto;
+}
+
+.searchable-dropdown-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0.75rem;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.searchable-dropdown-item:last-child {
+    border-bottom: none;
+}
+
+.searchable-dropdown-item:hover,
+.searchable-dropdown-item.focused {
+    background-color: #f0f7ff;
+}
+
+.searchable-dropdown-item.selected {
+    background-color: #e8f4fd;
+}
+
+.searchable-dropdown-item.selected .dropdown-item-name {
+    font-weight: 600;
+    color: var(--adeptus-primary);
+}
+
+.dropdown-item-name {
+    flex: 1;
+    font-size: 0.8125rem;
+    color: #212529;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-right: 0.5rem;
+}
+
+.dropdown-item-category {
+    font-size: 0.6875rem;
+    padding: 0.15rem 0.4rem;
+    border-radius: 0.25rem;
+    color: #fff;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* Empty state */
+.searchable-dropdown-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem 1rem;
+    color: var(--adeptus-secondary);
+}
+
+.searchable-dropdown-empty i {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+    opacity: 0.5;
+}
+
+.searchable-dropdown-empty span {
+    font-size: 0.8125rem;
+}
+
 /* ==========================================================================
    KPI Grid Mode
    ========================================================================== */

@@ -72,6 +72,14 @@ define([
         this.selectedReportSlug = this.config.defaultReport || '';
         this.selectedReportSource = '';
 
+        // Embedded mode state (mirrors modal functionality)
+        this.embeddedCurrentView = 'table';
+        this.embeddedTablePage = 1;
+        this.embeddedTableRowsPerPage = 25;
+        this.embeddedChartType = 'bar';
+        this.embeddedXAxis = '';
+        this.embeddedYAxis = '';
+
         // Cache settings
         this.cacheKey = 'adeptus_block_reports_' + this.blockId;
         this.cacheTTL = 5 * 60 * 1000; // 5 minutes
@@ -190,7 +198,7 @@ define([
                 }
             });
 
-            // Report selector change (for embedded mode).
+            // Report selector change (for embedded mode) - hidden select fallback.
             this.container.on('change', '.report-selector-select', function() {
                 var selectedValue = $(this).val();
                 if (selectedValue) {
@@ -199,8 +207,137 @@ define([
                     var source = parts[1] || 'wizard';
                     self.selectedReportSlug = slug;
                     self.selectedReportSource = source;
+                    // Reset embedded state
+                    self.embeddedTablePage = 1;
+                    self.embeddedCurrentView = 'table';
                     self.loadEmbeddedReport(slug, source);
                 }
+            });
+
+            // Searchable dropdown - Toggle open/close.
+            this.container.on('click', '.searchable-dropdown-toggle', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                var dropdown = $(this).closest('.searchable-dropdown');
+                self.toggleSearchableDropdown(dropdown);
+            });
+
+            // Searchable dropdown - Search input.
+            this.container.on('input', '.searchable-dropdown-input', function() {
+                var dropdown = $(this).closest('.searchable-dropdown');
+                var query = $(this).val().toLowerCase().trim();
+                self.filterSearchableDropdown(dropdown, query);
+            });
+
+            // Searchable dropdown - Item selection.
+            this.container.on('click', '.searchable-dropdown-item', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                var dropdown = $(this).closest('.searchable-dropdown');
+                var value = $(this).data('value');
+                var text = $(this).find('.dropdown-item-name').text();
+                self.selectSearchableDropdownItem(dropdown, value, text);
+            });
+
+            // Searchable dropdown - Keyboard navigation.
+            this.container.on('keydown', '.searchable-dropdown-input', function(e) {
+                var dropdown = $(this).closest('.searchable-dropdown');
+                var items = dropdown.find('.searchable-dropdown-item:visible');
+                var focused = dropdown.find('.searchable-dropdown-item.focused');
+
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    if (focused.length === 0) {
+                        items.first().addClass('focused');
+                    } else {
+                        var next = focused.nextAll('.searchable-dropdown-item:visible').first();
+                        if (next.length) {
+                            focused.removeClass('focused');
+                            next.addClass('focused');
+                            self.scrollDropdownItemIntoView(next);
+                        }
+                    }
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    if (focused.length) {
+                        var prev = focused.prevAll('.searchable-dropdown-item:visible').first();
+                        if (prev.length) {
+                            focused.removeClass('focused');
+                            prev.addClass('focused');
+                            self.scrollDropdownItemIntoView(prev);
+                        }
+                    }
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (focused.length) {
+                        focused.trigger('click');
+                    } else if (items.length === 1) {
+                        items.first().trigger('click');
+                    }
+                } else if (e.key === 'Escape') {
+                    self.closeSearchableDropdown(dropdown);
+                }
+            });
+
+            // Close dropdown when clicking outside.
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('.searchable-dropdown').length) {
+                    self.container.find('.searchable-dropdown.open').each(function() {
+                        self.closeSearchableDropdown($(this));
+                    });
+                }
+            });
+
+            // Embedded mode - View toggle (Table/Chart).
+            this.container.on('click', '.embedded-view-toggle-btn', function(e) {
+                e.preventDefault();
+                var view = $(this).data('view');
+                self.switchEmbeddedView(view);
+            });
+
+            // Embedded mode - Table pagination.
+            this.container.on('click', '.embedded-pagination-prev', function(e) {
+                e.preventDefault();
+                if (self.embeddedTablePage > 1) {
+                    self.embeddedTablePage--;
+                    self.renderEmbeddedTablePage();
+                    self.scrollToEmbeddedTableTop();
+                }
+            });
+
+            this.container.on('click', '.embedded-pagination-next', function(e) {
+                e.preventDefault();
+                var totalPages = Math.ceil((self.embeddedData || []).length / self.embeddedTableRowsPerPage);
+                if (self.embeddedTablePage < totalPages) {
+                    self.embeddedTablePage++;
+                    self.renderEmbeddedTablePage();
+                    self.scrollToEmbeddedTableTop();
+                }
+            });
+
+            // Embedded mode - Chart type change.
+            this.container.on('change', '.embedded-chart-type', function() {
+                self.embeddedChartType = $(this).val();
+                self.renderEmbeddedChart();
+            });
+
+            // Embedded mode - X-Axis change.
+            this.container.on('change', '.embedded-chart-x-axis', function() {
+                self.embeddedXAxis = $(this).val();
+                self.renderEmbeddedChart();
+            });
+
+            // Embedded mode - Y-Axis change.
+            this.container.on('change', '.embedded-chart-y-axis', function() {
+                self.embeddedYAxis = $(this).val();
+                self.renderEmbeddedChart();
+            });
+
+            // Embedded mode - Export.
+            this.container.on('click', '.embedded-export', function(e) {
+                e.preventDefault();
+                var format = $(this).data('format');
+                self.exportEmbeddedReport(format);
             });
 
             // Preload report data on hover (300ms delay to avoid unnecessary loads).
@@ -574,6 +711,8 @@ define([
         populateReportSelector: function() {
             var self = this;
             var select = this.container.find('.report-selector-select');
+            var dropdown = this.container.find('.searchable-dropdown');
+            var dropdownList = dropdown.find('.searchable-dropdown-list');
 
             if (!select.length) {
                 return;
@@ -582,16 +721,29 @@ define([
             // Get filtered reports based on category
             var reports = this.filterReports();
 
-            // Clear existing options except first
+            // Clear existing options
             select.find('option:not(:first)').remove();
+            dropdownList.empty();
 
-            // Add report options
+            // Add report options to both hidden select and searchable dropdown
             reports.forEach(function(report) {
                 var reportName = report.name || report.title || report.display_name || report.slug || 'Untitled';
                 var value = report.slug + '::' + report.source;
-                var categoryLabel = report.category_info ? ' [' + report.category_info.name + ']' : '';
+                var categoryInfo = report.category_info || {name: 'General', color: '#6c757d'};
+                var categoryLabel = ' [' + categoryInfo.name + ']';
                 var selected = (self.selectedReportSlug === report.slug) ? ' selected' : '';
+
+                // Hidden select option
                 select.append('<option value="' + value + '"' + selected + '>' + reportName + categoryLabel + '</option>');
+
+                // Searchable dropdown item
+                var itemHtml = '<li class="searchable-dropdown-item" data-value="' + value + '" data-search="' +
+                    reportName.toLowerCase() + ' ' + categoryInfo.name.toLowerCase() + '" role="option">' +
+                    '<span class="dropdown-item-name">' + self.escapeHtml(reportName) + '</span>' +
+                    '<span class="dropdown-item-category" style="background-color: ' + categoryInfo.color + '">' +
+                    self.escapeHtml(categoryInfo.name) + '</span>' +
+                    '</li>';
+                dropdownList.append(itemHtml);
             });
 
             // If we have a default report configured and it's in the list, select it
@@ -606,17 +758,30 @@ define([
             if (!select.val() && reports.length > 0) {
                 var firstReport = reports[0];
                 var firstValue = firstReport.slug + '::' + firstReport.source;
+                var firstName = firstReport.name || firstReport.title || firstReport.display_name || firstReport.slug || 'Untitled';
                 select.val(firstValue);
                 this.selectedReportSlug = firstReport.slug;
                 this.selectedReportSource = firstReport.source;
+                // Update searchable dropdown display
+                dropdown.find('.searchable-dropdown-text').text(firstName);
+                dropdown.find('.searchable-dropdown-item').removeClass('selected');
+                dropdown.find('.searchable-dropdown-item[data-value="' + firstValue + '"]').addClass('selected');
                 // Load the first report
                 this.loadEmbeddedReport(firstReport.slug, firstReport.source);
             } else if (select.val()) {
-                // A report is selected, load it
+                // A report is selected, load it and update display
                 var parts = select.val().split('::');
+                var selectedReport = reports.find(function(r) { return r.slug === parts[0]; });
+                if (selectedReport) {
+                    var selectedName = selectedReport.name || selectedReport.title || selectedReport.display_name || selectedReport.slug || 'Untitled';
+                    dropdown.find('.searchable-dropdown-text').text(selectedName);
+                    dropdown.find('.searchable-dropdown-item').removeClass('selected');
+                    dropdown.find('.searchable-dropdown-item[data-value="' + select.val() + '"]').addClass('selected');
+                }
                 this.loadEmbeddedReport(parts[0], parts[1] || 'wizard');
             } else {
                 // No reports available
+                dropdown.find('.searchable-dropdown-text').text('-- No Reports --');
                 this.showEmpty();
             }
         },
@@ -865,33 +1030,32 @@ define([
                 return;
             }
 
-            // Update report header
-            var reportName = report.name || report.title || report.display_name || report.slug || 'Report';
-            this.container.find('.report-name').text(reportName);
+            // Store data for later use
+            this.embeddedReport = report;
+            this.embeddedData = data;
 
-            // Update category badge
+            // Update meta bar
             var category = report.category_info || {name: 'General', color: '#6c757d'};
             this.container.find('.report-category')
                 .text(category.name)
                 .css('background-color', category.color)
-                .css('color', '#fff')
-                .removeClass('d-none');
+                .css('color', '#fff');
+            this.container.find('.row-count-num').text(data.length);
+            this.container.find('.report-date').text('Updated: ' + new Date().toLocaleTimeString());
 
-            // Render chart if enabled
-            if (this.config.showChart) {
-                this.renderEmbeddedChart(report, data);
-                this.container.find('.block-adeptus-chart-container').removeClass('d-none');
-            } else {
-                this.container.find('.block-adeptus-chart-container').addClass('d-none');
-            }
+            // Populate chart axis selectors
+            this.populateEmbeddedChartControls(data);
 
-            // Render table if enabled
-            if (this.config.showTable) {
-                this.renderEmbeddedTable(data);
-                this.container.find('.block-adeptus-table-container').removeClass('d-none');
-            } else {
-                this.container.find('.block-adeptus-table-container').addClass('d-none');
-            }
+            // Reset to table view
+            this.embeddedCurrentView = 'table';
+            this.embeddedTablePage = 1;
+            this.container.find('.embedded-view-toggle-btn').removeClass('active');
+            this.container.find('.embedded-view-toggle-btn[data-view="table"]').addClass('active');
+            this.container.find('.embedded-table-view').removeClass('d-none');
+            this.container.find('.embedded-chart-view').addClass('d-none');
+
+            // Render table with pagination
+            this.renderEmbeddedTablePage();
 
             contentArea.removeClass('d-none');
             this.hideLoading();
@@ -899,114 +1063,84 @@ define([
         },
 
         /**
-         * Render chart in embedded mode.
+         * Switch between table and chart views in embedded mode.
          *
-         * @param {Object} report
-         * @param {Array} data
+         * @param {string} view - 'table' or 'chart'
          */
-        renderEmbeddedChart: function(report, data) {
-            var self = this;
-            var chartContainer = this.container.find('.block-adeptus-chart-container');
-            var canvas = chartContainer.find('.block-adeptus-chart')[0];
+        switchEmbeddedView: function(view) {
+            this.embeddedCurrentView = view;
 
-            if (!canvas || !data || data.length === 0) {
-                chartContainer.addClass('d-none');
-                return;
-            }
+            // Update toggle buttons
+            this.container.find('.embedded-view-toggle-btn').removeClass('active');
+            this.container.find('.embedded-view-toggle-btn[data-view="' + view + '"]').addClass('active');
 
-            // Destroy existing chart
-            if (this.embeddedChartInstance) {
-                this.embeddedChartInstance.destroy();
-                this.embeddedChartInstance = null;
-            }
-
-            var headers = Object.keys(data[0]);
-            var numericCols = this.detectNumericColumns(data, headers);
-
-            // Auto-detect best columns for chart
-            var labelKey = headers[0]; // First column for labels
-            var valueKey = numericCols.length > 0 ? numericCols[numericCols.length - 1] : headers[headers.length - 1];
-
-            // Format value key for display
-            var valueKeyFormatted = valueKey.replace(/_/g, ' ').replace(/\b\w/g, function(l) { return l.toUpperCase(); });
-
-            // Limit data for chart readability (max 20 items for embedded)
-            var chartData = data.slice(0, 20);
-            var labels = chartData.map(function(row) {
-                var label = row[labelKey];
-                if (label === null || label === undefined) return 'Unknown';
-                var labelStr = String(label);
-                return labelStr.length > 20 ? labelStr.substring(0, 20) + '...' : labelStr;
-            });
-            var values = chartData.map(function(row) {
-                return parseFloat(row[valueKey]) || 0;
-            });
-
-            // Generate colors
-            var colors = this.generateChartColors(values.length, 'bar');
-
-            // Create chart config
-            var config = {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: valueKeyFormatted,
-                        data: values,
-                        backgroundColor: colors[0],
-                        borderColor: colors[0].replace('0.7', '1'),
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        },
-                        x: {
-                            display: data.length <= 10 // Hide labels if too many
-                        }
-                    }
-                }
-            };
-
-            try {
-                this.embeddedChartInstance = new Chart(canvas.getContext('2d'), config);
-                chartContainer.removeClass('d-none');
-            } catch (error) {
-                chartContainer.html(
-                    '<div class="alert alert-warning text-center"><i class="fa fa-exclamation-circle"></i> Could not render chart</div>'
-                );
+            // Show/hide views
+            if (view === 'table') {
+                this.container.find('.embedded-table-view').removeClass('d-none');
+                this.container.find('.embedded-chart-view').addClass('d-none');
+            } else {
+                this.container.find('.embedded-table-view').addClass('d-none');
+                this.container.find('.embedded-chart-view').removeClass('d-none');
+                // Render chart when switching to chart view
+                this.renderEmbeddedChart();
             }
         },
 
         /**
-         * Render data table in embedded mode.
+         * Populate chart control dropdowns for embedded mode.
          *
          * @param {Array} data
          */
-        renderEmbeddedTable: function(data) {
-            var table = this.container.find('.block-adeptus-table');
+        populateEmbeddedChartControls: function(data) {
+            if (!data || data.length === 0) return;
+
+            var headers = Object.keys(data[0]);
+            var numericCols = this.detectNumericColumns(data, headers);
+
+            var xAxisSelect = this.container.find('.embedded-chart-x-axis');
+            var yAxisSelect = this.container.find('.embedded-chart-y-axis');
+
+            xAxisSelect.empty();
+            yAxisSelect.empty();
+
+            // Populate X-axis (all columns)
+            headers.forEach(function(h) {
+                var formatted = h.replace(/_/g, ' ').replace(/\b\w/g, function(l) { return l.toUpperCase(); });
+                xAxisSelect.append('<option value="' + h + '">' + formatted + '</option>');
+            });
+
+            // Populate Y-axis (prefer numeric columns)
+            var yOptions = numericCols.length > 0 ? numericCols : headers;
+            yOptions.forEach(function(h) {
+                var formatted = h.replace(/_/g, ' ').replace(/\b\w/g, function(l) { return l.toUpperCase(); });
+                yAxisSelect.append('<option value="' + h + '">' + formatted + '</option>');
+            });
+
+            // Set defaults
+            this.embeddedXAxis = headers[0];
+            this.embeddedYAxis = numericCols.length > 0 ? numericCols[numericCols.length - 1] : headers[headers.length - 1];
+
+            xAxisSelect.val(this.embeddedXAxis);
+            yAxisSelect.val(this.embeddedYAxis);
+        },
+
+        /**
+         * Render current page of table in embedded mode.
+         */
+        renderEmbeddedTablePage: function() {
+            var data = this.embeddedData || [];
+            var table = this.container.find('.embedded-table');
             var thead = table.find('thead');
             var tbody = table.find('tbody');
-            var maxRows = this.config.tableMaxRows || 10;
 
             thead.empty();
             tbody.empty();
 
-            if (!data || data.length === 0) {
-                this.container.find('.block-adeptus-table-container').addClass('d-none');
+            if (data.length === 0) {
                 return;
             }
 
-            // Build headers from first row
+            // Build headers
             var headers = Object.keys(data[0]);
             var headerRow = $('<tr>');
             headers.forEach(function(h) {
@@ -1015,8 +1149,14 @@ define([
             });
             thead.append(headerRow);
 
+            // Calculate pagination
+            var totalPages = Math.ceil(data.length / this.embeddedTableRowsPerPage);
+            var startIndex = (this.embeddedTablePage - 1) * this.embeddedTableRowsPerPage;
+            var endIndex = Math.min(startIndex + this.embeddedTableRowsPerPage, data.length);
+            var pageData = data.slice(startIndex, endIndex);
+
             // Build rows
-            data.slice(0, maxRows).forEach(function(row) {
+            pageData.forEach(function(row) {
                 var tr = $('<tr>');
                 headers.forEach(function(h) {
                     var val = row[h];
@@ -1030,10 +1170,140 @@ define([
                 tbody.append(tr);
             });
 
-            // Update row count
-            var countText = 'Showing ' + Math.min(data.length, maxRows) + ' of ' + data.length + ' rows';
-            this.container.find('.block-adeptus-row-count').text(countText);
-            this.container.find('.block-adeptus-table-container').removeClass('d-none');
+            // Update pagination info
+            this.container.find('.row-count').text('Showing ' + (startIndex + 1) + '-' + endIndex + ' of ' + data.length);
+            this.container.find('.embedded-pagination-info').text('Page ' + this.embeddedTablePage + ' of ' + totalPages);
+
+            // Update button states
+            this.container.find('.embedded-pagination-prev').prop('disabled', this.embeddedTablePage <= 1);
+            this.container.find('.embedded-pagination-next').prop('disabled', this.embeddedTablePage >= totalPages);
+        },
+
+        /**
+         * Render chart in embedded mode with current settings.
+         */
+        renderEmbeddedChart: function() {
+            var data = this.embeddedData || [];
+            var canvas = this.container.find('.embedded-chart')[0];
+
+            if (!canvas || data.length === 0) {
+                return;
+            }
+
+            // Destroy existing chart
+            if (this.embeddedChartInstance) {
+                this.embeddedChartInstance.destroy();
+                this.embeddedChartInstance = null;
+            }
+
+            var chartType = this.embeddedChartType || 'bar';
+            var xAxis = this.embeddedXAxis || Object.keys(data[0])[0];
+            var yAxis = this.embeddedYAxis || Object.keys(data[0])[1];
+
+            // Prepare chart data (limit to 30 items)
+            var chartData = data.slice(0, 30);
+            var labels = chartData.map(function(row) {
+                var label = row[xAxis];
+                if (label === null || label === undefined) return 'Unknown';
+                var labelStr = String(label);
+                return labelStr.length > 20 ? labelStr.substring(0, 20) + '...' : labelStr;
+            });
+            var values = chartData.map(function(row) {
+                return parseFloat(row[yAxis]) || 0;
+            });
+
+            // Generate colors
+            var colors = this.generateChartColors(values.length, chartType);
+
+            // Build dataset config
+            var datasetConfig = {
+                label: yAxis.replace(/_/g, ' ').replace(/\b\w/g, function(l) { return l.toUpperCase(); }),
+                data: values
+            };
+
+            if (chartType === 'pie' || chartType === 'doughnut') {
+                datasetConfig.backgroundColor = colors;
+                datasetConfig.borderWidth = 1;
+            } else {
+                datasetConfig.backgroundColor = colors[0];
+                datasetConfig.borderColor = colors[0].replace('0.7', '1');
+                datasetConfig.borderWidth = 1;
+            }
+
+            // Chart config
+            var config = {
+                type: chartType,
+                data: {
+                    labels: labels,
+                    datasets: [datasetConfig]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: chartType === 'pie' || chartType === 'doughnut',
+                            position: 'right'
+                        }
+                    }
+                }
+            };
+
+            // Add scales for bar/line charts
+            if (chartType === 'bar' || chartType === 'line') {
+                config.options.scales = {
+                    y: { beginAtZero: true },
+                    x: { display: data.length <= 15 }
+                };
+            }
+
+            try {
+                this.embeddedChartInstance = new Chart(canvas.getContext('2d'), config);
+            } catch (error) {
+                this.container.find('.embedded-chart-container').html(
+                    '<div class="alert alert-warning text-center"><i class="fa fa-exclamation-circle"></i> Could not render chart</div>'
+                );
+            }
+        },
+
+        /**
+         * Export embedded report data.
+         *
+         * @param {string} format
+         */
+        exportEmbeddedReport: function(format) {
+            var data = this.embeddedData || [];
+            var report = this.embeddedReport || {};
+
+            if (data.length === 0) {
+                return;
+            }
+
+            if (format === 'csv') {
+                var headers = Object.keys(data[0]);
+                var csvContent = headers.join(',') + '\n';
+
+                data.forEach(function(row) {
+                    var rowValues = headers.map(function(h) {
+                        var val = row[h];
+                        if (val === null || val === undefined) return '';
+                        var strVal = String(val);
+                        // Escape quotes and wrap in quotes if contains comma
+                        if (strVal.includes(',') || strVal.includes('"') || strVal.includes('\n')) {
+                            strVal = '"' + strVal.replace(/"/g, '""') + '"';
+                        }
+                        return strVal;
+                    });
+                    csvContent += rowValues.join(',') + '\n';
+                });
+
+                var blob = new Blob([csvContent], {type: 'text/csv;charset=utf-8;'});
+                var link = document.createElement('a');
+                var reportName = report.name || report.slug || 'report';
+                link.href = URL.createObjectURL(blob);
+                link.download = reportName.replace(/[^a-z0-9]/gi, '_') + '_' + new Date().toISOString().split('T')[0] + '.csv';
+                link.click();
+            }
         },
 
         /**
@@ -2404,6 +2674,154 @@ define([
             if (listContainer.length) {
                 listContainer[0].scrollIntoView({behavior: 'smooth', block: 'start'});
             }
+        },
+
+        /**
+         * Scroll to the top of the embedded table.
+         */
+        scrollToEmbeddedTableTop: function() {
+            var tableContainer = this.container.find('.embedded-table-view');
+            if (tableContainer.length) {
+                tableContainer[0].scrollIntoView({behavior: 'smooth', block: 'start'});
+            }
+        },
+
+        /**
+         * Toggle searchable dropdown open/closed.
+         *
+         * @param {jQuery} dropdown
+         */
+        toggleSearchableDropdown: function(dropdown) {
+            if (dropdown.hasClass('open')) {
+                this.closeSearchableDropdown(dropdown);
+            } else {
+                this.openSearchableDropdown(dropdown);
+            }
+        },
+
+        /**
+         * Open searchable dropdown.
+         *
+         * @param {jQuery} dropdown
+         */
+        openSearchableDropdown: function(dropdown) {
+            // Close any other open dropdowns first
+            var self = this;
+            this.container.find('.searchable-dropdown.open').each(function() {
+                if (!$(this).is(dropdown)) {
+                    self.closeSearchableDropdown($(this));
+                }
+            });
+
+            dropdown.addClass('open');
+            dropdown.find('.searchable-dropdown-toggle').attr('aria-expanded', 'true');
+
+            // Clear search and show all items
+            var input = dropdown.find('.searchable-dropdown-input');
+            input.val('');
+            dropdown.find('.searchable-dropdown-item').show().removeClass('focused');
+            dropdown.find('.searchable-dropdown-empty').addClass('d-none');
+
+            // Focus search input
+            setTimeout(function() {
+                input.focus();
+            }, 50);
+        },
+
+        /**
+         * Close searchable dropdown.
+         *
+         * @param {jQuery} dropdown
+         */
+        closeSearchableDropdown: function(dropdown) {
+            dropdown.removeClass('open');
+            dropdown.find('.searchable-dropdown-toggle').attr('aria-expanded', 'false');
+            dropdown.find('.searchable-dropdown-item').removeClass('focused');
+        },
+
+        /**
+         * Filter searchable dropdown items based on search query.
+         *
+         * @param {jQuery} dropdown
+         * @param {string} query
+         */
+        filterSearchableDropdown: function(dropdown, query) {
+            var items = dropdown.find('.searchable-dropdown-item');
+            var emptyState = dropdown.find('.searchable-dropdown-empty');
+            var visibleCount = 0;
+
+            items.each(function() {
+                var searchText = $(this).data('search') || '';
+                if (query === '' || searchText.indexOf(query) !== -1) {
+                    $(this).show();
+                    visibleCount++;
+                } else {
+                    $(this).hide();
+                }
+            });
+
+            // Remove focus from hidden items
+            items.filter(':hidden').removeClass('focused');
+
+            // Show/hide empty state
+            if (visibleCount === 0) {
+                emptyState.removeClass('d-none');
+            } else {
+                emptyState.addClass('d-none');
+            }
+        },
+
+        /**
+         * Select an item from the searchable dropdown.
+         *
+         * @param {jQuery} dropdown
+         * @param {string} value
+         * @param {string} text
+         */
+        selectSearchableDropdownItem: function(dropdown, value, text) {
+            // Update display text
+            dropdown.find('.searchable-dropdown-text').text(text);
+
+            // Mark item as selected
+            dropdown.find('.searchable-dropdown-item').removeClass('selected');
+            dropdown.find('.searchable-dropdown-item[data-value="' + value + '"]').addClass('selected');
+
+            // Update hidden select and trigger change
+            var select = dropdown.siblings('.report-selector-select');
+            select.val(value).trigger('change');
+
+            // Close dropdown
+            this.closeSearchableDropdown(dropdown);
+        },
+
+        /**
+         * Scroll a dropdown item into view.
+         *
+         * @param {jQuery} item
+         */
+        scrollDropdownItemIntoView: function(item) {
+            var list = item.closest('.searchable-dropdown-list');
+            var listHeight = list.height();
+            var itemTop = item.position().top;
+            var itemHeight = item.outerHeight();
+
+            if (itemTop < 0) {
+                list.scrollTop(list.scrollTop() + itemTop);
+            } else if (itemTop + itemHeight > listHeight) {
+                list.scrollTop(list.scrollTop() + (itemTop + itemHeight - listHeight));
+            }
+        },
+
+        /**
+         * Escape HTML special characters.
+         *
+         * @param {string} text
+         * @return {string}
+         */
+        escapeHtml: function(text) {
+            var div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         },
 
         /**
