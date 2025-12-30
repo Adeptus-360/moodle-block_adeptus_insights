@@ -751,7 +751,7 @@ define([
         populateReportSelector: function() {
             var self = this;
             var select = this.container.find('.report-selector-select');
-            var dropdown = this.container.find('.searchable-dropdown');
+            var dropdown = this.container.find('.block-adeptus-report-selector .searchable-dropdown');
             var dropdownList = dropdown.find('.searchable-dropdown-list');
 
             if (!select.length) {
