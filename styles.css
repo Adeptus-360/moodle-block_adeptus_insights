@@ -28,6 +28,9 @@
 .block-adeptus-insights {
     position: relative;
     min-height: 100px;
+    /* Enable container queries for responsive block width detection */
+    container-type: inline-size;
+    container-name: adeptus-block;
 }
 
 /* ==========================================================================
@@ -69,27 +72,12 @@
 /* Category filter dropdown */
 .block-adeptus-category-filter {
     flex: 1;
-    max-width: 200px;
+    min-width: 140px;
 }
 
-.block-adeptus-category-filter .category-filter-select {
-    font-size: 0.8125rem;
-    padding: 0.35rem 2rem 0.35rem 0.75rem;
-    border-radius: var(--adeptus-radius);
-    border-color: var(--adeptus-border);
-    background-color: #fff;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.block-adeptus-category-filter .category-filter-select:hover {
-    border-color: var(--adeptus-primary);
-}
-
-.block-adeptus-category-filter .category-filter-select:focus {
-    border-color: var(--adeptus-primary);
-    box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.15);
-    outline: none;
+/* Category dropdown uses same searchable-dropdown styles */
+.block-adeptus-category-filter .category-dropdown {
+    width: 100%;
 }
 
 /* Embedded mode toolbar with filters */
@@ -101,6 +89,7 @@
 .block-adeptus-filters {
     flex: 1;
     min-width: 200px;
+    gap: 0.5rem;
 }
 
 /* Report selector dropdown (for embedded mode) */
@@ -1559,6 +1548,131 @@
     }
 }
 
+/* ==========================================================================
+   Container Query Responsive Styles (for side columns)
+   ========================================================================== */
+
+/* Narrow container (< 350px) - typically side columns */
+@container adeptus-block (max-width: 350px) {
+    .block-adeptus-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+    }
+
+    .block-adeptus-toolbar.embedded-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .block-adeptus-filters {
+        flex-direction: column !important;
+        width: 100%;
+        gap: 0.5rem !important;
+    }
+
+    .block-adeptus-category-filter,
+    .block-adeptus-report-selector {
+        width: 100%;
+        min-width: unset;
+        flex: unset;
+    }
+
+    .block-adeptus-toolbar-actions {
+        align-self: flex-end;
+        margin-top: 0.25rem;
+    }
+
+    /* Searchable dropdown adjustments for narrow containers */
+    .searchable-dropdown-toggle {
+        font-size: 0.75rem;
+        padding: 0.3rem 0.5rem;
+    }
+
+    /* Action bar adjustments */
+    .embedded-action-bar {
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: stretch !important;
+    }
+
+    .embedded-action-bar .view-toggle {
+        width: 100%;
+        display: flex;
+    }
+
+    .embedded-action-bar .view-toggle .embedded-view-toggle-btn {
+        flex: 1;
+    }
+
+    .embedded-action-bar .export-buttons {
+        width: 100%;
+    }
+
+    .embedded-action-bar .export-buttons .embedded-export {
+        width: 100%;
+    }
+
+    /* Meta bar adjustments */
+    .embedded-meta-bar {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 0.25rem;
+    }
+
+    /* Chart controls adjustments */
+    .chart-controls {
+        flex-direction: column !important;
+    }
+
+    .chart-controls .control-group {
+        width: 100%;
+        max-width: none;
+    }
+
+    /* Table footer adjustments */
+    .embedded-table-footer {
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: stretch !important;
+    }
+
+    .embedded-table-pagination {
+        justify-content: center;
+    }
+
+    /* KPI grid adjustments */
+    .block-adeptus-kpi-grid.kpi-cols-2,
+    .block-adeptus-kpi-grid.kpi-cols-3,
+    .block-adeptus-kpi-grid.kpi-cols-4 {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Medium container (350px - 500px) */
+@container adeptus-block (min-width: 351px) and (max-width: 500px) {
+    .block-adeptus-filters {
+        flex-direction: column !important;
+        width: 100%;
+        gap: 0.5rem !important;
+    }
+
+    .block-adeptus-category-filter,
+    .block-adeptus-report-selector {
+        width: 100%;
+        flex: unset;
+    }
+
+    /* Chart controls on two rows */
+    .chart-controls .control-group {
+        min-width: 45%;
+    }
+}
+
+/* ==========================================================================
+   Media Query Responsive Styles (fallback for viewport)
+   ========================================================================== */
+
 @media (max-width: 575.98px) {
     .block-adeptus-kpi-grid.kpi-cols-2,
     .block-adeptus-kpi-grid.kpi-cols-3,
@@ -1568,8 +1682,20 @@
 
     .block-adeptus-toolbar {
         flex-direction: column;
-        align-items: flex-start;
+        align-items: stretch;
         gap: 0.5rem;
+    }
+
+    .block-adeptus-filters {
+        flex-direction: column !important;
+        width: 100%;
+        gap: 0.5rem !important;
+    }
+
+    .block-adeptus-category-filter,
+    .block-adeptus-report-selector {
+        width: 100%;
+        flex: unset;
     }
 
     .embedded-report-header {
@@ -1581,6 +1707,11 @@
         flex-direction: column;
         gap: 0.5rem;
         align-items: flex-start;
+    }
+
+    .embedded-action-bar {
+        flex-direction: column;
+        gap: 0.5rem;
     }
 }
 

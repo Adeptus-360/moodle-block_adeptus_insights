@@ -690,17 +690,57 @@ define([
                 return a.name.localeCompare(b.name);
             });
 
-            // Populate dropdown
+            // Populate hidden select
             var select = this.container.find('.category-filter-select');
+            var dropdown = this.container.find('.category-dropdown');
+            var dropdownList = dropdown.find('.searchable-dropdown-list');
+
             if (select.length) {
                 // Keep the first "All Categories" option, remove the rest
                 select.find('option:not(:first)').remove();
 
-                // Add category options
+                // Add category options to hidden select
                 this.availableCategories.forEach(function(cat) {
                     var selected = self.selectedCategory === cat.slug ? ' selected' : '';
                     select.append('<option value="' + cat.slug + '"' + selected + '>' + cat.name + '</option>');
                 });
+            }
+
+            // Populate searchable dropdown list
+            if (dropdownList.length) {
+                dropdownList.empty();
+
+                // Add "All Categories" option first
+                var allSelected = !this.selectedCategory ? 'selected' : '';
+                var allItemHtml = '<li class="searchable-dropdown-item ' + allSelected + '" data-value="" ' +
+                    'data-search="all categories" role="option">' +
+                    '<span class="dropdown-item-name">All Categories</span>' +
+                    '</li>';
+                dropdownList.append(allItemHtml);
+
+                // Add category options
+                this.availableCategories.forEach(function(cat) {
+                    var isSelected = self.selectedCategory === cat.slug ? 'selected' : '';
+                    var itemHtml = '<li class="searchable-dropdown-item ' + isSelected + '" data-value="' + cat.slug + '" ' +
+                        'data-search="' + cat.name.toLowerCase() + '" role="option">' +
+                        '<span class="dropdown-item-name">' + self.escapeHtml(cat.name) + '</span>' +
+                        '<span class="dropdown-item-category" style="background-color: ' + cat.color + '">' +
+                        '<i class="fa fa-circle" style="font-size: 0.5rem;"></i></span>' +
+                        '</li>';
+                    dropdownList.append(itemHtml);
+                });
+
+                // Update dropdown text to show selected category
+                var selectedText = 'All Categories';
+                if (this.selectedCategory) {
+                    var selectedCat = this.availableCategories.find(function(c) {
+                        return c.slug === self.selectedCategory;
+                    });
+                    if (selectedCat) {
+                        selectedText = selectedCat.name;
+                    }
+                }
+                dropdown.find('.searchable-dropdown-text').text(selectedText);
             }
         },
 
@@ -2819,9 +2859,12 @@ define([
             dropdown.find('.searchable-dropdown-item').removeClass('selected');
             dropdown.find('.searchable-dropdown-item[data-value="' + value + '"]').addClass('selected');
 
-            // Update hidden select and trigger change
-            var select = dropdown.siblings('.report-selector-select');
-            select.val(value).trigger('change');
+            // Find the hidden select sibling and trigger change
+            // Works for both category-filter-select and report-selector-select
+            var select = dropdown.siblings('select');
+            if (select.length) {
+                select.val(value).trigger('change');
+            }
 
             // Close dropdown
             this.closeSearchableDropdown(dropdown);
