@@ -740,6 +740,43 @@
     font-size: 0.75rem;
 }
 
+/* Embedded loading overlay */
+.block-adeptus-embedded .embedded-loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.92);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    border-radius: var(--adeptus-radius);
+}
+
+.block-adeptus-embedded .embedded-loading-spinner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--adeptus-primary);
+}
+
+.block-adeptus-embedded .embedded-loading-spinner i {
+    font-size: 2rem;
+}
+
+.block-adeptus-embedded .embedded-loading-spinner span {
+    font-size: 0.875rem;
+    color: var(--adeptus-secondary);
+}
+
+/* Ensure content area is positioned for overlay */
+.block-adeptus-embedded .block-adeptus-content {
+    position: relative;
+}
+
 /* ==========================================================================
    Searchable Dropdown
    ========================================================================== */

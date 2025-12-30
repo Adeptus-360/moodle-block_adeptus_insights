@@ -933,7 +933,7 @@ define([
             var self = this;
             var cacheKey = slug + '_' + source;
 
-            // Check cache first for instant loading
+            // Check cache first for instant loading (no overlay needed)
             if (this.reportDataCache[cacheKey]) {
                 var cached = this.reportDataCache[cacheKey];
                 this.embeddedData = cached.results;
@@ -941,12 +941,16 @@ define([
                 return;
             }
 
+            // Show loading overlay for non-cached requests
+            this.showEmbeddedLoadingOverlay();
+
             // Find the report from our cached list
             var report = this.reports.find(function(r) {
                 return r.slug === slug;
             });
 
             if (!report) {
+                this.hideEmbeddedLoadingOverlay();
                 this.showError('Report not found');
                 return;
             }
@@ -963,6 +967,7 @@ define([
                     dataType: 'json',
                     timeout: 30000
                 }).done(function(response) {
+                    self.hideEmbeddedLoadingOverlay();
                     if (response.success) {
                         // Cache the result
                         self.reportDataCache[cacheKey] = {
@@ -977,6 +982,7 @@ define([
                         self.showError(response.message || 'Failed to load report');
                     }
                 }).fail(function() {
+                    self.hideEmbeddedLoadingOverlay();
                     self.showError('Connection error');
                 });
             } else {
@@ -984,6 +990,7 @@ define([
                 var token = this.apiKey || (window.adeptusAuthData ? window.adeptusAuthData.api_key : null);
 
                 if (!token) {
+                    this.hideEmbeddedLoadingOverlay();
                     this.showError('No authentication token');
                     return;
                 }
@@ -997,6 +1004,7 @@ define([
                     },
                     timeout: 15000
                 }).done(function(response) {
+                    self.hideEmbeddedLoadingOverlay();
                     if (response.success && response.report) {
                         // Cache the result
                         self.reportDataCache[cacheKey] = {
@@ -1011,6 +1019,7 @@ define([
                         self.showError('Failed to load report');
                     }
                 }).fail(function() {
+                    self.hideEmbeddedLoadingOverlay();
                     self.showError('Connection error');
                 });
             }
@@ -2684,6 +2693,30 @@ define([
             if (tableContainer.length) {
                 tableContainer[0].scrollIntoView({behavior: 'smooth', block: 'start'});
             }
+        },
+
+        /**
+         * Show the embedded loading overlay.
+         */
+        showEmbeddedLoadingOverlay: function() {
+            var overlay = this.container.find('.embedded-loading-overlay');
+            var content = this.container.find('.block-adeptus-content');
+
+            // Show content area if hidden (to show overlay over it)
+            content.removeClass('d-none');
+
+            // Show overlay with fade
+            overlay.removeClass('d-none').css('opacity', 0).animate({opacity: 1}, 150);
+        },
+
+        /**
+         * Hide the embedded loading overlay.
+         */
+        hideEmbeddedLoadingOverlay: function() {
+            var overlay = this.container.find('.embedded-loading-overlay');
+            overlay.animate({opacity: 0}, 150, function() {
+                $(this).addClass('d-none');
+            });
         },
 
         /**

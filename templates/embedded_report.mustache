@@ -100,6 +100,14 @@
 
     {{! Content area - mirrors modal design }}
     <div class="block-adeptus-content d-none">
+        {{! Loading overlay for report switching }}
+        <div class="embedded-loading-overlay d-none">
+            <div class="embedded-loading-spinner">
+                <i class="fa fa-spinner fa-spin"></i>
+                <span>Loading report...</span>
+            </div>
+        </div>
+
         {{! Report meta bar }}
         <div class="embedded-meta-bar d-flex justify-content-between align-items-center mb-2">
             <div class="report-badges">
