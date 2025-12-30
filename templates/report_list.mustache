@@ -48,9 +48,28 @@
     {{! Toolbar }}
     <div class="block-adeptus-toolbar">
         <div class="block-adeptus-category-filter">
-            <select class="form-select form-select-sm category-filter-select" aria-label="Filter by category">
+            <div class="searchable-dropdown category-dropdown" data-placeholder="All Categories">
+                <button type="button" class="searchable-dropdown-toggle" aria-haspopup="listbox" aria-expanded="false">
+                    <span class="searchable-dropdown-text">All Categories</span>
+                    <i class="fa fa-chevron-down searchable-dropdown-arrow"></i>
+                </button>
+                <div class="searchable-dropdown-menu" role="listbox">
+                    <div class="searchable-dropdown-search">
+                        <i class="fa fa-search"></i>
+                        <input type="text" class="searchable-dropdown-input" placeholder="Search categories..." aria-label="Search categories">
+                    </div>
+                    <ul class="searchable-dropdown-list">
+                        {{! Options populated by JavaScript }}
+                    </ul>
+                    <div class="searchable-dropdown-empty d-none">
+                        <i class="fa fa-folder-open"></i>
+                        <span>No categories found</span>
+                    </div>
+                </div>
+            </div>
+            {{! Hidden select for form compatibility }}
+            <select class="category-filter-select d-none" aria-label="Filter by category">
                 <option value="">All Categories</option>
-                {{! Options will be populated by JavaScript }}
             </select>
         </div>
 

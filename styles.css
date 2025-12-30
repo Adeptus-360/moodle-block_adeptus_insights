@@ -39,8 +39,8 @@
 
 .block-adeptus-toolbar {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    gap: 0.5rem;
     padding: 0.5rem 0;
     margin-bottom: 0.75rem;
     border-bottom: 1px solid var(--adeptus-border);
@@ -48,7 +48,19 @@
 
 .block-adeptus-toolbar-actions {
     display: flex;
+    align-items: center;
     gap: 0.25rem;
+    flex-shrink: 0;
+}
+
+.block-adeptus-toolbar-actions .block-adeptus-refresh {
+    padding: 0.25rem 0.5rem;
+    color: var(--adeptus-secondary);
+    transition: color 0.15s ease;
+}
+
+.block-adeptus-toolbar-actions .block-adeptus-refresh:hover {
+    color: var(--adeptus-primary);
 }
 
 .block-adeptus-context-badge {
@@ -72,12 +84,20 @@
 /* Category filter dropdown */
 .block-adeptus-category-filter {
     flex: 1;
-    min-width: 140px;
+    min-width: 120px;
+    max-width: 280px;
 }
 
 /* Category dropdown uses same searchable-dropdown styles */
 .block-adeptus-category-filter .category-dropdown {
     width: 100%;
+}
+
+/* Links/KPI/Tabs mode - category filter can be wider since it's the only filter */
+.block-adeptus-links .block-adeptus-category-filter,
+.block-adeptus-kpi .block-adeptus-category-filter,
+.block-adeptus-tabs .block-adeptus-category-filter {
+    max-width: none;
 }
 
 /* Embedded mode toolbar with filters */
@@ -1554,12 +1574,12 @@
 
 /* Narrow container (< 350px) - typically side columns */
 @container adeptus-block (max-width: 350px) {
+    /* Toolbar - keep items inline but allow wrapping */
     .block-adeptus-toolbar {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 0.5rem;
+        flex-wrap: wrap;
     }
 
+    /* For embedded mode with multiple filters, stack them */
     .block-adeptus-toolbar.embedded-toolbar {
         flex-direction: column;
         align-items: stretch;
@@ -1575,10 +1595,17 @@
     .block-adeptus-report-selector {
         width: 100%;
         min-width: unset;
+        max-width: none;
         flex: unset;
     }
 
+    /* Toolbar actions - position at end of filter row */
     .block-adeptus-toolbar-actions {
+        flex-shrink: 0;
+    }
+
+    /* In embedded mode, actions go to end */
+    .block-adeptus-toolbar.embedded-toolbar .block-adeptus-toolbar-actions {
         align-self: flex-end;
         margin-top: 0.25rem;
     }
@@ -1587,6 +1614,34 @@
     .searchable-dropdown-toggle {
         font-size: 0.75rem;
         padding: 0.3rem 0.5rem;
+    }
+
+    /* Links mode pagination */
+    .block-adeptus-pagination {
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: center;
+        text-align: center;
+    }
+
+    .block-adeptus-pagination .pagination-info {
+        order: 2;
+    }
+
+    .block-adeptus-pagination .pagination-controls {
+        order: 1;
+        width: 100%;
+        justify-content: center;
+    }
+
+    .block-adeptus-pagination .pagination-controls .btn {
+        flex: 1;
+        max-width: 100px;
+    }
+
+    .block-adeptus-pagination .pagination-pages {
+        min-width: 60px;
+        text-align: center;
     }
 
     /* Action bar adjustments */
@@ -1681,6 +1736,10 @@
     }
 
     .block-adeptus-toolbar {
+        flex-wrap: wrap;
+    }
+
+    .block-adeptus-toolbar.embedded-toolbar {
         flex-direction: column;
         align-items: stretch;
         gap: 0.5rem;
@@ -1695,6 +1754,7 @@
     .block-adeptus-category-filter,
     .block-adeptus-report-selector {
         width: 100%;
+        max-width: none;
         flex: unset;
     }
 
@@ -1712,6 +1772,22 @@
     .embedded-action-bar {
         flex-direction: column;
         gap: 0.5rem;
+    }
+
+    /* Pagination responsiveness */
+    .block-adeptus-pagination {
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .block-adeptus-pagination .pagination-info {
+        order: 2;
+    }
+
+    .block-adeptus-pagination .pagination-controls {
+        order: 1;
+        justify-content: center;
     }
 }
 
