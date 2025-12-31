@@ -1496,7 +1496,11 @@ define([
             gridContainer.empty();
 
             var kpiReports = reports.slice(0, maxCards);
+            var cardMap = {}; // Map slug to card element
+            var wizardReports = [];
+            var aiReports = [];
 
+            // Create all cards first
             kpiReports.forEach(function(report, index) {
                 var card = template.html();
                 var $card = $(card);
@@ -1515,11 +1519,125 @@ define([
 
                 gridContainer.append($card);
 
-                // Load KPI data for this card
-                self.loadKpiData(report, $card);
+                // Store reference for batch update
+                cardMap[report.slug] = {
+                    $card: $card,
+                    report: report,
+                    index: index
+                };
+
+                // Separate wizard and AI reports
+                if (report.source === 'wizard') {
+                    wizardReports.push(report);
+                } else {
+                    aiReports.push(report);
+                }
             });
 
             gridContainer.removeClass('d-none');
+
+            // Use batch loading for wizard reports (single request for all)
+            if (wizardReports.length > 0) {
+                this.loadKpiBatch(wizardReports, cardMap);
+            }
+
+            // Load AI reports individually (they use external API)
+            aiReports.forEach(function(report, index) {
+                var cardInfo = cardMap[report.slug];
+                setTimeout(function() {
+                    self.loadKpiData(report, cardInfo.$card, cardInfo.index);
+                }, index * 100);
+            });
+        },
+
+        /**
+         * Load multiple KPI cards in a single batch request.
+         *
+         * @param {Array} reports Wizard reports to load
+         * @param {Object} cardMap Map of slug to card info
+         */
+        loadKpiBatch: function(reports, cardMap) {
+            var self = this;
+            var startTime = performance.now();
+
+            // Get report IDs (names) for batch request
+            var reportIds = reports.map(function(r) {
+                return r.report_template_id || r.id || r.name || r.slug;
+            });
+
+            console.log('[AdeptusKPI] Starting batch load for ' + reportIds.length + ' wizard reports');
+
+            $.ajax({
+                url: M.cfg.wwwroot + '/report/adeptus_insights/ajax/batch_kpi_data.php',
+                method: 'POST',
+                data: {
+                    reportids: JSON.stringify(reportIds),
+                    sesskey: M.cfg.sesskey
+                },
+                dataType: 'json',
+                timeout: 30000
+            }).done(function(response) {
+                var elapsed = Math.round(performance.now() - startTime);
+                console.log('[AdeptusKPI] Batch load completed in ' + elapsed + 'ms for ' +
+                    reportIds.length + ' reports (server: ' + (response.total_time_ms || '?') + 'ms)');
+
+                if (response.success && response.reports) {
+                    // Update each card with its data
+                    reports.forEach(function(report) {
+                        var reportId = report.report_template_id || report.id || report.name || report.slug;
+                        var reportData = response.reports[reportId];
+                        var cardInfo = cardMap[report.slug];
+
+                        if (!cardInfo) {
+                            return;
+                        }
+
+                        var $card = cardInfo.$card;
+                        var cacheKey = report.slug + '_' + report.source;
+
+                        if (reportData && reportData.success) {
+                            console.log('[AdeptusKPI] Card ' + cardInfo.index + ' (' + report.slug +
+                                ') loaded in batch (' + (reportData.time_ms || '?') + 'ms, ' +
+                                reportData.count + ' rows)');
+
+                            // Cache the results
+                            self.reportDataCache[cacheKey] = {
+                                report: report,
+                                results: reportData.results || []
+                            };
+
+                            // Render the KPI value
+                            self.renderKpiValue($card, reportData.results || []);
+                        } else {
+                            console.warn('[AdeptusKPI] Card ' + cardInfo.index + ' (' + report.slug +
+                                ') failed in batch:', reportData ? reportData.error : 'No data');
+                            $card.find('.kpi-card-value').text('--');
+                            $card.find('.kpi-card-trend').addClass('d-none');
+                        }
+                    });
+                } else {
+                    // Batch failed, fall back to individual loading
+                    console.warn('[AdeptusKPI] Batch load failed, falling back to individual requests');
+                    reports.forEach(function(report, index) {
+                        var cardInfo = cardMap[report.slug];
+                        setTimeout(function() {
+                            self.loadKpiData(report, cardInfo.$card, cardInfo.index);
+                        }, index * 100);
+                    });
+                }
+            }).fail(function(jqXHR, textStatus, errorThrown) {
+                var elapsed = Math.round(performance.now() - startTime);
+                console.error('[AdeptusKPI] Batch load failed after ' + elapsed + 'ms:',
+                    textStatus, errorThrown);
+
+                // Fall back to individual loading
+                reports.forEach(function(report, index) {
+                    var cardInfo = cardMap[report.slug];
+                    setTimeout(function() {
+                        self.loadKpiData(report, cardInfo.$card, cardInfo.index);
+                    }, index * 100);
+                });
+            });
         },
 
         /**
@@ -1527,17 +1645,27 @@ define([
          *
          * @param {Object} report
          * @param {jQuery} $card
+         * @param {number} cardIndex Card index for logging
+         * @param {number} retryCount Current retry attempt (optional)
          */
-        loadKpiData: function(report, $card) {
+        loadKpiData: function(report, $card, cardIndex, retryCount) {
             var self = this;
             var cacheKey = report.slug + '_' + report.source;
+            retryCount = retryCount || 0;
+            var maxRetries = 2;
+            var startTime = performance.now();
 
             // Check cache first
             if (this.reportDataCache[cacheKey]) {
                 var cached = this.reportDataCache[cacheKey];
+                console.log('[AdeptusKPI] Card ' + cardIndex + ' (' + report.slug + ') loaded from cache');
                 this.renderKpiValue($card, cached.results);
                 return;
             }
+
+            // Get the report ID - try multiple possible fields
+            var reportId = report.report_template_id || report.id || report.name || report.slug;
+            console.log('[AdeptusKPI] Card ' + cardIndex + ' (' + report.slug + ') starting request...');
 
             // Load data based on source
             if (report.source === 'wizard') {
@@ -1545,29 +1673,49 @@ define([
                     url: M.cfg.wwwroot + '/report/adeptus_insights/ajax/generate_report.php',
                     method: 'POST',
                     data: {
-                        reportid: report.name || report.report_template_id,
+                        reportid: reportId,
                         sesskey: M.cfg.sesskey
                     },
                     dataType: 'json',
-                    timeout: 15000
+                    timeout: 30000
                 }).done(function(response) {
+                    var elapsed = Math.round(performance.now() - startTime);
                     if (response.success) {
+                        console.log('[AdeptusKPI] Card ' + cardIndex + ' (' + report.slug + ') loaded in ' + elapsed + 'ms');
                         self.reportDataCache[cacheKey] = {
                             report: report,
                             results: response.results || []
                         };
                         self.renderKpiValue($card, response.results || []);
                     } else {
+                        console.warn('[AdeptusKPI] Card ' + cardIndex + ' (' + report.slug + ') failed in ' + elapsed + 'ms:',
+                            response.error || 'Unknown error');
                         $card.find('.kpi-card-value').text('--');
+                        $card.find('.kpi-card-trend').addClass('d-none');
                     }
-                }).fail(function() {
-                    $card.find('.kpi-card-value').text('--');
+                }).fail(function(jqXHR, textStatus, errorThrown) {
+                    var elapsed = Math.round(performance.now() - startTime);
+                    console.error('[AdeptusKPI] Card ' + cardIndex + ' (' + report.slug + ') AJAX error after ' + elapsed + 'ms:',
+                        textStatus, errorThrown, 'Status:', jqXHR.status);
+
+                    // Retry on timeout or server error
+                    if (retryCount < maxRetries && (textStatus === 'timeout' || jqXHR.status >= 500)) {
+                        console.log('[AdeptusKPI] Retrying card ' + cardIndex + ' (attempt ' + (retryCount + 2) + ')');
+                        setTimeout(function() {
+                            self.loadKpiData(report, $card, cardIndex, retryCount + 1);
+                        }, 1000 * (retryCount + 1));
+                    } else {
+                        $card.find('.kpi-card-value').text('--');
+                        $card.find('.kpi-card-trend').addClass('d-none');
+                    }
                 });
             } else {
                 // AI reports
                 var token = this.apiKey || (window.adeptusAuthData ? window.adeptusAuthData.api_key : null);
                 if (!token) {
+                    console.warn('[AdeptusKPI] Card ' + cardIndex + ' (' + report.slug + '): No API token available');
                     $card.find('.kpi-card-value').text('--');
+                    $card.find('.kpi-card-trend').addClass('d-none');
                     return;
                 }
 
@@ -1578,32 +1726,56 @@ define([
                         'Authorization': 'Bearer ' + token,
                         'Accept': 'application/json'
                     },
-                    timeout: 15000
+                    timeout: 30000
                 }).done(function(response) {
+                    var elapsed = Math.round(performance.now() - startTime);
                     if (response.success && response.data) {
+                        console.log('[AdeptusKPI] Card ' + cardIndex + ' (' + report.slug + ') AI loaded in ' + elapsed + 'ms');
                         self.reportDataCache[cacheKey] = {
                             report: response.report || report,
                             results: response.data || []
                         };
                         self.renderKpiValue($card, response.data || []);
                     } else {
+                        console.warn('[AdeptusKPI] Card ' + cardIndex + ' (' + report.slug + ') AI failed in ' + elapsed + 'ms:',
+                            response.error || 'No data returned');
                         $card.find('.kpi-card-value').text('--');
+                        $card.find('.kpi-card-trend').addClass('d-none');
                     }
-                }).fail(function() {
-                    $card.find('.kpi-card-value').text('--');
+                }).fail(function(jqXHR, textStatus, errorThrown) {
+                    var elapsed = Math.round(performance.now() - startTime);
+                    console.error('[AdeptusKPI] Card ' + cardIndex + ' (' + report.slug + ') AI error after ' + elapsed + 'ms:',
+                        textStatus, errorThrown, 'Status:', jqXHR.status);
+
+                    // Retry on timeout or server error
+                    if (retryCount < maxRetries && (textStatus === 'timeout' || jqXHR.status >= 500)) {
+                        console.log('[AdeptusKPI] Retrying AI card ' + cardIndex + ' (attempt ' + (retryCount + 2) + ')');
+                        setTimeout(function() {
+                            self.loadKpiData(report, $card, cardIndex, retryCount + 1);
+                        }, 1000 * (retryCount + 1));
+                    } else {
+                        $card.find('.kpi-card-value').text('--');
+                        $card.find('.kpi-card-trend').addClass('d-none');
+                    }
                 });
             }
         },
 
         /**
-         * Render KPI value on card.
+         * Render KPI value on card with trend and sparkline.
          *
          * @param {jQuery} $card
          * @param {Array} data
          */
         renderKpiValue: function($card, data) {
+            var slug = $card.data('slug');
+            var source = $card.data('source') || 'wizard';
+            var label = $card.find('.kpi-card-label').text() || '';
+
             if (!data || data.length === 0) {
                 $card.find('.kpi-card-value').text('0');
+                // Save zero value and update trend from server
+                this.saveKpiHistoryToServer($card, slug, 0, source, label, 0);
                 return;
             }
 
@@ -1635,24 +1807,261 @@ define([
             }
 
             // Format the value nicely
-            if (value >= 1000000) {
-                formattedValue = (value / 1000000).toFixed(1) + 'M';
-            } else if (value >= 1000) {
-                formattedValue = (value / 1000).toFixed(1) + 'K';
-            } else if (Number.isInteger(value)) {
-                formattedValue = value.toLocaleString();
-            } else {
-                formattedValue = value.toFixed(1);
-            }
+            formattedValue = this.formatKpiValue(value);
 
             $card.find('.kpi-card-value').text(formattedValue);
 
-            // Add a simple trend indicator (placeholder - would need historical data)
+            // Save to server and update trend/sparkline from response
+            this.saveKpiHistoryToServer($card, slug, value, source, label, data.length);
+        },
+
+        /**
+         * Format a KPI value for display.
+         *
+         * @param {number} value
+         * @return {string}
+         */
+        formatKpiValue: function(value) {
+            if (value >= 1000000) {
+                return (value / 1000000).toFixed(1) + 'M';
+            } else if (value >= 1000) {
+                return (value / 1000).toFixed(1) + 'K';
+            } else if (Number.isInteger(value)) {
+                return value.toLocaleString();
+            } else {
+                return value.toFixed(1);
+            }
+        },
+
+        /**
+         * Save KPI history to server via AJAX and update trend/sparkline.
+         *
+         * @param {jQuery} $card
+         * @param {string} slug
+         * @param {number} value
+         * @param {string} source Report source (wizard/ai)
+         * @param {string} label Metric label
+         * @param {number} rowCount Number of data rows
+         */
+        saveKpiHistoryToServer: function($card, slug, value, source, label, rowCount) {
+            var self = this;
+
+            // Get configured history interval (default 1 hour = 3600 seconds)
+            var historyInterval = parseInt(this.config.kpiHistoryInterval, 10) || 3600;
+
+            require(['core/ajax'], function(Ajax) {
+                var promises = Ajax.call([{
+                    methodname: 'block_adeptus_insights_save_kpi_history',
+                    args: {
+                        blockinstanceid: self.blockId,
+                        reportslug: slug,
+                        value: value,
+                        source: source || 'wizard',
+                        label: label || '',
+                        rowcount: rowCount || 0,
+                        contexttype: 'site',
+                        contextid: 0,
+                        interval: historyInterval
+                    }
+                }]);
+
+                promises[0].done(function(response) {
+                    if (response.success) {
+                        // Update trend indicator from server response
+                        self.updateKpiTrendFromServer($card, response.trend_direction, response.trend_percentage);
+                    }
+                }).fail(function() {
+                    // Silent fail - trend won't update but KPI value is still shown
+                });
+            });
+
+            // Also fetch history for sparkline (separate call for better UX)
+            this.loadKpiSparklineFromServer($card, slug, value);
+        },
+
+        /**
+         * Load KPI history from server for sparkline.
+         *
+         * @param {jQuery} $card
+         * @param {string} slug
+         * @param {number} currentValue
+         */
+        loadKpiSparklineFromServer: function($card, slug, currentValue) {
+            var self = this;
+
+            require(['core/ajax'], function(Ajax) {
+                var promises = Ajax.call([{
+                    methodname: 'block_adeptus_insights_get_kpi_history',
+                    args: {
+                        blockinstanceid: self.blockId,
+                        reportslug: slug,
+                        limit: 10
+                    }
+                }]);
+
+                promises[0].done(function(response) {
+                    if (response.success && response.sparkline && response.sparkline.length >= 2) {
+                        self.renderKpiSparklineFromData($card, slug, response.sparkline, currentValue);
+                    } else {
+                        // Not enough history for sparkline
+                        $card.find('.kpi-card-sparkline').addClass('d-none');
+                    }
+                }).fail(function() {
+                    $card.find('.kpi-card-sparkline').addClass('d-none');
+                });
+            });
+        },
+
+        /**
+         * Update KPI trend indicator from server response.
+         *
+         * @param {jQuery} $card
+         * @param {string} direction Trend direction (up/down/neutral)
+         * @param {number} percentage Trend percentage
+         */
+        updateKpiTrendFromServer: function($card, direction, percentage) {
             var trendContainer = $card.find('.kpi-card-trend');
             trendContainer.removeClass('d-none trend-up trend-down trend-neutral');
+
+            var absChange = Math.abs(percentage);
+            var changeText;
+            if (absChange >= 100) {
+                changeText = Math.round(absChange) + '%';
+            } else if (absChange >= 10) {
+                changeText = absChange.toFixed(0) + '%';
+            } else {
+                changeText = absChange.toFixed(1) + '%';
+            }
+
+            if (direction === 'up') {
+                trendContainer.addClass('trend-up');
+                trendContainer.find('.trend-icon').html('<i class="fa fa-arrow-up"></i>');
+                trendContainer.find('.trend-value').text(changeText + ' vs previous');
+            } else if (direction === 'down') {
+                trendContainer.addClass('trend-down');
+                trendContainer.find('.trend-icon').html('<i class="fa fa-arrow-down"></i>');
+                trendContainer.find('.trend-value').text(changeText + ' vs previous');
+            } else {
+                trendContainer.addClass('trend-neutral');
+                trendContainer.find('.trend-icon').html('<i class="fa fa-minus"></i>');
+                trendContainer.find('.trend-value').text('No change');
+            }
+        },
+
+        /**
+         * Legacy method for backwards compatibility.
+         *
+         * @param {jQuery} $card
+         * @param {string} slug
+         * @param {number} currentValue
+         */
+        updateKpiTrend: function($card, slug, currentValue) {
+            // Show neutral trend initially, server call will update
+            var trendContainer = $card.find('.kpi-card-trend');
+            trendContainer.removeClass('d-none');
             trendContainer.addClass('trend-neutral');
-            trendContainer.find('.trend-icon').html('<i class="fa fa-minus"></i>');
-            trendContainer.find('.trend-value').text('vs previous');
+            trendContainer.find('.trend-icon').html('<i class="fa fa-spinner fa-spin"></i>');
+            trendContainer.find('.trend-value').text('Loading...');
+        },
+
+        /**
+         * Render sparkline chart from server data.
+         *
+         * @param {jQuery} $card
+         * @param {string} slug
+         * @param {Array} sparklineData Array of values
+         * @param {number} currentValue Current value to append
+         */
+        renderKpiSparklineFromData: function($card, slug, sparklineData, currentValue) {
+            var sparklineContainer = $card.find('.kpi-card-sparkline');
+            var canvas = sparklineContainer.find('.sparkline-chart')[0];
+
+            if (!canvas) {
+                return;
+            }
+
+            // Build data points array
+            var dataPoints = sparklineData.slice();
+            // Add current value if different from last
+            if (dataPoints.length === 0 || dataPoints[dataPoints.length - 1] !== currentValue) {
+                dataPoints.push(currentValue);
+            }
+
+            // Need at least 2 points for a meaningful sparkline
+            if (dataPoints.length < 2) {
+                sparklineContainer.addClass('d-none');
+                return;
+            }
+
+            sparklineContainer.removeClass('d-none');
+
+            // Determine sparkline color based on overall trend
+            var firstValue = dataPoints[0];
+            var lastValue = dataPoints[dataPoints.length - 1];
+            var trendColor = lastValue >= firstValue ? 'rgba(40, 167, 69, 0.8)' : 'rgba(220, 53, 69, 0.8)';
+            var trendBgColor = lastValue >= firstValue ? 'rgba(40, 167, 69, 0.1)' : 'rgba(220, 53, 69, 0.1)';
+
+            // Destroy existing chart if any
+            var chartKey = 'sparkline_' + this.blockId + '_' + slug;
+            if (this.kpiSparklineCharts && this.kpiSparklineCharts[chartKey]) {
+                this.kpiSparklineCharts[chartKey].destroy();
+            }
+
+            // Initialize chart storage
+            if (!this.kpiSparklineCharts) {
+                this.kpiSparklineCharts = {};
+            }
+
+            // Create sparkline chart
+            try {
+                this.kpiSparklineCharts[chartKey] = new Chart(canvas.getContext('2d'), {
+                    type: 'line',
+                    data: {
+                        labels: dataPoints.map(function() { return ''; }),
+                        datasets: [{
+                            data: dataPoints,
+                            borderColor: trendColor,
+                            backgroundColor: trendBgColor,
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: 0,
+                            pointHoverRadius: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: { enabled: false }
+                        },
+                        scales: {
+                            x: { display: false },
+                            y: { display: false }
+                        },
+                        elements: {
+                            line: { borderCapStyle: 'round' }
+                        },
+                        animation: { duration: 500 }
+                    }
+                });
+            } catch (e) {
+                // Chart.js not available or error
+                sparklineContainer.addClass('d-none');
+            }
+        },
+
+        /**
+         * Legacy method for backwards compatibility.
+         *
+         * @param {jQuery} $card
+         * @param {string} slug
+         * @param {number} currentValue
+         */
+        renderKpiSparkline: function($card, slug, currentValue) {
+            // Sparkline is loaded via loadKpiSparklineFromServer
+            // This is a no-op for backwards compatibility
         },
 
         /**

@@ -25,10 +25,10 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'block_adeptus_insights';
-$plugin->version = 2025122900;  // YYYYMMDDXX format
+$plugin->version = 2025123003;  // YYYYMMDDXX format - Email addresses for notifications
 $plugin->requires = 2022112800; // Moodle 4.1+
 $plugin->maturity = MATURITY_ALPHA;
-$plugin->release = '1.0.0-alpha';
+$plugin->release = '2.0.0-alpha';
 
 // This block requires the Adeptus Insights report plugin
 $plugin->dependencies = [

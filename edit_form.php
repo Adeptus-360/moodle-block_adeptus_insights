@@ -135,6 +135,22 @@ class block_adeptus_insights_edit_form extends block_edit_form {
         $mform->setDefault('config_kpi_columns', 2);
         $mform->hideIf('config_kpi_columns', 'config_display_mode', 'neq', 'kpi');
 
+        // KPI history save interval (for KPI mode trend tracking).
+        $historyintervals = [
+            3600 => get_string('kpi_interval_1h', 'block_adeptus_insights'),
+            21600 => get_string('kpi_interval_6h', 'block_adeptus_insights'),
+            43200 => get_string('kpi_interval_12h', 'block_adeptus_insights'),
+            86400 => get_string('kpi_interval_1d', 'block_adeptus_insights'),
+            259200 => get_string('kpi_interval_3d', 'block_adeptus_insights'),
+            604800 => get_string('kpi_interval_1w', 'block_adeptus_insights'),
+            2592000 => get_string('kpi_interval_1m', 'block_adeptus_insights'),
+        ];
+        $mform->addElement('select', 'config_kpi_history_interval',
+            get_string('configkpihistoryinterval', 'block_adeptus_insights'), $historyintervals);
+        $mform->setDefault('config_kpi_history_interval', 3600);
+        $mform->addHelpButton('config_kpi_history_interval', 'configkpihistoryinterval', 'block_adeptus_insights');
+        $mform->hideIf('config_kpi_history_interval', 'config_display_mode', 'neq', 'kpi');
+
         // KPI report selection (for KPI mode).
         $mform->addElement('static', 'config_kpi_reports_label', '',
             '<div class="alert alert-info small">' .
@@ -237,6 +253,228 @@ class block_adeptus_insights_edit_form extends block_edit_form {
         $categories = $this->get_category_options();
         $mform->addElement('autocomplete', 'config_context_category', get_string('configcontextcategory', 'block_adeptus_insights'), $categories);
         $mform->hideIf('config_context_category', 'config_context_filter', 'neq', 'category');
+
+        // =====================================
+        // ALERT CONFIGURATION (for KPI mode)
+        // =====================================
+        $mform->addElement('header', 'config_header_alerts', get_string('config_header_alerts', 'block_adeptus_insights'));
+        $mform->addHelpButton('config_header_alerts', 'config_header_alerts', 'block_adeptus_insights');
+
+        // Proactive monitoring concept explanation.
+        $mform->addElement('static', 'alert_info', '',
+            '<div class="alert alert-info">' .
+            '<i class="fa fa-bell mr-2"></i>' .
+            '<strong>' . get_string('insurance_policy_title', 'block_adeptus_insights') . '</strong><br>' .
+            get_string('insurance_policy_desc', 'block_adeptus_insights') .
+            '</div>');
+        $mform->hideIf('alert_info', 'config_display_mode', 'neq', 'kpi');
+
+        // Enable alerts master toggle.
+        $mform->addElement('advcheckbox', 'config_alerts_enabled',
+            get_string('config_alerts_enabled', 'block_adeptus_insights'));
+        $mform->setDefault('config_alerts_enabled', 0);
+        $mform->addHelpButton('config_alerts_enabled', 'config_alerts_enabled', 'block_adeptus_insights');
+        $mform->hideIf('config_alerts_enabled', 'config_display_mode', 'neq', 'kpi');
+
+        // Alert configurations (stored as JSON array).
+        $mform->addElement('textarea', 'config_alerts_json', '',
+            ['rows' => 2, 'class' => 'd-none', 'id' => 'id_config_alerts_json']);
+        $mform->setType('config_alerts_json', PARAM_RAW);
+        $mform->setDefault('config_alerts_json', '[]');
+
+        // Get existing alerts for this block (if editing).
+        $existingalerts = $this->get_existing_alerts();
+        $existingalertsjson = json_encode($existingalerts);
+
+        // Build operator and interval options for JavaScript.
+        $operators = $this->get_alert_operators();
+        $checkintervals = $this->get_alert_check_intervals();
+        $cooldowns = $this->get_cooldown_options();
+        $roles = $this->get_alert_roles();
+
+        // Multi-alert configuration UI container.
+        $mform->addElement('html',
+            '<div id="alerts-manager-container" class="alerts-manager-ui mb-3" style="display:none;"
+                  data-existing-alerts="' . htmlspecialchars($existingalertsjson, ENT_QUOTES, 'UTF-8') . '"
+                  data-operators="' . htmlspecialchars(json_encode($operators), ENT_QUOTES, 'UTF-8') . '"
+                  data-intervals="' . htmlspecialchars(json_encode($checkintervals), ENT_QUOTES, 'UTF-8') . '"
+                  data-cooldowns="' . htmlspecialchars(json_encode($cooldowns), ENT_QUOTES, 'UTF-8') . '"
+                  data-roles="' . htmlspecialchars(json_encode($roles), ENT_QUOTES, 'UTF-8') . '">
+
+                <div class="alerts-list-header d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <span class="font-weight-bold">' . get_string('config_alerts_list', 'block_adeptus_insights') . '</span>
+                        <span class="badge badge-secondary alerts-count ml-2">0</span>
+                    </div>
+                    <button type="button" id="add-alert-btn" class="btn btn-outline-primary btn-sm">
+                        <i class="fa fa-plus mr-1"></i> ' . get_string('config_add_alert', 'block_adeptus_insights') . '
+                    </button>
+                </div>
+
+                <div id="alerts-list" class="alerts-list mb-3">
+                    <div class="alerts-empty text-muted text-center py-4">
+                        <i class="fa fa-bell-slash fa-2x mb-2"></i><br>
+                        ' . get_string('no_alerts_configured', 'block_adeptus_insights') . '
+                    </div>
+                </div>
+
+                <!-- Alert edit modal/panel template -->
+                <div id="alert-edit-panel" class="alert-edit-panel card mb-3" style="display:none;">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span class="font-weight-bold alert-panel-title">' . get_string('config_add_alert', 'block_adeptus_insights') . '</span>
+                        <button type="button" class="close alert-panel-close" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label for="alert-edit-report">' . get_string('config_alert_report', 'block_adeptus_insights') . ' <span class="text-danger">*</span></label>
+                            <input type="text" id="alert-edit-report-search" class="form-control"
+                                   placeholder="' . get_string('config_alert_report_placeholder', 'block_adeptus_insights') . '">
+                            <div id="alert-report-dropdown" class="alert-report-dropdown position-absolute bg-white border rounded shadow-sm"
+                                 style="display:none; z-index:1050; max-height:250px; overflow-y:auto;"></div>
+                            <input type="hidden" id="alert-edit-report" value="">
+                            <small class="form-text text-muted" id="alert-edit-report-display"></small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="alert-edit-name">' . get_string('config_alert_name', 'block_adeptus_insights') . '</label>
+                            <input type="text" id="alert-edit-name" class="form-control" placeholder="' . get_string('config_alert_name_placeholder', 'block_adeptus_insights') . '">
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="alert-edit-operator">' . get_string('config_alert_operator', 'block_adeptus_insights') . '</label>
+                                    <select id="alert-edit-operator" class="form-control"></select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="alert-edit-warning">' . get_string('config_alert_warning_value', 'block_adeptus_insights') . '</label>
+                                    <input type="number" step="any" id="alert-edit-warning" class="form-control">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="alert-edit-critical">' . get_string('config_alert_critical_value', 'block_adeptus_insights') . '</label>
+                                    <input type="number" step="any" id="alert-edit-critical" class="form-control">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="alert-edit-interval">' . get_string('config_alert_check_interval', 'block_adeptus_insights') . '</label>
+                                    <select id="alert-edit-interval" class="form-control"></select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="alert-edit-cooldown">' . get_string('config_alert_cooldown', 'block_adeptus_insights') . '</label>
+                                    <select id="alert-edit-cooldown" class="form-control"></select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>' . get_string('config_alert_notify_on', 'block_adeptus_insights') . '</label>
+                            <div class="d-flex flex-wrap">
+                                <div class="custom-control custom-checkbox mr-3">
+                                    <input type="checkbox" class="custom-control-input" id="alert-edit-notify-warning" checked>
+                                    <label class="custom-control-label" for="alert-edit-notify-warning">' . get_string('config_alert_notify_warning', 'block_adeptus_insights') . '</label>
+                                </div>
+                                <div class="custom-control custom-checkbox mr-3">
+                                    <input type="checkbox" class="custom-control-input" id="alert-edit-notify-critical" checked>
+                                    <label class="custom-control-label" for="alert-edit-notify-critical">' . get_string('config_alert_notify_critical', 'block_adeptus_insights') . '</label>
+                                </div>
+                                <div class="custom-control custom-checkbox">
+                                    <input type="checkbox" class="custom-control-input" id="alert-edit-notify-recovery" checked>
+                                    <label class="custom-control-label" for="alert-edit-notify-recovery">' . get_string('config_alert_notify_recovery', 'block_adeptus_insights') . '</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="my-3">
+                        <h6 class="text-muted mb-3"><i class="fa fa-envelope mr-1"></i> Email Notifications</h6>
+
+                        <div class="form-group">
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input" id="alert-edit-notify-email">
+                                <label class="custom-control-label" for="alert-edit-notify-email">' . get_string('config_alert_notify_email', 'block_adeptus_insights') . '</label>
+                            </div>
+                            <small class="form-text text-muted">' . get_string('config_alert_notify_email_desc', 'block_adeptus_insights') . '</small>
+                        </div>
+
+                        <div class="form-group" id="email-addresses-group" style="display: none;">
+                            <label for="alert-edit-email-addresses">' . get_string('config_alert_notify_email_addresses', 'block_adeptus_insights') . '</label>
+                            <textarea id="alert-edit-email-addresses" class="form-control" rows="3" placeholder="' . get_string('config_alert_notify_email_addresses_placeholder', 'block_adeptus_insights') . '"></textarea>
+                            <small class="form-text text-muted">' . get_string('config_alert_notify_email_addresses_desc', 'block_adeptus_insights') . '</small>
+                        </div>
+
+                        <hr class="my-3">
+                        <h6 class="text-muted mb-3"><i class="fa fa-comment mr-1"></i> Moodle Message Notifications</h6>
+
+                        <div class="form-group">
+                            <label for="alert-edit-notify-roles">' . get_string('config_alert_notify_roles', 'block_adeptus_insights') . '</label>
+                            <select id="alert-edit-notify-roles" class="form-control" multiple size="4"></select>
+                            <small class="form-text text-muted">' . get_string('config_alert_notify_roles_desc', 'block_adeptus_insights') . '</small>
+                        </div>
+                    </div>
+                    <div class="card-footer text-right">
+                        <button type="button" class="btn btn-secondary alert-panel-cancel">' . get_string('cancel') . '</button>
+                        <button type="button" class="btn btn-primary alert-panel-save">' . get_string('savechanges') . '</button>
+                    </div>
+                </div>
+            </div>');
+
+        $mform->hideIf('alerts-manager-container', 'config_display_mode', 'neq', 'kpi');
+    }
+
+    /**
+     * Get existing alerts for the current block instance.
+     *
+     * @return array Array of alert configurations
+     */
+    private function get_existing_alerts() {
+        global $DB, $CFG;
+
+        $blockinstanceid = $this->block->instance->id ?? 0;
+        if (empty($blockinstanceid)) {
+            return [];
+        }
+
+        try {
+            $alerts = $DB->get_records('block_adeptus_alerts', ['blockinstanceid' => $blockinstanceid], 'id ASC');
+            $result = [];
+
+            foreach ($alerts as $alert) {
+                $result[] = [
+                    'id' => $alert->id,
+                    'report_slug' => $alert->report_slug,
+                    'report_name' => self::get_report_display_name($alert->report_slug),
+                    'alert_name' => $alert->alert_name,
+                    'operator' => $alert->operator,
+                    'warning_value' => $alert->warning_value,
+                    'critical_value' => $alert->critical_value,
+                    'check_interval' => $alert->check_interval,
+                    'cooldown_seconds' => $alert->cooldown_seconds,
+                    'notify_on_warning' => (bool) $alert->notify_on_warning,
+                    'notify_on_critical' => (bool) $alert->notify_on_critical,
+                    'notify_on_recovery' => (bool) $alert->notify_on_recovery,
+                    'notify_email' => (bool) $alert->notify_email,
+                    'notify_roles' => json_decode($alert->notify_roles, true) ?: [],
+                    'enabled' => (bool) $alert->enabled,
+                    'current_status' => $alert->current_status,
+                ];
+            }
+
+            return $result;
+        } catch (\Exception $e) {
+            debugging('Failed to get existing alerts: ' . $e->getMessage(), DEBUG_DEVELOPER);
+            return [];
+        }
     }
 
     /**
@@ -353,6 +591,217 @@ class block_adeptus_insights_edit_form extends block_edit_form {
     }
 
     /**
+     * Get available alert operators.
+     *
+     * @return array
+     */
+    private function get_alert_operators() {
+        return [
+            'gt' => get_string('alert_op_gt', 'block_adeptus_insights'),
+            'lt' => get_string('alert_op_lt', 'block_adeptus_insights'),
+            'eq' => get_string('alert_op_eq', 'block_adeptus_insights'),
+            'gte' => get_string('alert_op_gte', 'block_adeptus_insights'),
+            'lte' => get_string('alert_op_lte', 'block_adeptus_insights'),
+            'change_pct' => get_string('alert_op_change_pct', 'block_adeptus_insights'),
+            'increase_pct' => get_string('alert_op_increase_pct', 'block_adeptus_insights'),
+            'decrease_pct' => get_string('alert_op_decrease_pct', 'block_adeptus_insights'),
+        ];
+    }
+
+    /**
+     * Get available check intervals for alerts.
+     *
+     * @return array
+     */
+    private function get_alert_check_intervals() {
+        return [
+            300 => get_string('alert_interval_5m', 'block_adeptus_insights'),
+            900 => get_string('alert_interval_15m', 'block_adeptus_insights'),
+            1800 => get_string('alert_interval_30m', 'block_adeptus_insights'),
+            3600 => get_string('alert_interval_1h', 'block_adeptus_insights'),
+            7200 => get_string('alert_interval_2h', 'block_adeptus_insights'),
+            14400 => get_string('alert_interval_4h', 'block_adeptus_insights'),
+            28800 => get_string('alert_interval_8h', 'block_adeptus_insights'),
+            86400 => get_string('alert_interval_24h', 'block_adeptus_insights'),
+        ];
+    }
+
+    /**
+     * Get cooldown options for notifications.
+     *
+     * @return array
+     */
+    private function get_cooldown_options() {
+        return [
+            900 => get_string('cooldown_15m', 'block_adeptus_insights'),
+            1800 => get_string('cooldown_30m', 'block_adeptus_insights'),
+            3600 => get_string('cooldown_1h', 'block_adeptus_insights'),
+            7200 => get_string('cooldown_2h', 'block_adeptus_insights'),
+            14400 => get_string('cooldown_4h', 'block_adeptus_insights'),
+            28800 => get_string('cooldown_8h', 'block_adeptus_insights'),
+            86400 => get_string('cooldown_24h', 'block_adeptus_insights'),
+            172800 => get_string('cooldown_48h', 'block_adeptus_insights'),
+        ];
+    }
+
+    /**
+     * Get available KPI reports for alert monitoring.
+     *
+     * @return array
+     */
+    private function get_kpi_report_options() {
+        global $CFG;
+
+        $reports = ['' => get_string('selectreport', 'block_adeptus_insights')];
+
+        try {
+            require_once($CFG->dirroot . '/report/adeptus_insights/classes/installation_manager.php');
+            require_once($CFG->dirroot . '/report/adeptus_insights/classes/api_config.php');
+
+            $installationmanager = new \report_adeptus_insights\installation_manager();
+            $apikey = $installationmanager->get_api_key();
+            $apiurl = \report_adeptus_insights\api_config::get_backend_url();
+
+            if (!empty($apikey) && !empty($apiurl)) {
+                $ch = curl_init();
+                curl_setopt($ch, CURLOPT_URL, $apiurl . '/reports/definitions');
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                    'Content-Type: application/json',
+                    'Accept: application/json',
+                    'X-API-Key: ' . $apikey,
+                ]);
+
+                $response = curl_exec($ch);
+                $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                curl_close($ch);
+
+                if ($httpcode === 200 && $response) {
+                    $data = json_decode($response, true);
+                    if (isset($data['success']) && $data['success'] && isset($data['data'])) {
+                        foreach ($data['data'] as $report) {
+                            $name = $report['name'] ?? $report['title'] ?? $report['slug'] ?? 'Unnamed';
+                            $slug = $report['slug'] ?? $report['name'] ?? '';
+                            if (!empty($slug)) {
+                                $reports[$slug] = $name;
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            debugging('Failed to fetch KPI reports: ' . $e->getMessage(), DEBUG_DEVELOPER);
+        }
+
+        return $reports;
+    }
+
+    /**
+     * Get the display name for a report slug.
+     *
+     * @param string $slug The report slug
+     * @return string The display name or empty string
+     */
+    public static function get_report_display_name(string $slug): string {
+        global $CFG;
+
+        if (empty($slug)) {
+            return '';
+        }
+
+        try {
+            require_once($CFG->dirroot . '/report/adeptus_insights/classes/installation_manager.php');
+            require_once($CFG->dirroot . '/report/adeptus_insights/classes/api_config.php');
+
+            $installationmanager = new \report_adeptus_insights\installation_manager();
+            $apikey = $installationmanager->get_api_key();
+            $apiurl = \report_adeptus_insights\api_config::get_backend_url();
+
+            if (empty($apikey) || empty($apiurl)) {
+                return $slug;
+            }
+
+            // Try wizard reports first.
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $apiurl . '/wizard-reports/' . urlencode($slug));
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                'Content-Type: application/json',
+                'Accept: application/json',
+                'Authorization: Bearer ' . $apikey,
+            ]);
+
+            $response = curl_exec($ch);
+            $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+
+            if ($httpcode === 200 && $response) {
+                $data = json_decode($response, true);
+                if (isset($data['report']['name'])) {
+                    return $data['report']['name'];
+                }
+                if (isset($data['report']['title'])) {
+                    return $data['report']['title'];
+                }
+            }
+
+            // Try AI reports.
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $apiurl . '/ai-reports/' . urlencode($slug));
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                'Content-Type: application/json',
+                'Accept: application/json',
+                'Authorization: Bearer ' . $apikey,
+            ]);
+
+            $response = curl_exec($ch);
+            $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+
+            if ($httpcode === 200 && $response) {
+                $data = json_decode($response, true);
+                if (isset($data['report']['name'])) {
+                    return $data['report']['name'];
+                }
+                if (isset($data['report']['title'])) {
+                    return $data['report']['title'];
+                }
+            }
+        } catch (\Exception $e) {
+            debugging('Failed to get report name: ' . $e->getMessage(), DEBUG_DEVELOPER);
+        }
+
+        return $slug;
+    }
+
+    /**
+     * Get roles that can receive alerts.
+     *
+     * @return array
+     */
+    private function get_alert_roles() {
+        global $DB;
+
+        $roles = [];
+
+        // Get roles that typically have management responsibilities.
+        $records = $DB->get_records('role', [], 'sortorder ASC', 'id, shortname, name');
+        foreach ($records as $role) {
+            $rolename = role_get_name($role);
+            $roles[$role->id] = $rolename;
+        }
+
+        return $roles;
+    }
+
+    /**
      * Validate the form data.
      *
      * @param array $data
@@ -366,6 +815,17 @@ class block_adeptus_insights_edit_form extends block_edit_form {
         if (isset($data['config_display_mode']) && $data['config_display_mode'] === 'embedded') {
             if (empty($data['config_show_chart']) && empty($data['config_show_table'])) {
                 $errors['config_show_chart'] = get_string('errorloadingreport', 'block_adeptus_insights');
+            }
+        }
+
+        // Validate multi-alert configuration (alerts_json is validated via JavaScript).
+        // Server-side validation of JSON structure.
+        if (!empty($data['config_alerts_enabled']) && $data['config_display_mode'] === 'kpi') {
+            if (!empty($data['config_alerts_json'])) {
+                $alerts = json_decode($data['config_alerts_json'], true);
+                if (json_last_error() !== JSON_ERROR_NONE) {
+                    $errors['config_alerts_json'] = 'Invalid alert configuration format';
+                }
             }
         }
 

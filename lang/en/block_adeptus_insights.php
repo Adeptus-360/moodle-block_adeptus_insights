@@ -191,3 +191,207 @@ $string['cacheduration'] = 'Cache duration';
 $string['cacheduration_desc'] = 'How long to cache report data (in seconds).';
 $string['defaultchartheight'] = 'Default chart height';
 $string['defaultchartheight_desc'] = 'Default height for charts in pixels.';
+
+// KPI History and Trends.
+$string['task_cleanup_kpi_history'] = 'Cleanup old KPI history entries';
+$string['kpi_trend_up'] = 'Trending up';
+$string['kpi_trend_down'] = 'Trending down';
+$string['kpi_trend_neutral'] = 'No change';
+$string['kpi_change_percentage'] = '{$a}% change';
+$string['kpi_no_history'] = 'No historical data';
+$string['kpi_history_points'] = '{$a} data points';
+$string['kpi_first_recorded'] = 'First recorded: {$a}';
+$string['kpi_last_recorded'] = 'Last recorded: {$a}';
+$string['kpi_min_value'] = 'Min: {$a}';
+$string['kpi_max_value'] = 'Max: {$a}';
+$string['kpi_avg_value'] = 'Avg: {$a}';
+
+// KPI History Interval Settings.
+$string['configkpihistoryinterval'] = 'History save frequency';
+$string['configkpihistoryinterval_help'] = 'How often to save a new KPI history data point for trend tracking and sparklines. More frequent saves provide more detailed trend data but use more storage. Less frequent saves are better for long-term trends.';
+$string['kpi_interval_1h'] = 'Every hour';
+$string['kpi_interval_6h'] = 'Every 6 hours';
+$string['kpi_interval_12h'] = 'Every 12 hours';
+$string['kpi_interval_1d'] = 'Every day';
+$string['kpi_interval_3d'] = 'Every 3 days';
+$string['kpi_interval_1w'] = 'Every week';
+$string['kpi_interval_1m'] = 'Every month';
+
+// Alert System - Configuration Headers.
+$string['config_header_alerts'] = 'Alert Configuration';
+$string['config_header_alerts_desc'] = 'Configure alert thresholds to receive notifications when KPI metrics exceed defined limits.';
+$string['config_header_alerts_help'] = 'The Alert System provides proactive monitoring for your KPI metrics. Configure thresholds for the metrics that matter most to your organisation, and receive notifications when they require attention.
+
+**Example use cases:**
+- Get notified when enrollment numbers reach a target milestone
+- Monitor course completion rates for quality assurance
+- Track engagement metrics to identify successful content
+- Receive alerts when key performance indicators need review
+
+**Configuration options:**
+- **Report to monitor**: Choose which KPI/report metric to track
+- **Threshold conditions**: Set warning and critical levels
+- **Check frequency**: How often to evaluate the metric
+- **Notification preferences**: Email, Moodle messages, or both
+- **Cooldown period**: Prevent repeated notifications
+
+You can configure multiple alerts per block, each monitoring a different metric with its own thresholds and notification settings.';
+
+// Alert System - Scheduled Tasks.
+$string['task_check_alert_thresholds'] = 'Check KPI alert thresholds';
+$string['task_cleanup_alert_history'] = 'Cleanup old alert history entries';
+
+// Alert System - Message Providers.
+$string['messageprovider:alertnotification'] = 'KPI alert notifications';
+$string['messageprovider:criticalalert'] = 'Critical KPI alerts';
+$string['messageprovider:alertrecovery'] = 'Alert recovery notifications';
+
+// Alert System - Status Labels.
+$string['alert_status_ok'] = 'OK';
+$string['alert_status_warning'] = 'Warning';
+$string['alert_status_critical'] = 'Critical';
+$string['alert_status_recovery'] = 'Recovered';
+
+// Alert System - Operators.
+$string['alert_op_gt'] = 'Greater than';
+$string['alert_op_lt'] = 'Less than';
+$string['alert_op_eq'] = 'Equals';
+$string['alert_op_gte'] = 'Greater than or equal to';
+$string['alert_op_lte'] = 'Less than or equal to';
+$string['alert_op_change_pct'] = 'Change by percentage';
+$string['alert_op_increase_pct'] = 'Increase by percentage';
+$string['alert_op_decrease_pct'] = 'Decrease by percentage';
+
+// Alert System - Check Intervals.
+$string['alert_interval_5m'] = 'Every 5 minutes';
+$string['alert_interval_15m'] = 'Every 15 minutes';
+$string['alert_interval_30m'] = 'Every 30 minutes';
+$string['alert_interval_1h'] = 'Every hour';
+$string['alert_interval_2h'] = 'Every 2 hours';
+$string['alert_interval_4h'] = 'Every 4 hours';
+$string['alert_interval_8h'] = 'Every 8 hours';
+$string['alert_interval_24h'] = 'Every 24 hours';
+
+// Alert System - Configuration Form.
+$string['config_alerts_enabled'] = 'Enable alerts for this block';
+$string['config_alerts_enabled_desc'] = 'When enabled, you can configure threshold alerts for KPI metrics.';
+$string['config_alerts_enabled_help'] = 'Enable the alert system to receive proactive notifications when your KPI metrics reach important thresholds.
+
+**How it works:**
+- Configure warning and critical thresholds for any monitored report
+- The system checks metrics at your defined intervals (e.g., hourly, daily)
+- When a threshold is crossed, notifications are sent via Moodle messaging and/or email
+
+**Alert types:**
+- **Warning** (amber): Metric has reached the warning threshold
+- **Critical** (red): Metric has reached the critical threshold
+- **Recovery** (green): Metric has returned to normal levels
+
+**Best practices:**
+- Choose thresholds that align with your organisation\'s goals and KPIs
+- Use warning thresholds for early awareness, critical for urgent attention
+- Configure appropriate cooldown periods to control notification frequency';
+$string['config_add_alert'] = 'Add alert';
+$string['config_remove_alert'] = 'Remove alert';
+$string['config_alert_report'] = 'Report to monitor';
+$string['config_alert_report_desc'] = 'Select which report/KPI to monitor for this alert.';
+$string['config_alert_report_placeholder'] = 'Search reports by name, category, or type...';
+$string['config_alert_name'] = 'Alert name';
+$string['config_alert_name_desc'] = 'A friendly name for this alert (optional).';
+$string['config_alert_description'] = 'Alert description';
+$string['config_alert_description_desc'] = 'Additional context included in notifications (optional).';
+$string['config_alert_operator'] = 'Condition';
+$string['config_alert_operator_desc'] = 'When to trigger the alert.';
+$string['config_alert_warning_value'] = 'Warning threshold';
+$string['config_alert_warning_value_desc'] = 'Value that triggers a warning alert.';
+$string['config_alert_critical_value'] = 'Critical threshold';
+$string['config_alert_critical_value_desc'] = 'Value that triggers a critical alert.';
+$string['config_alert_check_interval'] = 'Check frequency';
+$string['config_alert_check_interval_desc'] = 'How often to check the threshold.';
+$string['config_alert_cooldown'] = 'Notification cooldown';
+$string['config_alert_cooldown_desc'] = 'Minimum time between repeated notifications for the same alert.';
+$string['config_alert_notify_warning'] = 'Notify on warning';
+$string['config_alert_notify_warning_desc'] = 'Send notification when warning threshold is reached.';
+$string['config_alert_notify_critical'] = 'Notify on critical';
+$string['config_alert_notify_critical_desc'] = 'Send notification when critical threshold is reached.';
+$string['config_alert_notify_recovery'] = 'Notify on recovery';
+$string['config_alert_notify_recovery_desc'] = 'Send notification when alert status returns to OK.';
+$string['config_alert_notify_email'] = 'Send email notifications';
+$string['config_alert_notify_email_desc'] = 'Send alerts to the email addresses specified below.';
+$string['config_alert_notify_email_addresses'] = 'Email recipients';
+$string['config_alert_notify_email_addresses_desc'] = 'Enter email addresses to receive alerts (one per line). Can include external stakeholders who don\'t have Moodle accounts.';
+$string['config_alert_notify_email_addresses_placeholder'] = 'admin@example.com
+manager@example.com
+stakeholder@company.com';
+$string['config_alert_notify_roles'] = 'Moodle message recipients';
+$string['config_alert_notify_roles_desc'] = 'Select roles to receive Moodle notifications. Users must have accounts on this site.';
+$string['config_no_alerts'] = 'No alerts configured. Click "Add alert" to create one.';
+$string['config_alerts_list'] = 'Configured Alerts';
+$string['config_alert_name_placeholder'] = 'e.g., Low Engagement Alert';
+$string['config_alert_notify_on'] = 'Notify on';
+$string['no_alerts_configured'] = 'No alerts configured yet. Click "Add Alert" to create your first alert.';
+$string['edit_alert'] = 'Edit alert';
+$string['delete_alert'] = 'Delete alert';
+$string['alert_delete_confirm'] = 'Are you sure you want to delete this alert?';
+$string['add_new_alert'] = 'Add New Alert';
+$string['alert_report_label'] = 'Report: {$a}';
+$string['alert_check_every'] = 'Check: {$a}';
+$string['alert_selected_report'] = 'Selected: {$a}';
+$string['alert_for_report'] = 'Alert for: {$a}';
+$string['alert_thresholds'] = 'Warning: {$a->warning}, Critical: {$a->critical}';
+$string['alert_threshold_warning_only'] = 'Warning: {$a}';
+$string['alert_threshold_critical_only'] = 'Critical: {$a}';
+$string['alert_check_every'] = 'Check every {$a}';
+$string['alert_status_badge_ok'] = 'OK';
+$string['alert_status_badge_warning'] = 'Warning';
+$string['alert_status_badge_critical'] = 'Critical';
+$string['alert_enabled'] = 'Enabled';
+$string['alert_disabled'] = 'Disabled';
+$string['alert_validation_report_required'] = 'Please select a report to monitor.';
+$string['alert_validation_threshold_required'] = 'At least one threshold (warning or critical) is required.';
+
+// Alert System - Notification Messages.
+$string['alert_notification_subject'] = '{$a->status}: {$a->alert}';
+$string['alert_notification_intro'] = 'The alert "{$a->alert}" has changed status to {$a->status}.';
+$string['alert_notification_details'] = 'Report: {$a->report}
+Current value: {$a->value}
+Threshold: {$a->threshold}
+Details: {$a->details}';
+$string['alert_notification_action'] = 'View dashboard: {$a}';
+
+// Alert System - Visual Indicators.
+$string['alerts_badge_warning'] = '{$a} warning';
+$string['alerts_badge_warnings'] = '{$a} warnings';
+$string['alerts_badge_critical'] = '{$a} critical';
+$string['alerts_badge_criticals'] = '{$a} critical alerts';
+$string['alert_indicator_warning'] = 'Warning: approaching threshold';
+$string['alert_indicator_critical'] = 'Critical: threshold exceeded';
+$string['alert_indicator_ok'] = 'Status OK';
+$string['view_alert_details'] = 'View alert details';
+$string['dismiss_alert'] = 'Dismiss alert';
+$string['acknowledge_alert'] = 'Acknowledge';
+
+// Alert System - History.
+$string['alert_history'] = 'Alert History';
+$string['alert_history_empty'] = 'No alert history available.';
+$string['alert_triggered_at'] = 'Triggered {$a}';
+$string['alert_value_was'] = 'Value was {$a->value} (threshold: {$a->threshold})';
+$string['alert_status_changed'] = 'Status changed from {$a->from} to {$a->to}';
+
+// Alert System - Info Panel Descriptions.
+$string['insurance_policy_title'] = 'Proactive Monitoring';
+$string['insurance_policy_desc'] = 'Set up alerts to stay informed when your KPIs reach important milestones or require attention.';
+$string['insurance_example_inactive'] = 'Monitor user activity levels across your courses';
+$string['insurance_example_submissions'] = 'Track submission rates and completion progress';
+$string['insurance_example_grades'] = 'Watch for changes in grade distributions';
+$string['insurance_example_engagement'] = 'Detect shifts in engagement patterns';
+
+// Alert System - Cooldown Options.
+$string['cooldown_15m'] = '15 minutes';
+$string['cooldown_30m'] = '30 minutes';
+$string['cooldown_1h'] = '1 hour';
+$string['cooldown_2h'] = '2 hours';
+$string['cooldown_4h'] = '4 hours';
+$string['cooldown_8h'] = '8 hours';
+$string['cooldown_24h'] = '24 hours';
+$string['cooldown_48h'] = '48 hours';
