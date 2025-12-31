@@ -1751,6 +1751,103 @@
     .block-adeptus-modal-footer .btn {
         width: 100%;
     }
+
+    /* Modal full-width on tablet/mobile */
+    .modal-dialog.modal-lg {
+        max-width: 100%;
+        margin: 0.5rem;
+    }
+
+    /* Ensure tables scroll horizontally */
+    .modal-table-container,
+    .embedded-table-container,
+    .tab-table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Tab navigation - scrollable on mobile */
+    .block-adeptus-tab-nav {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+
+    .block-adeptus-tab-nav::-webkit-scrollbar {
+        display: none;
+    }
+
+    .block-adeptus-tab-nav .nav-item {
+        flex-shrink: 0;
+    }
+
+    /* KPI sparklines larger touch area */
+    .kpi-card-sparkline {
+        min-height: 35px;
+    }
+
+    /* Touch-friendly buttons (44px minimum) */
+    .block-adeptus-toolbar-actions .btn,
+    .embedded-action-bar .btn,
+    .tab-action-bar .btn {
+        min-height: 44px;
+        min-width: 44px;
+    }
+
+    .view-toggle .view-toggle-btn,
+    .view-toggle .embedded-view-toggle-btn,
+    .view-toggle .tab-view-toggle-btn {
+        min-height: 44px;
+        padding: 0.5rem 1rem;
+    }
+
+    /* Pagination touch targets */
+    .pagination-controls .btn,
+    .embedded-table-pagination .btn,
+    .tab-table-pagination .btn,
+    .table-pagination .btn {
+        min-height: 44px;
+        min-width: 44px;
+    }
+}
+
+/* Small mobile devices */
+@media (max-width: 480px) {
+    /* Stack KPI grid to single column */
+    .block-adeptus-kpi-grid.kpi-cols-2 {
+        grid-template-columns: 1fr;
+    }
+
+    /* Larger KPI text for readability */
+    .kpi-card-value {
+        font-size: 1.75rem;
+    }
+
+    /* Full-width modal on small mobile */
+    .modal-dialog.modal-lg {
+        margin: 0;
+        max-width: 100%;
+        height: 100%;
+    }
+
+    .modal-dialog.modal-lg .modal-content {
+        height: 100%;
+        border-radius: 0;
+    }
+
+    /* Alert edit panel - stack all columns */
+    .alert-edit-panel .row > [class*="col-"] {
+        flex: 0 0 100%;
+        max-width: 100%;
+        margin-bottom: 0.5rem;
+    }
+
+    /* Checkbox groups wrap nicely */
+    .alert-edit-panel .d-flex.flex-wrap .custom-control {
+        margin-bottom: 0.5rem;
+    }
 }
 
 /* ==========================================================================
@@ -2197,4 +2294,102 @@
 
 .kpi-icon-option i {
     font-size: 0.875rem;
+}
+
+/* Mobile responsive icon picker */
+@media (max-width: 575.98px) {
+    .kpi-icon-dropdown {
+        width: calc(100vw - 2rem);
+        max-width: 300px;
+        left: 50% !important;
+        transform: translateX(-50%);
+    }
+
+    .kpi-icon-picker.dropup .kpi-icon-dropdown {
+        transform: translateX(-50%);
+    }
+
+    .kpi-icon-option {
+        width: 36px;
+        height: 36px;
+    }
+
+    /* Report selector list on mobile */
+    .report-selector-list .list-group-item {
+        flex-wrap: wrap;
+        padding: 0.75rem;
+    }
+
+    .report-selector-list .list-group-item .d-flex {
+        width: 100%;
+    }
+
+    .report-selector-list .report-selector-remove {
+        margin-top: 0.5rem;
+        margin-left: auto;
+    }
+
+    /* Alert report dropdown */
+    .alert-report-dropdown {
+        width: calc(100% - 1rem) !important;
+        max-width: none !important;
+    }
+
+    /* Searchable dropdown on mobile */
+    .searchable-dropdown-menu {
+        max-width: calc(100vw - 2rem);
+    }
+}
+
+/* Edit form responsive improvements */
+@media (max-width: 767.98px) {
+    /* Report selector UI */
+    .report-selector-ui {
+        margin-bottom: 1rem;
+    }
+
+    .report-selector-header {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .report-selector-search {
+        width: 100%;
+    }
+
+    /* Alert cards stack better on mobile */
+    .alerts-list .card {
+        margin-bottom: 0.75rem;
+    }
+
+    .alerts-list .card-body {
+        padding: 0.75rem;
+    }
+
+    .alerts-list .card-body .d-flex {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    /* Alert list header */
+    .alerts-list-header {
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: flex-start !important;
+    }
+
+    .alerts-list-header #add-alert-btn {
+        width: 100%;
+    }
+
+    /* Alert edit panel footer */
+    .alert-edit-panel .card-footer {
+        display: flex;
+        flex-direction: column-reverse;
+        gap: 0.5rem;
+    }
+
+    .alert-edit-panel .card-footer .btn {
+        width: 100%;
+    }
 }
