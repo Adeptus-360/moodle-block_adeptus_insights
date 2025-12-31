@@ -29,6 +29,52 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
      *
      * @param {Object} options Configuration options
      */
+    // Available icons for KPI cards (FontAwesome 4).
+    var KPI_ICONS = [
+        {id: 'fa-users', label: 'Users', category: 'People'},
+        {id: 'fa-user', label: 'User', category: 'People'},
+        {id: 'fa-user-plus', label: 'New User', category: 'People'},
+        {id: 'fa-graduation-cap', label: 'Education', category: 'Education'},
+        {id: 'fa-book', label: 'Book', category: 'Education'},
+        {id: 'fa-certificate', label: 'Certificate', category: 'Education'},
+        {id: 'fa-clock-o', label: 'Time', category: 'Time'},
+        {id: 'fa-calendar', label: 'Calendar', category: 'Time'},
+        {id: 'fa-hourglass-half', label: 'Hourglass', category: 'Time'},
+        {id: 'fa-check-circle', label: 'Complete', category: 'Status'},
+        {id: 'fa-check', label: 'Check', category: 'Status'},
+        {id: 'fa-trophy', label: 'Trophy', category: 'Status'},
+        {id: 'fa-star', label: 'Star', category: 'Status'},
+        {id: 'fa-bar-chart', label: 'Bar Chart', category: 'Analytics'},
+        {id: 'fa-line-chart', label: 'Line Chart', category: 'Analytics'},
+        {id: 'fa-pie-chart', label: 'Pie Chart', category: 'Analytics'},
+        {id: 'fa-area-chart', label: 'Area Chart', category: 'Analytics'},
+        {id: 'fa-percent', label: 'Percent', category: 'Numbers'},
+        {id: 'fa-hashtag', label: 'Number', category: 'Numbers'},
+        {id: 'fa-sort-numeric-asc', label: 'Ranking', category: 'Numbers'},
+        {id: 'fa-dollar', label: 'Dollar', category: 'Financial'},
+        {id: 'fa-gbp', label: 'Pound', category: 'Financial'},
+        {id: 'fa-money', label: 'Money', category: 'Financial'},
+        {id: 'fa-tasks', label: 'Tasks', category: 'Progress'},
+        {id: 'fa-spinner', label: 'Progress', category: 'Progress'},
+        {id: 'fa-bullseye', label: 'Target', category: 'Progress'},
+        {id: 'fa-flag', label: 'Flag', category: 'Progress'},
+        {id: 'fa-envelope', label: 'Email', category: 'Communication'},
+        {id: 'fa-comments', label: 'Comments', category: 'Communication'},
+        {id: 'fa-bell', label: 'Notifications', category: 'Communication'},
+        {id: 'fa-exclamation-triangle', label: 'Warning', category: 'Alerts'},
+        {id: 'fa-info-circle', label: 'Info', category: 'Alerts'},
+        {id: 'fa-thumbs-up', label: 'Thumbs Up', category: 'Feedback'},
+        {id: 'fa-thumbs-down', label: 'Thumbs Down', category: 'Feedback'},
+        {id: 'fa-smile-o', label: 'Satisfaction', category: 'Feedback'}
+    ];
+
+    // Default icons for KPI cards (fallback when no icon selected).
+    var DEFAULT_KPI_ICONS = ['fa-users', 'fa-graduation-cap', 'fa-clock-o', 'fa-check-circle'];
+
+    /**
+     * Report Selector component for picking KPI/Tab reports.
+     * @param {Object} options Configuration options
+     */
     var ReportSelector = function(options) {
         this.mode = options.mode || 'kpi'; // 'kpi' or 'tabs'
         this.apiKey = options.apiKey || '';
@@ -510,12 +556,22 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
          * @param {Object} report Report object
          */
         addReport: function(report) {
+            // Determine default icon based on current count (for KPI mode)
+            var defaultIcon = DEFAULT_KPI_ICONS[this.selectedReports.length % DEFAULT_KPI_ICONS.length];
+
             // Add to selected list
-            this.selectedReports.push({
+            var reportData = {
                 slug: report.slug,
                 source: report.source,
                 name: report.displayName || report.name || report.title || report.slug
-            });
+            };
+
+            // Add icon for KPI mode only
+            if (this.mode === 'kpi') {
+                reportData.icon = defaultIcon;
+            }
+
+            this.selectedReports.push(reportData);
 
             this.saveSelection();
             this.updateSelectedCount();
@@ -549,10 +605,18 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                 var name = selected.name || (report ? report.displayName : selected.slug);
                 var categoryName = report ? report.categoryName : 'Unknown';
 
+                // Build icon picker for KPI mode
+                var iconPicker = '';
+                if (self.mode === 'kpi') {
+                    var currentIcon = selected.icon || DEFAULT_KPI_ICONS[index % DEFAULT_KPI_ICONS.length];
+                    iconPicker = self.buildIconPicker(currentIcon, index);
+                }
+
                 var item = '<li class="list-group-item d-flex justify-content-between align-items-center" ' +
                     'data-index="' + index + '" data-slug="' + selected.slug + '" data-source="' + selected.source + '">' +
                     '<div class="d-flex align-items-center flex-grow-1 min-width-0">' +
                     '<span class="drag-handle mr-2" style="cursor: move;"><i class="fa fa-bars text-muted"></i></span>' +
+                    iconPicker +
                     '<span class="badge badge-secondary mr-2">' + (index + 1) + '</span>' +
                     '<span class="text-truncate" title="' + self.escapeHtml(name) + '">' + self.escapeHtml(name) + '</span>' +
                     '<small class="text-muted ml-2 d-none d-md-inline">[' + self.escapeHtml(categoryName) + ']</small>' +
@@ -570,6 +634,135 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
 
             this.updateListDisplay();
             this.initSortable();
+            this.initIconPickers();
+        },
+
+        /**
+         * Build icon picker dropdown HTML.
+         *
+         * @param {string} currentIcon Current icon class
+         * @param {number} index Report index
+         * @return {string} HTML for icon picker
+         */
+        buildIconPicker: function(currentIcon, index) {
+            var html = '<div class="dropdown kpi-icon-picker mr-2" data-index="' + index + '">' +
+                '<button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" ' +
+                'data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" title="Select icon">' +
+                '<i class="fa ' + currentIcon + '"></i>' +
+                '</button>' +
+                '<div class="dropdown-menu kpi-icon-dropdown">' +
+                '<div class="px-2 py-1">' +
+                '<small class="text-muted">Select an icon</small>' +
+                '</div>' +
+                '<div class="dropdown-divider"></div>' +
+                '<div class="kpi-icon-grid px-2">';
+
+            // Group icons by category
+            var categories = {};
+            KPI_ICONS.forEach(function(icon) {
+                if (!categories[icon.category]) {
+                    categories[icon.category] = [];
+                }
+                categories[icon.category].push(icon);
+            });
+
+            // Render icons grouped by category
+            Object.keys(categories).forEach(function(category) {
+                html += '<div class="kpi-icon-category mb-1">' +
+                    '<small class="text-muted d-block mb-1">' + category + '</small>' +
+                    '<div class="d-flex flex-wrap">';
+
+                categories[category].forEach(function(icon) {
+                    var isActive = icon.id === currentIcon ? ' active' : '';
+                    html += '<button type="button" class="btn btn-sm btn-light kpi-icon-option m-1' + isActive + '" ' +
+                        'data-icon="' + icon.id + '" title="' + icon.label + '">' +
+                        '<i class="fa ' + icon.id + '"></i>' +
+                        '</button>';
+                });
+
+                html += '</div></div>';
+            });
+
+            html += '</div></div></div>';
+
+            return html;
+        },
+
+        /**
+         * Initialize icon picker event handlers.
+         * Manually handles dropdown toggle since Bootstrap doesn't auto-init dynamic content.
+         */
+        initIconPickers: function() {
+            var self = this;
+
+            // Handle dropdown toggle (manual implementation for dynamic content)
+            this.container.find('.kpi-icon-picker .dropdown-toggle').off('click.iconpicker').on('click.iconpicker', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                var $btn = $(this);
+                var $picker = $btn.closest('.kpi-icon-picker');
+                var $menu = $picker.find('.dropdown-menu');
+                var isOpen = $menu.hasClass('show');
+
+                // Close all other open dropdowns first
+                self.container.find('.kpi-icon-picker .dropdown-menu.show').removeClass('show');
+                self.container.find('.kpi-icon-picker .dropdown-toggle').attr('aria-expanded', 'false');
+
+                if (!isOpen) {
+                    // Calculate if dropdown would overflow - use dropup if needed
+                    var pickerRect = $picker[0].getBoundingClientRect();
+                    var viewportHeight = window.innerHeight;
+                    var spaceBelow = viewportHeight - pickerRect.bottom;
+
+                    // Use dropup if less than 320px below
+                    if (spaceBelow < 320) {
+                        $picker.addClass('dropup');
+                    } else {
+                        $picker.removeClass('dropup');
+                    }
+
+                    // Open this dropdown
+                    $menu.addClass('show');
+                    $btn.attr('aria-expanded', 'true');
+                }
+            });
+
+            // Handle icon selection
+            this.container.find('.kpi-icon-option').off('click.iconpicker').on('click.iconpicker', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                var $btn = $(this);
+                var $picker = $btn.closest('.kpi-icon-picker');
+                var index = parseInt($picker.data('index'), 10);
+                var newIcon = $btn.data('icon');
+
+                // Update selected report
+                if (self.selectedReports[index]) {
+                    self.selectedReports[index].icon = newIcon;
+                    self.saveSelection();
+
+                    // Update picker button icon
+                    $picker.find('.dropdown-toggle i').removeClass().addClass('fa ' + newIcon);
+
+                    // Update active state
+                    $picker.find('.kpi-icon-option').removeClass('active');
+                    $btn.addClass('active');
+
+                    // Close dropdown
+                    $picker.find('.dropdown-menu').removeClass('show');
+                    $picker.find('.dropdown-toggle').attr('aria-expanded', 'false');
+                }
+            });
+
+            // Close dropdown when clicking outside
+            $(document).off('click.iconpicker-close').on('click.iconpicker-close', function(e) {
+                if (!$(e.target).closest('.kpi-icon-picker').length) {
+                    self.container.find('.kpi-icon-picker .dropdown-menu.show').removeClass('show');
+                    self.container.find('.kpi-icon-picker .dropdown-toggle').attr('aria-expanded', 'false');
+                }
+            });
         },
 
         /**

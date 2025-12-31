@@ -779,7 +779,12 @@ define([
                     return r.slug === slug && (r.source === source || !item.source);
                 });
                 if (report) {
-                    result.push(report);
+                    // Clone report and add custom icon if configured
+                    var enrichedReport = Object.assign({}, report);
+                    if (item.icon) {
+                        enrichedReport.customIcon = item.icon;
+                    }
+                    result.push(enrichedReport);
                 }
             });
 
@@ -1513,9 +1518,10 @@ define([
                 $card.find('.kpi-card-trend').addClass('d-none');
                 $card.find('.kpi-card-sparkline').addClass('d-none');
 
-                // Set different icons based on index
-                var icons = ['fa-users', 'fa-graduation-cap', 'fa-clock', 'fa-check-circle'];
-                $card.find('.kpi-card-icon i').removeClass('fa-chart-line').addClass(icons[index % icons.length]);
+                // Set icon - use custom icon if configured, otherwise default based on index
+                var defaultIcons = ['fa-users', 'fa-graduation-cap', 'fa-clock-o', 'fa-check-circle'];
+                var iconClass = report.customIcon || defaultIcons[index % defaultIcons.length];
+                $card.find('.kpi-card-icon i').removeClass('fa-bar-chart').addClass(iconClass);
 
                 gridContainer.append($card);
 
