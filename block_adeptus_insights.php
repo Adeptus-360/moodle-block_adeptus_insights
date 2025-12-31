@@ -347,6 +347,15 @@ class block_adeptus_insights extends block_base {
             }
         }
 
+        // Parse manually selected reports (for report_source = 'manual').
+        $manualselectedreports = [];
+        if (!empty($this->config->selected_reports_json)) {
+            $decoded = json_decode($this->config->selected_reports_json, true);
+            if (is_array($decoded)) {
+                $manualselectedreports = $decoded;
+            }
+        }
+
         // Get alert status for this block.
         $alertstatus = $this->get_alert_status();
 
@@ -354,6 +363,7 @@ class block_adeptus_insights extends block_base {
             'displayMode' => $this->config->display_mode ?? 'links',
             'reportSource' => $this->config->report_source ?? 'all',
             'selectedReports' => $this->config->selected_reports ?? [],
+            'manualSelectedReports' => $manualselectedreports,
             'reportCategory' => $this->config->report_category ?? '',
             'kpiSelectedReports' => $kpiselectedreports,
             'tabsSelectedReports' => $tabsselectedreports,
