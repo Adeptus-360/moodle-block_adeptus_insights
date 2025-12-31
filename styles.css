@@ -1106,6 +1106,30 @@
     height: 30px;
 }
 
+/* KPI Footer - timestamp left, refresh right */
+.block-adeptus-kpi-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.block-adeptus-kpi-footer .block-adeptus-timestamp {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.block-adeptus-kpi-footer .block-adeptus-refresh {
+    color: var(--adeptus-secondary);
+    font-size: 0.875rem;
+    line-height: 1;
+    margin-left: auto;
+}
+
+.block-adeptus-kpi-footer .block-adeptus-refresh:hover {
+    color: var(--adeptus-primary);
+}
+
 /* ==========================================================================
    Tabbed Reports Mode
    ========================================================================== */

@@ -3453,15 +3453,26 @@ define([
          * Update the timestamp display.
          */
         updateTimestamp: function() {
-            if (!this.config.showTimestamp || !this.lastUpdated) {
+            if (!this.lastUpdated) {
                 return;
             }
 
-            var timestampEl = this.container.find('.block-adeptus-timestamp');
             var text = this.formatTimeAgo(this.lastUpdated);
 
-            timestampEl.find('.timestamp-text').text(text);
-            timestampEl.removeClass('d-none');
+            // Handle KPI mode footer (contains both timestamp and refresh)
+            var kpiFooter = this.container.find('.block-adeptus-kpi-footer');
+            if (kpiFooter.length) {
+                kpiFooter.find('.timestamp-text').text(text);
+                kpiFooter.removeClass('d-none');
+                return;
+            }
+
+            // Handle standard timestamp element
+            if (this.config.showTimestamp) {
+                var timestampEl = this.container.find('.block-adeptus-timestamp');
+                timestampEl.find('.timestamp-text').text(text);
+                timestampEl.removeClass('d-none');
+            }
         },
 
         /**
