@@ -121,8 +121,17 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                 // Bind events
                 self.bindEvents();
 
-                // Show container
-                self.container.show();
+                // Show container (except for manual mode which is controlled by report_source toggle).
+                // KPI and Tabs visibility is controlled by display_mode toggle in bindEvents().
+                if (self.mode === 'manual') {
+                    // Manual mode visibility is controlled by report_source, trigger check now.
+                    var reportSource = $('[name="config_report_source"]').val();
+                    if (reportSource === 'manual') {
+                        self.container.show();
+                    }
+                } else {
+                    self.container.show();
+                }
             });
         },
 
@@ -170,7 +179,12 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
          * Render the report selector UI with searchable dropdown.
          */
         render: function() {
-            var modeLabel = this.mode === 'kpi' ? 'KPI Reports' : 'Tab Reports';
+            var modeLabels = {
+                'kpi': 'KPI Reports',
+                'tabs': 'Tab Reports',
+                'manual': 'Selected Reports'
+            };
+            var modeLabel = modeLabels[this.mode] || 'Reports';
             var uniqueId = this.mode + '-search-' + Date.now();
 
             var html = '<div class="report-selector-ui">' +
@@ -455,11 +469,11 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
          */
         updateHighlight: function() {
             var items = this.container.find('.report-search-item');
-            items.removeClass('bg-primary text-white');
+            items.removeClass('bg-primary text-white bg-light');
 
             if (this.highlightedIndex >= 0 && this.highlightedIndex < items.length) {
                 var item = items.eq(this.highlightedIndex);
-                item.addClass('bg-primary text-white');
+                item.removeClass('bg-light').addClass('bg-primary text-white');
 
                 // Scroll into view
                 var dropdown = this.container.find('.report-search-dropdown');
@@ -1727,10 +1741,28 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                 textareaName: 'config_tabs_selected_reports'
             });
 
+            // Initialize Manual report selector (for Report Source = Manual).
+            new ReportSelector({
+                mode: 'manual',
+                apiKey: options.apiKey,
+                containerId: 'manual-report-selector-container',
+                textareaName: 'config_selected_reports_json'
+            });
+
             // Initialize Alerts manager.
             new AlertsManager({
                 apiKey: options.apiKey
             });
+
+            // Handle report source visibility toggle.
+            $('[name="config_report_source"]').on('change', function() {
+                var source = $(this).val();
+                if (source === 'manual') {
+                    $('#manual-report-selector-container').show();
+                } else {
+                    $('#manual-report-selector-container').hide();
+                }
+            }).trigger('change');
         }
     };
 });

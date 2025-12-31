@@ -86,10 +86,14 @@ class block_adeptus_insights_edit_form extends block_edit_form {
         $mform->hideIf('config_report_category', 'config_report_source', 'eq', 'manual');
 
         // Selected reports (for manual selection).
-        // This will be populated via JavaScript from the API.
-        $mform->addElement('textarea', 'config_selected_reports_json', get_string('configselectedreports', 'block_adeptus_insights'));
+        // Hidden textarea to store the JSON data.
+        $mform->addElement('textarea', 'config_selected_reports_json', get_string('configselectedreports', 'block_adeptus_insights'),
+            ['rows' => 4, 'class' => 'manual-reports-selector d-none']);
         $mform->setType('config_selected_reports_json', PARAM_RAW);
         $mform->hideIf('config_selected_reports_json', 'config_report_source', 'neq', 'manual');
+
+        // Manual report selector UI (rendered via JavaScript).
+        $mform->addElement('html', '<div id="manual-report-selector-container" class="manual-report-selector-ui mb-3" style="display:none;"></div>');
 
         // =====================================
         // DISPLAY OPTIONS
