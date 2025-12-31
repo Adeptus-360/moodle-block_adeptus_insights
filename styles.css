@@ -829,6 +829,22 @@
     border-bottom-right-radius: 0;
 }
 
+/* Disabled state for locked category dropdown */
+.searchable-dropdown.disabled .searchable-dropdown-toggle {
+    background-color: #e9ecef;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.searchable-dropdown.disabled .searchable-dropdown-toggle:hover {
+    background-color: #e9ecef;
+    border-color: #ced4da;
+}
+
+.searchable-dropdown.disabled .searchable-dropdown-text {
+    color: #6c757d;
+}
+
 .searchable-dropdown-text {
     flex: 1;
     overflow: hidden;

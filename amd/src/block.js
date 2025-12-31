@@ -646,11 +646,13 @@ define([
             var promises = [];
             var source = this.config.reportSource || 'all';
 
-            if (source === 'all' || source === 'wizard') {
+            // For 'manual' and 'category' sources, we need to fetch all reports first,
+            // then filter them in filterReports(). Same for 'all'.
+            if (source === 'all' || source === 'wizard' || source === 'manual' || source === 'category') {
                 promises.push(this.fetchFromApi('/wizard-reports', token));
             }
 
-            if (source === 'all' || source === 'ai') {
+            if (source === 'all' || source === 'ai' || source === 'manual' || source === 'category') {
                 promises.push(this.fetchFromApi('/ai-reports', token));
             }
 
@@ -667,7 +669,10 @@ define([
 
                     var reports = result.reports || result.data || [];
                     if (reports && reports.length) {
-                        var reportSource = (source === 'ai' || (i === 1 && source === 'all')) ? 'ai' : 'wizard';
+                        // Determine report source: for sources that fetch both APIs (all, manual, category),
+                        // the second promise (i === 1) is AI reports.
+                        var fetchesBoth = (source === 'all' || source === 'manual' || source === 'category');
+                        var reportSource = (source === 'ai' || (i === 1 && fetchesBoth)) ? 'ai' : 'wizard';
                         reports.forEach(function(report) {
                             report.source = report.source || reportSource;
                             allReports.push(report);
@@ -797,6 +802,14 @@ define([
         populateCategoryFilter: function() {
             var self = this;
             var categoryMap = {};
+            var config = this.config;
+
+            // If reportSource is 'category', pre-set the selected category from config
+            // and lock it (user cannot change it).
+            var categoryLocked = (config.reportSource === 'category' && config.reportCategory);
+            if (categoryLocked) {
+                this.selectedCategory = config.reportCategory;
+            }
 
             // Extract unique categories from reports
             this.reports.forEach(function(report) {
@@ -815,6 +828,20 @@ define([
                     };
                 }
             });
+
+            // If category is locked and not found in reports, add it as a fallback
+            // This ensures the dropdown shows the configured category even if no reports match
+            if (categoryLocked && !categoryMap[config.reportCategory]) {
+                // Format slug as display name (capitalize, replace dashes/underscores with spaces)
+                var displayName = config.reportCategory
+                    .replace(/[-_]/g, ' ')
+                    .replace(/\b\w/g, function(l) { return l.toUpperCase(); });
+                categoryMap[config.reportCategory] = {
+                    slug: config.reportCategory,
+                    name: displayName,
+                    color: '#6c757d'
+                };
+            }
 
             // Convert to array and sort by name
             this.availableCategories = Object.values(categoryMap).sort(function(a, b) {
@@ -872,6 +899,17 @@ define([
                     }
                 }
                 dropdown.find('.searchable-dropdown-text').text(selectedText);
+
+                // If category is locked via config, disable the dropdown
+                if (categoryLocked) {
+                    dropdown.addClass('disabled');
+                    dropdown.find('.searchable-dropdown-toggle')
+                        .addClass('disabled')
+                        .attr('disabled', true)
+                        .css('pointer-events', 'none')
+                        .attr('title', 'Category is set by block configuration');
+                    select.prop('disabled', true);
+                }
             }
         },
 
@@ -967,7 +1005,7 @@ define([
             var reports = this.reports.slice();
             var config = this.config;
 
-            // Filter by selected category (from dropdown).
+            // Filter by selected category (from dropdown - runtime selection).
             if (this.selectedCategory) {
                 reports = reports.filter(function(r) {
                     var catSlug = r.category_info ? r.category_info.slug : (r.category || '');
@@ -975,11 +1013,24 @@ define([
                 });
             }
 
-            // Filter to manually selected reports (from block config).
-            if (config.reportSource === 'manual' && config.selectedReports && config.selectedReports.length) {
-                var selected = config.selectedReports;
+            // Filter by category from block config (when reportSource === 'category').
+            if (config.reportSource === 'category' && config.reportCategory) {
                 reports = reports.filter(function(r) {
-                    return selected.indexOf(r.slug) !== -1;
+                    var catSlug = r.category_info ? r.category_info.slug : (r.category || '');
+                    return catSlug === config.reportCategory;
+                });
+            }
+
+            // Filter to manually selected reports (from block config).
+            // manualSelectedReports is an array of objects: [{slug, source, name}, ...]
+            if (config.reportSource === 'manual' && config.manualSelectedReports && config.manualSelectedReports.length) {
+                var selected = config.manualSelectedReports;
+                // Extract slugs from the objects for filtering.
+                var selectedSlugs = selected.map(function(item) {
+                    return typeof item === 'string' ? item : item.slug;
+                });
+                reports = reports.filter(function(r) {
+                    return selectedSlugs.indexOf(r.slug) !== -1;
                 });
             }
 
