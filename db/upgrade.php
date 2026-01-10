@@ -37,7 +37,6 @@ function xmldb_block_adeptus_insights_upgrade($oldversion) {
 
     // Upgrade to version with KPI history table.
     if ($oldversion < 2025123000) {
-
         // Define table block_adeptus_kpi_history to be created.
         $table = new xmldb_table('block_adeptus_kpi_history');
 
@@ -75,7 +74,6 @@ function xmldb_block_adeptus_insights_upgrade($oldversion) {
 
     // Upgrade to version with alert system tables.
     if ($oldversion < 2025123001) {
-
         // Define table block_adeptus_alerts to be created.
         $table = new xmldb_table('block_adeptus_alerts');
 
@@ -164,7 +162,6 @@ function xmldb_block_adeptus_insights_upgrade($oldversion) {
 
     // Add notify_emails field to alerts table.
     if ($oldversion < 2025123003) {
-
         // Define field notify_emails to be added to block_adeptus_alerts.
         $table = new xmldb_table('block_adeptus_alerts');
         $field = new xmldb_field('notify_emails', XMLDB_TYPE_TEXT, null, null, null, null, null, 'notify_roles');

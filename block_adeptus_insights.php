@@ -31,7 +31,6 @@ defined('MOODLE_INTERNAL') || die();
  * on dashboards, course pages, and other Moodle locations.
  */
 class block_adeptus_insights extends block_base {
-
     /**
      * Initialize the block.
      */
@@ -629,7 +628,6 @@ class block_adeptus_insights extends block_base {
             foreach ($todeleteids as $deleteid) {
                 \block_adeptus_insights\alert_manager::delete_alert($deleteid);
             }
-
         } catch (\Exception $e) {
             debugging('Failed to save alert configurations: ' . $e->getMessage(), DEBUG_DEVELOPER);
         }
@@ -643,7 +641,7 @@ class block_adeptus_insights extends block_base {
 
         try {
             $DB->set_field('block_adeptus_alerts', 'enabled', 0, [
-                'blockinstanceid' => $this->instance->id
+                'blockinstanceid' => $this->instance->id,
             ]);
         } catch (\Exception $e) {
             debugging('Failed to disable alerts: ' . $e->getMessage(), DEBUG_DEVELOPER);

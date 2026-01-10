@@ -32,7 +32,6 @@ use block_adeptus_insights\kpi_history_manager;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class check_alert_thresholds extends \core\task\scheduled_task {
-
     /**
      * Get task name.
      *
@@ -116,9 +115,13 @@ class check_alert_thresholds extends \core\task\scheduled_task {
 
                     // Get previous value for percentage-based operators.
                     $previousvalue = null;
-                    if (in_array($alert->operator,
+                    if (
+                        in_array(
+                            $alert->operator,
                             [alert_manager::OP_CHANGE_PERCENT, alert_manager::OP_INCREASE_PERCENT,
-                             alert_manager::OP_DECREASE_PERCENT])) {
+                            alert_manager::OP_DECREASE_PERCENT]
+                        )
+                    ) {
                         $previousvalue = $this->get_previous_value($blockinstanceid, $reportslug);
                     }
 
@@ -135,12 +138,13 @@ class check_alert_thresholds extends \core\task\scheduled_task {
                         mtrace("    - $reportslug: Status unchanged ({$result['new_status']})");
                     }
                 }
-
             } catch (\Exception $e) {
                 $errorcount++;
                 mtrace("  ERROR processing block $blockinstanceid: " . $e->getMessage());
-                debugging('Alert check error for block ' . $blockinstanceid . ': ' . $e->getMessage(),
-                    DEBUG_DEVELOPER);
+                debugging(
+                    'Alert check error for block ' . $blockinstanceid . ': ' . $e->getMessage(),
+                    DEBUG_DEVELOPER
+                );
             }
         }
 

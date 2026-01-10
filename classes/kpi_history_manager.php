@@ -26,7 +26,6 @@ defined('MOODLE_INTERNAL') || die();
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class kpi_history_manager {
-
     /** @var int Default minimum seconds between data points to avoid duplicates */
     const DEFAULT_INTERVAL_SECONDS = 3600; // 1 hour
 
@@ -214,7 +213,7 @@ class kpi_history_manager {
     public static function get_sparkline_data(int $blockinstanceid, string $reportslug, int $points = 10): array {
         $history = self::get_history($blockinstanceid, $reportslug, $points);
 
-        return array_map(function($entry) {
+        return array_map(function ($entry) {
             return (float) $entry->metric_value;
         }, $history);
     }
@@ -252,7 +251,7 @@ class kpi_history_manager {
         }
 
         // Delete older entries.
-        list($insql, $params) = $DB->get_in_or_equal($keepids, SQL_PARAMS_NAMED, 'keep', false);
+        [$insql, $params] = $DB->get_in_or_equal($keepids, SQL_PARAMS_NAMED, 'keep', false);
         $params['blockid'] = $blockinstanceid;
         $params['slug'] = $reportslug;
 

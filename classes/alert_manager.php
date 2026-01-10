@@ -29,7 +29,6 @@ defined('MOODLE_INTERNAL') || die();
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class alert_manager {
-
     /** @var string Alert status - within acceptable range */
     const STATUS_OK = 'ok';
 
@@ -252,7 +251,7 @@ class alert_manager {
 
         if (!empty($alerts)) {
             // Delete history for all alerts.
-            list($insql, $params) = $DB->get_in_or_equal($alerts);
+            [$insql, $params] = $DB->get_in_or_equal($alerts);
             $DB->delete_records_select('block_adeptus_alert_history', "alertid $insql", $params);
         }
 
@@ -296,8 +295,11 @@ class alert_manager {
                     $result['status'] = self::STATUS_CRITICAL;
                     $result['threshold_breached'] = $alert->critical_value;
                     $result['threshold_type'] = 'critical';
-                    $result['details'] = sprintf('%.1f%% change exceeds critical threshold of %.1f%%',
-                        $percentchange, $alert->critical_value);
+                    $result['details'] = sprintf(
+                        '%.1f%% change exceeds critical threshold of %.1f%%',
+                        $percentchange,
+                        $alert->critical_value
+                    );
                     return $result;
                 }
             }
@@ -307,8 +309,11 @@ class alert_manager {
                     $result['status'] = self::STATUS_WARNING;
                     $result['threshold_breached'] = $alert->warning_value;
                     $result['threshold_type'] = 'warning';
-                    $result['details'] = sprintf('%.1f%% change exceeds warning threshold of %.1f%%',
-                        $percentchange, $alert->warning_value);
+                    $result['details'] = sprintf(
+                        '%.1f%% change exceeds warning threshold of %.1f%%',
+                        $percentchange,
+                        $alert->warning_value
+                    );
                     return $result;
                 }
             }
@@ -504,8 +509,13 @@ class alert_manager {
      * @param array $evaluation Evaluation details
      * @return int History record ID
      */
-    private static function log_alert_event($alert, string $newstatus, string $oldstatus,
-            float $value, array $evaluation): int {
+    private static function log_alert_event(
+        $alert,
+        string $newstatus,
+        string $oldstatus,
+        float $value,
+        array $evaluation
+    ): int {
         global $DB;
 
         $record = new \stdClass();
@@ -694,7 +704,8 @@ class alert_manager {
         $alertname = !empty($alert->alert_name) ? $alert->alert_name : $alert->report_slug;
 
         // Subject line.
-        $subject = sprintf('[%s] %s: %s',
+        $subject = sprintf(
+            '[%s] %s: %s',
             $SITE->shortname,
             $statusemojis[$status] ?? '📊',
             get_string('alert_notification_subject', 'block_adeptus_insights', [
@@ -750,8 +761,13 @@ class alert_manager {
      * @param array $statusemojis Status emojis
      * @return string HTML content
      */
-    private static function build_html_notification($alert, string $status, array $evaluation,
-            array $statuslabels, array $statusemojis): string {
+    private static function build_html_notification(
+        $alert,
+        string $status,
+        array $evaluation,
+        array $statuslabels,
+        array $statusemojis
+    ): string {
         global $CFG, $SITE;
 
         $statuscolors = [
@@ -925,7 +941,8 @@ HTML;
     public static function get_alert_history(int $alertid, int $limit = 50): array {
         global $DB;
 
-        return $DB->get_records('block_adeptus_alert_history',
+        return $DB->get_records(
+            'block_adeptus_alert_history',
             ['alertid' => $alertid],
             'timecreated DESC',
             '*',
@@ -1016,10 +1033,13 @@ HTML;
             );
 
             if (!empty($keepids)) {
-                list($insql, $params) = $DB->get_in_or_equal($keepids, SQL_PARAMS_NAMED, 'id', false);
+                [$insql, $params] = $DB->get_in_or_equal($keepids, SQL_PARAMS_NAMED, 'id', false);
                 $params['alertid'] = $alertid;
-                $DB->delete_records_select('block_adeptus_alert_history',
-                    "alertid = :alertid AND id $insql", $params);
+                $DB->delete_records_select(
+                    'block_adeptus_alert_history',
+                    "alertid = :alertid AND id $insql",
+                    $params
+                );
             }
         }
     }
@@ -1088,8 +1108,12 @@ HTML;
 
             // Get previous value for comparison operators.
             $previousvalue = null;
-            if (in_array($alert->operator,
-                    [self::OP_CHANGE_PERCENT, self::OP_INCREASE_PERCENT, self::OP_DECREASE_PERCENT])) {
+            if (
+                in_array(
+                    $alert->operator,
+                    [self::OP_CHANGE_PERCENT, self::OP_INCREASE_PERCENT, self::OP_DECREASE_PERCENT]
+                )
+            ) {
                 $previousvalue = kpi_history_manager::get_previous_value($blockinstanceid, $alert->report_slug);
             }
 

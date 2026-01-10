@@ -36,7 +36,6 @@ use block_adeptus_insights\kpi_history_manager;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class get_kpi_history extends external_api {
-
     /**
      * Define parameters for execute function.
      *
@@ -103,7 +102,7 @@ class get_kpi_history extends external_api {
         }
 
         // Get sparkline data (just values).
-        $sparklinedata = array_map(function($h) {
+        $sparklinedata = array_map(function ($h) {
             return $h['value'];
         }, $historydata);
 

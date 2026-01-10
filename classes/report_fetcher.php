@@ -34,7 +34,6 @@ defined('MOODLE_INTERNAL') || die();
  * Provides methods to fetch reports from the Adeptus Insights backend API.
  */
 class report_fetcher {
-
     /** @var \report_adeptus_insights\installation_manager */
     private $installation_manager;
 
@@ -96,7 +95,7 @@ class report_fetcher {
 
         // Filter by category if specified.
         if (!empty($category)) {
-            $reports = array_filter($reports, function($report) use ($category) {
+            $reports = array_filter($reports, function ($report) use ($category) {
                 $reportCategory = $report['category_info']['slug'] ?? '';
                 return $reportCategory === $category;
             });
@@ -104,7 +103,7 @@ class report_fetcher {
         }
 
         // Sort by name.
-        usort($reports, function($a, $b) {
+        usort($reports, function ($a, $b) {
             return strcasecmp($a['name'] ?? '', $b['name'] ?? '');
         });
 
@@ -300,7 +299,7 @@ class report_fetcher {
         // Filter to selected reports if manual selection.
         if ($source === 'manual' && !empty($selectedReports)) {
             $selectedSlugs = is_array($selectedReports) ? $selectedReports : [$selectedReports];
-            $reports = array_filter($reports, function($report) use ($selectedSlugs) {
+            $reports = array_filter($reports, function ($report) use ($selectedSlugs) {
                 return in_array($report['slug'], $selectedSlugs);
             });
             $reports = array_values($reports);
@@ -312,7 +311,7 @@ class report_fetcher {
         }
 
         // Format for display.
-        return array_map(function($report) {
+        return array_map(function ($report) {
             return [
                 'slug' => $report['slug'],
                 'name' => $report['name'],

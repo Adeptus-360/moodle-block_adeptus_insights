@@ -35,7 +35,6 @@ use block_adeptus_insights\kpi_history_manager;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class save_kpi_history extends external_api {
-
     /**
      * Define parameters for execute function.
      *

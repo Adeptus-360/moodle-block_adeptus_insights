@@ -36,7 +36,6 @@ use context_system;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class search_reports extends external_api {
-
     /** @var int Cache duration in seconds */
     const CACHE_DURATION = 300; // 5 minutes
 
@@ -88,11 +87,12 @@ class search_reports extends external_api {
             $category = strtolower($report['category'] ?? '');
 
             // Match if query is empty (return all) or matches name, slug, or category.
-            if (empty($query) ||
+            if (
+                empty($query) ||
                 strpos($name, $query) !== false ||
                 strpos($slug, $query) !== false ||
-                strpos($category, $query) !== false) {
-
+                strpos($category, $query) !== false
+            ) {
                 // Format label with category and source badge.
                 $sourcebadge = $report['source'] === 'ai' ? '[AI]' : '[Wizard]';
                 $categoryinfo = !empty($report['category']) ? ' (' . $report['category'] . ')' : '';
@@ -113,7 +113,7 @@ class search_reports extends external_api {
         }
 
         // Sort results by relevance (exact matches first, then alphabetically).
-        usort($results, function($a, $b) use ($query) {
+        usort($results, function ($a, $b) use ($query) {
             $aname = strtolower($a['name']);
             $bname = strtolower($b['name']);
 
@@ -187,14 +187,13 @@ class search_reports extends external_api {
             }
 
             // Sort all reports alphabetically by name.
-            usort($allreports, function($a, $b) {
+            usort($allreports, function ($a, $b) {
                 return strcmp($a['name'], $b['name']);
             });
 
             // Update cache.
             self::$reportscache = $allreports;
             self::$cachetimestamp = time();
-
         } catch (\Exception $e) {
             debugging('Failed to fetch reports for search: ' . $e->getMessage(), DEBUG_DEVELOPER);
             return [];

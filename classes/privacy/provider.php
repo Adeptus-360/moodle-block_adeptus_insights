@@ -40,11 +40,7 @@ use core_privacy\local\request\writer;
  * @copyright  2026 Adeptus 360 <info@adeptus360.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class provider implements
-    \core_privacy\local\metadata\provider,
-    \core_privacy\local\request\plugin\provider,
-    \core_privacy\local\request\core_userlist_provider {
-
+class provider implements \core_privacy\local\metadata\provider, \core_privacy\local\request\core_userlist_provider, \core_privacy\local\request\plugin\provider {
     /**
      * Returns meta data about this system.
      *
@@ -197,7 +193,8 @@ class provider implements
             }
 
             // Export alerts created by user.
-            $alerts = $DB->get_records_select('block_adeptus_alerts',
+            $alerts = $DB->get_records_select(
+                'block_adeptus_alerts',
                 'blockinstanceid = :blockid AND (createdby = :userid1 OR modifiedby = :userid2)',
                 ['blockid' => $context->instanceid, 'userid1' => $userid, 'userid2' => $userid]
             );
@@ -226,11 +223,15 @@ class provider implements
         $blockinstanceid = $context->instanceid;
 
         // Delete alert history first (foreign key constraint).
-        $alertids = $DB->get_fieldset_select('block_adeptus_alerts', 'id',
-            'blockinstanceid = :blockid', ['blockid' => $blockinstanceid]);
+        $alertids = $DB->get_fieldset_select(
+            'block_adeptus_alerts',
+            'id',
+            'blockinstanceid = :blockid',
+            ['blockid' => $blockinstanceid]
+        );
 
         if ($alertids) {
-            list($insql, $inparams) = $DB->get_in_or_equal($alertids, SQL_PARAMS_NAMED);
+            [$insql, $inparams] = $DB->get_in_or_equal($alertids, SQL_PARAMS_NAMED);
             $DB->delete_records_select('block_adeptus_alert_history', "alertid $insql", $inparams);
         }
 
@@ -265,13 +266,21 @@ class provider implements
             ]);
 
             // Anonymize alerts created/modified by this user (don't delete as others may use them).
-            $DB->set_field_select('block_adeptus_alerts', 'createdby', null,
+            $DB->set_field_select(
+                'block_adeptus_alerts',
+                'createdby',
+                null,
                 'blockinstanceid = :blockid AND createdby = :userid',
-                ['blockid' => $blockinstanceid, 'userid' => $userid]);
+                ['blockid' => $blockinstanceid, 'userid' => $userid]
+            );
 
-            $DB->set_field_select('block_adeptus_alerts', 'modifiedby', null,
+            $DB->set_field_select(
+                'block_adeptus_alerts',
+                'modifiedby',
+                null,
                 'blockinstanceid = :blockid AND modifiedby = :userid',
-                ['blockid' => $blockinstanceid, 'userid' => $userid]);
+                ['blockid' => $blockinstanceid, 'userid' => $userid]
+            );
         }
     }
 
@@ -295,18 +304,31 @@ class provider implements
         }
 
         $blockinstanceid = $context->instanceid;
-        list($insql, $inparams) = $DB->get_in_or_equal($userids, SQL_PARAMS_NAMED);
+        [$insql, $inparams] = $DB->get_in_or_equal($userids, SQL_PARAMS_NAMED);
 
         // Delete KPI history for these users.
         $params = array_merge(['blockid' => $blockinstanceid], $inparams);
-        $DB->delete_records_select('block_adeptus_kpi_history',
-            "blockinstanceid = :blockid AND userid $insql", $params);
+        $DB->delete_records_select(
+            'block_adeptus_kpi_history',
+            "blockinstanceid = :blockid AND userid $insql",
+            $params
+        );
 
         // Anonymize alerts.
-        $DB->set_field_select('block_adeptus_alerts', 'createdby', null,
-            "blockinstanceid = :blockid AND createdby $insql", $params);
+        $DB->set_field_select(
+            'block_adeptus_alerts',
+            'createdby',
+            null,
+            "blockinstanceid = :blockid AND createdby $insql",
+            $params
+        );
 
-        $DB->set_field_select('block_adeptus_alerts', 'modifiedby', null,
-            "blockinstanceid = :blockid AND modifiedby $insql", $params);
+        $DB->set_field_select(
+            'block_adeptus_alerts',
+            'modifiedby',
+            null,
+            "blockinstanceid = :blockid AND modifiedby $insql",
+            $params
+        );
     }
 }
