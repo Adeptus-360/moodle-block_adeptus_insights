@@ -28,7 +28,7 @@ use block_adeptus_insights\kpi_history_manager;
  * thresholds and trigger notifications when thresholds are breached.
  *
  * @package    block_adeptus_insights
- * @copyright  2025 Adeptus Analytics
+ * @copyright  2026 Adeptus 360 <info@adeptus360.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class check_alert_thresholds extends \core\task\scheduled_task {

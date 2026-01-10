@@ -24,7 +24,7 @@ use block_adeptus_insights\kpi_history_manager;
  * Scheduled task to cleanup old KPI history entries.
  *
  * @package    block_adeptus_insights
- * @copyright  2025 Adeptus Analytics
+ * @copyright  2026 Adeptus 360 <info@adeptus360.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class cleanup_kpi_history extends \core\task\scheduled_task {
