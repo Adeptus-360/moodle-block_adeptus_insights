@@ -18,19 +18,19 @@
  * Version information for the Adeptus Insights block.
  *
  * @package    block_adeptus_insights
- * @copyright  2025 Adeptus Analytics
+ * @copyright  2026 Adeptus 360 <info@adeptus360.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'block_adeptus_insights';
-$plugin->version = 2025123003;  // YYYYMMDDXX format - Email addresses for notifications
+$plugin->version = 2026011001;  // YYYYMMDDXX format
 $plugin->requires = 2022112800; // Moodle 4.1+
-$plugin->maturity = MATURITY_ALPHA;
-$plugin->release = '2.0.0-alpha';
+$plugin->maturity = MATURITY_STABLE;
+$plugin->release = '1.0.0';
 
 // This block requires the Adeptus Insights report plugin
 $plugin->dependencies = [
-    'report_adeptus_insights' => 2025111930,
+    'report_adeptus_insights' => 2022112800,
 ];

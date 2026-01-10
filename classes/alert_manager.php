@@ -25,7 +25,7 @@ defined('MOODLE_INTERNAL') || die();
  * Implements the "Insurance Policy" concept for proactive educational intervention.
  *
  * @package    block_adeptus_insights
- * @copyright  2025 Adeptus Analytics
+ * @copyright  2026 Adeptus 360 <info@adeptus360.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class alert_manager {

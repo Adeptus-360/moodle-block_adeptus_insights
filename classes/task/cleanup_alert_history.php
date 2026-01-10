@@ -27,7 +27,7 @@ use block_adeptus_insights\alert_manager;
  * the configured retention period (default 180 days).
  *
  * @package    block_adeptus_insights
- * @copyright  2025 Adeptus Analytics
+ * @copyright  2026 Adeptus 360 <info@adeptus360.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class cleanup_alert_history extends \core\task\scheduled_task {

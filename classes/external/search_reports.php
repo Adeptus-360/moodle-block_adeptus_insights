@@ -32,7 +32,7 @@ use context_system;
  * External function to search reports for alert configuration autocomplete.
  *
  * @package    block_adeptus_insights
- * @copyright  2025 Adeptus Analytics
+ * @copyright  2026 Adeptus 360 <info@adeptus360.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class search_reports extends external_api {

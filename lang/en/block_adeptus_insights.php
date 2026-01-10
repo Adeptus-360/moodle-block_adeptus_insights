@@ -18,7 +18,7 @@
  * Language strings for the Adeptus Insights block.
  *
  * @package    block_adeptus_insights
- * @copyright  2025 Adeptus Analytics
+ * @copyright  2026 Adeptus 360 <info@adeptus360.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -237,7 +237,19 @@ $string['aria_openreport'] = 'Open report: {$a}';
 $string['aria_closereport'] = 'Close report';
 
 // Privacy.
-$string['privacy:metadata'] = 'The Adeptus Insights block does not store any personal data itself. All report data is managed by the parent Adeptus Insights report plugin.';
+$string['privacy:metadata'] = 'The Adeptus Insights block stores KPI history and alert configuration data.';
+$string['privacy:metadata:block_adeptus_kpi_history'] = 'Historical KPI values for trend indicators and sparklines.';
+$string['privacy:metadata:block_adeptus_kpi_history:userid'] = 'The ID of the user who triggered the KPI capture.';
+$string['privacy:metadata:block_adeptus_kpi_history:blockinstanceid'] = 'The block instance ID.';
+$string['privacy:metadata:block_adeptus_kpi_history:report_slug'] = 'The report identifier.';
+$string['privacy:metadata:block_adeptus_kpi_history:metric_value'] = 'The recorded metric value.';
+$string['privacy:metadata:block_adeptus_kpi_history:timecreated'] = 'When the value was captured.';
+$string['privacy:metadata:block_adeptus_alerts'] = 'Alert threshold configurations for KPI monitoring.';
+$string['privacy:metadata:block_adeptus_alerts:createdby'] = 'The ID of the user who created the alert.';
+$string['privacy:metadata:block_adeptus_alerts:modifiedby'] = 'The ID of the user who last modified the alert.';
+$string['privacy:metadata:block_adeptus_alerts:blockinstanceid'] = 'The block instance ID.';
+$string['privacy:metadata:block_adeptus_alerts:alert_name'] = 'The name of the alert.';
+$string['privacy:metadata:block_adeptus_alerts:timecreated'] = 'When the alert was created.';
 
 // Admin settings.
 $string['settings'] = 'Adeptus Insights Block Settings';
