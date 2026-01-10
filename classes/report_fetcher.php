@@ -35,13 +35,13 @@ defined('MOODLE_INTERNAL') || die();
  */
 class report_fetcher {
     /** @var \report_adeptus_insights\installation_manager */
-    private $installation_manager;
+    private $installationmanager;
 
     /** @var string */
-    private $api_url;
+    private $apiurl;
 
     /** @var string */
-    private $api_key;
+    private $apikey;
 
     /**
      * Constructor.
@@ -78,16 +78,16 @@ class report_fetcher {
         $reports = [];
 
         if ($source === 'all' || $source === 'wizard') {
-            $wizardReports = $this->fetch_wizard_reports();
-            foreach ($wizardReports as $report) {
+            $wizardreports = $this->fetch_wizard_reports();
+            foreach ($wizardreports as $report) {
                 $report['source'] = 'wizard';
                 $reports[] = $report;
             }
         }
 
         if ($source === 'all' || $source === 'ai') {
-            $aiReports = $this->fetch_ai_reports();
-            foreach ($aiReports as $report) {
+            $aireports = $this->fetch_ai_reports();
+            foreach ($aireports as $report) {
                 $report['source'] = 'ai';
                 $reports[] = $report;
             }
@@ -96,8 +96,8 @@ class report_fetcher {
         // Filter by category if specified.
         if (!empty($category)) {
             $reports = array_filter($reports, function ($report) use ($category) {
-                $reportCategory = $report['category_info']['slug'] ?? '';
-                return $reportCategory === $category;
+                $reportcategory = $report['category_info']['slug'] ?? '';
+                return $reportcategory === $category;
             });
             $reports = array_values($reports);
         }
@@ -234,10 +234,10 @@ class report_fetcher {
      * @param string $url API URL
      * @param string $method HTTP method
      * @param array $data Request body data
-     * @param array $extraHeaders Additional headers
+     * @param array $extraheaders Additional headers
      * @return array|null
      */
-    private function make_api_request($url, $method = 'GET', $data = [], $extraHeaders = []) {
+    private function make_api_request($url, $method = 'GET', $data = [], $extraheaders = []) {
         $ch = curl_init();
 
         curl_setopt($ch, CURLOPT_URL, $url);
@@ -252,7 +252,7 @@ class report_fetcher {
         ];
 
         // Add extra headers.
-        foreach ($extraHeaders as $key => $value) {
+        foreach ($extraheaders as $key => $value) {
             $headers[] = $key . ': ' . $value;
         }
 
@@ -269,12 +269,12 @@ class report_fetcher {
         }
 
         $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $error = curl_error($ch);
         curl_close($ch);
 
-        if ($error || $httpCode < 200 || $httpCode >= 300) {
-            debugging("API request failed: $url, HTTP $httpCode, Error: $error", DEBUG_DEVELOPER);
+        if ($error || $httpcode < 200 || $httpcode >= 300) {
+            debugging("API request failed: $url, HTTP $httpcode, Error: $error", DEBUG_DEVELOPER);
             return null;
         }
 
@@ -290,24 +290,24 @@ class report_fetcher {
     public function get_reports_for_display($config) {
         $source = $config['report_source'] ?? 'all';
         $category = $config['selected_category'] ?? '';
-        $selectedReports = $config['selected_reports'] ?? [];
-        $maxItems = $config['max_link_items'] ?? 10;
+        $selectedreports = $config['selected_reports'] ?? [];
+        $maxitems = $config['max_link_items'] ?? 10;
 
         // Fetch reports based on source.
         $reports = $this->fetch_reports($source, $category);
 
         // Filter to selected reports if manual selection.
-        if ($source === 'manual' && !empty($selectedReports)) {
-            $selectedSlugs = is_array($selectedReports) ? $selectedReports : [$selectedReports];
-            $reports = array_filter($reports, function ($report) use ($selectedSlugs) {
-                return in_array($report['slug'], $selectedSlugs);
+        if ($source === 'manual' && !empty($selectedreports)) {
+            $selectedslugs = is_array($selectedreports) ? $selectedreports : [$selectedreports];
+            $reports = array_filter($reports, function ($report) use ($selectedslugs) {
+                return in_array($report['slug'], $selectedslugs);
             });
             $reports = array_values($reports);
         }
 
         // Limit number of reports.
-        if ($maxItems > 0 && count($reports) > $maxItems) {
-            $reports = array_slice($reports, 0, $maxItems);
+        if ($maxitems > 0 && count($reports) > $maxitems) {
+            $reports = array_slice($reports, 0, $maxitems);
         }
 
         // Format for display.

@@ -34,7 +34,7 @@ class block_adeptus_insights_edit_form extends block_edit_form {
      * @param MoodleQuickForm $mform
      */
     protected function specific_definition($mform) {
-        global $CFG, $DB, $PAGE;
+        global $CFG, $DB;
 
         // Initialize the report selector JavaScript.
         $this->init_report_selector_js();
@@ -377,8 +377,10 @@ class block_adeptus_insights_edit_form extends block_edit_form {
                         </div>
 
                         <div class="form-group">
-                            <label for="alert-edit-name">' . get_string('config_alert_name', 'block_adeptus_insights') . '</label>
-                            <input type="text" id="alert-edit-name" class="form-control" placeholder="' . get_string('config_alert_name_placeholder', 'block_adeptus_insights') . '">
+                            <label for="alert-edit-name">' .
+                                get_string('config_alert_name', 'block_adeptus_insights') . '</label>
+                            <input type="text" id="alert-edit-name" class="form-control"
+                                placeholder="' . get_string('config_alert_name_placeholder', 'block_adeptus_insights') . '">
                         </div>
 
                         <div class="row">
@@ -421,16 +423,22 @@ class block_adeptus_insights_edit_form extends block_edit_form {
                             <label>' . get_string('config_alert_notify_on', 'block_adeptus_insights') . '</label>
                             <div class="d-flex flex-wrap">
                                 <div class="custom-control custom-checkbox mr-3">
-                                    <input type="checkbox" class="custom-control-input" id="alert-edit-notify-warning" checked>
-                                    <label class="custom-control-label" for="alert-edit-notify-warning">' . get_string('config_alert_notify_warning', 'block_adeptus_insights') . '</label>
+                                    <input type="checkbox" class="custom-control-input"
+                                        id="alert-edit-notify-warning" checked>
+                                    <label class="custom-control-label" for="alert-edit-notify-warning">' .
+                                        get_string('config_alert_notify_warning', 'block_adeptus_insights') . '</label>
                                 </div>
                                 <div class="custom-control custom-checkbox mr-3">
-                                    <input type="checkbox" class="custom-control-input" id="alert-edit-notify-critical" checked>
-                                    <label class="custom-control-label" for="alert-edit-notify-critical">' . get_string('config_alert_notify_critical', 'block_adeptus_insights') . '</label>
+                                    <input type="checkbox" class="custom-control-input"
+                                        id="alert-edit-notify-critical" checked>
+                                    <label class="custom-control-label" for="alert-edit-notify-critical">' .
+                                        get_string('config_alert_notify_critical', 'block_adeptus_insights') . '</label>
                                 </div>
                                 <div class="custom-control custom-checkbox">
-                                    <input type="checkbox" class="custom-control-input" id="alert-edit-notify-recovery" checked>
-                                    <label class="custom-control-label" for="alert-edit-notify-recovery">' . get_string('config_alert_notify_recovery', 'block_adeptus_insights') . '</label>
+                                    <input type="checkbox" class="custom-control-input"
+                                        id="alert-edit-notify-recovery" checked>
+                                    <label class="custom-control-label" for="alert-edit-notify-recovery">' .
+                                        get_string('config_alert_notify_recovery', 'block_adeptus_insights') . '</label>
                                 </div>
                             </div>
                         </div>
@@ -447,9 +455,12 @@ class block_adeptus_insights_edit_form extends block_edit_form {
                         </div>
 
                         <div class="form-group" id="email-addresses-group" style="display: none;">
-                            <label for="alert-edit-email-addresses">' . get_string('config_alert_notify_email_addresses', 'block_adeptus_insights') . '</label>
-                            <textarea id="alert-edit-email-addresses" class="form-control" rows="3" placeholder="' . get_string('config_alert_notify_email_addresses_placeholder', 'block_adeptus_insights') . '"></textarea>
-                            <small class="form-text text-muted">' . get_string('config_alert_notify_email_addresses_desc', 'block_adeptus_insights') . '</small>
+                            <label for="alert-edit-email-addresses">' .
+                                get_string('config_alert_notify_email_addresses', 'block_adeptus_insights') . '</label>
+                            <textarea id="alert-edit-email-addresses" class="form-control" rows="3"
+                                placeholder="' . get_string('config_alert_notify_email_addresses_placeholder', 'block_adeptus_insights') . '"></textarea>
+                            <small class="form-text text-muted">' .
+                                get_string('config_alert_notify_email_addresses_desc', 'block_adeptus_insights') . '</small>
                         </div>
 
                         <hr class="my-3">
@@ -560,7 +571,7 @@ class block_adeptus_insights_edit_form extends block_edit_form {
      * Initialize the JavaScript for the report selector UI.
      */
     private function init_report_selector_js() {
-        global $CFG, $PAGE;
+        global $CFG;
 
         // Get API key from parent plugin.
         $apikey = '';
@@ -572,7 +583,7 @@ class block_adeptus_insights_edit_form extends block_edit_form {
             debugging('Failed to get API key for report selector: ' . $e->getMessage(), DEBUG_DEVELOPER);
         }
 
-        $PAGE->requires->js_call_amd(
+        $this->block->page->requires->js_call_amd(
             'block_adeptus_insights/edit_form',
             'init',
             [['apiKey' => $apikey]]

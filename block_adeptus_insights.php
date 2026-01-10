@@ -105,7 +105,7 @@ class block_adeptus_insights extends block_base {
      * @return stdClass
      */
     public function get_content() {
-        global $OUTPUT, $USER, $PAGE;
+        global $OUTPUT, $USER;
 
         if ($this->content !== null) {
             return $this->content;
@@ -170,22 +170,15 @@ class block_adeptus_insights extends block_base {
      * Initialize JavaScript for the block.
      */
     private function init_block_javascript() {
-        global $CFG, $PAGE;
+        global $CFG;
 
-        // Debug: Log block initialization
-        $blockid = $this->instance->id ?? 'NULL';
-        $contextid = $this->context->id ?? 'NULL';
-        error_log("[AdeptusBlock PHP] init_block_javascript called - blockid: {$blockid}, contextid: {$contextid}");
-
-        // Get API key from parent plugin to pass directly to JS
+        // Get API key from parent plugin to pass directly to JS.
         $apikey = '';
         try {
             require_once($CFG->dirroot . '/report/adeptus_insights/classes/installation_manager.php');
             $installationmanager = new \report_adeptus_insights\installation_manager();
             $apikey = $installationmanager->get_api_key();
-            error_log("[AdeptusBlock PHP] API key retrieved: " . (empty($apikey) ? 'EMPTY' : 'present (' . strlen($apikey) . ' chars)'));
         } catch (\Exception $e) {
-            error_log("[AdeptusBlock PHP] Failed to get API key: " . $e->getMessage());
             debugging('Failed to get API key: ' . $e->getMessage(), DEBUG_DEVELOPER);
         }
 
@@ -196,12 +189,11 @@ class block_adeptus_insights extends block_base {
             'apiKey' => $apikey,
             'isAdmin' => is_siteadmin(),
         ];
-        error_log("[AdeptusBlock PHP] JS params: " . json_encode(['blockid' => $jsparams['blockid'], 'contextid' => $jsparams['contextid'], 'hasApiKey' => !empty($jsparams['apiKey'])]));
 
-        $PAGE->requires->js_call_amd(
+        $this->page->requires->js_call_amd(
             'block_adeptus_insights/block',
             'init',
-            [$jsparams]  // Pass as single argument (the options object)
+            [$jsparams]
         );
     }
 
@@ -229,7 +221,7 @@ class block_adeptus_insights extends block_base {
      * @return array
      */
     private function build_context_data() {
-        global $COURSE, $PAGE;
+        global $COURSE;
 
         $data = [
             'blockid' => $this->instance->id,
@@ -276,7 +268,7 @@ class block_adeptus_insights extends block_base {
      * @return array
      */
     private function get_context_filter() {
-        global $COURSE, $PAGE;
+        global $COURSE;
 
         $filter = [
             'type' => 'site',
@@ -304,8 +296,8 @@ class block_adeptus_insights extends block_base {
             return $filter;
         }
 
-        // Auto-detect context
-        $pagecontext = $PAGE->context;
+        // Auto-detect context.
+        $pagecontext = $this->page->context;
 
         if ($pagecontext->contextlevel == CONTEXT_COURSE && $COURSE->id > 1) {
             $filter['type'] = 'course';
