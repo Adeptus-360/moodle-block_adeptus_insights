@@ -28,7 +28,6 @@ use block_adeptus_insights\kpi_history_manager;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class cleanup_kpi_history extends \core\task\scheduled_task {
-
     /**
      * Get the name of the task.
      *

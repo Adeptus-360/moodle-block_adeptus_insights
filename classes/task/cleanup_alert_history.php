@@ -31,7 +31,6 @@ use block_adeptus_insights\alert_manager;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class cleanup_alert_history extends \core\task\scheduled_task {
-
     /**
      * Get task name.
      *

@@ -28,7 +28,6 @@ defined('MOODLE_INTERNAL') || die();
  * Form for editing Adeptus Insights block instances.
  */
 class block_adeptus_insights_edit_form extends block_edit_form {
-
     /**
      * Define the form fields.
      *
@@ -87,8 +86,12 @@ class block_adeptus_insights_edit_form extends block_edit_form {
 
         // Selected reports (for manual selection).
         // Hidden textarea to store the JSON data.
-        $mform->addElement('textarea', 'config_selected_reports_json', get_string('configselectedreports', 'block_adeptus_insights'),
-            ['rows' => 4, 'class' => 'manual-reports-selector d-none']);
+        $mform->addElement(
+            'textarea',
+            'config_selected_reports_json',
+            get_string('configselectedreports', 'block_adeptus_insights'),
+            ['rows' => 4, 'class' => 'manual-reports-selector d-none']
+        );
         $mform->setType('config_selected_reports_json', PARAM_RAW);
         $mform->hideIf('config_selected_reports_json', 'config_report_source', 'neq', 'manual');
 
@@ -149,23 +152,35 @@ class block_adeptus_insights_edit_form extends block_edit_form {
             604800 => get_string('kpi_interval_1w', 'block_adeptus_insights'),
             2592000 => get_string('kpi_interval_1m', 'block_adeptus_insights'),
         ];
-        $mform->addElement('select', 'config_kpi_history_interval',
-            get_string('configkpihistoryinterval', 'block_adeptus_insights'), $historyintervals);
+        $mform->addElement(
+            'select',
+            'config_kpi_history_interval',
+            get_string('configkpihistoryinterval', 'block_adeptus_insights'),
+            $historyintervals
+        );
         $mform->setDefault('config_kpi_history_interval', 3600);
         $mform->addHelpButton('config_kpi_history_interval', 'configkpihistoryinterval', 'block_adeptus_insights');
         $mform->hideIf('config_kpi_history_interval', 'config_display_mode', 'neq', 'kpi');
 
         // KPI report selection (for KPI mode).
-        $mform->addElement('static', 'config_kpi_reports_label', '',
+        $mform->addElement(
+            'static',
+            'config_kpi_reports_label',
+            '',
             '<div class="alert alert-info small">' .
             '<i class="fa fa-info-circle"></i> ' .
             get_string('configkpireports_desc', 'block_adeptus_insights') .
-            '</div>');
+            '</div>'
+        );
         $mform->hideIf('config_kpi_reports_label', 'config_display_mode', 'neq', 'kpi');
 
         // KPI selected reports (stored as JSON).
-        $mform->addElement('textarea', 'config_kpi_selected_reports', get_string('configkpireports', 'block_adeptus_insights'),
-            ['rows' => 4, 'class' => 'kpi-reports-selector d-none']);
+        $mform->addElement(
+            'textarea',
+            'config_kpi_selected_reports',
+            get_string('configkpireports', 'block_adeptus_insights'),
+            ['rows' => 4, 'class' => 'kpi-reports-selector d-none']
+        );
         $mform->setType('config_kpi_selected_reports', PARAM_RAW);
         $mform->hideIf('config_kpi_selected_reports', 'config_display_mode', 'neq', 'kpi');
 
@@ -173,16 +188,24 @@ class block_adeptus_insights_edit_form extends block_edit_form {
         $mform->addElement('html', '<div id="kpi-report-selector-container" class="kpi-report-selector-ui mb-3" style="display:none;"></div>');
 
         // Tabs report selection (for tabs mode).
-        $mform->addElement('static', 'config_tabs_reports_label', '',
+        $mform->addElement(
+            'static',
+            'config_tabs_reports_label',
+            '',
             '<div class="alert alert-info small">' .
             '<i class="fa fa-info-circle"></i> ' .
             get_string('configtabsreports_desc', 'block_adeptus_insights') .
-            '</div>');
+            '</div>'
+        );
         $mform->hideIf('config_tabs_reports_label', 'config_display_mode', 'neq', 'tabs');
 
         // Tabs selected reports (stored as JSON).
-        $mform->addElement('textarea', 'config_tabs_selected_reports', get_string('configtabsreports', 'block_adeptus_insights'),
-            ['rows' => 4, 'class' => 'tabs-reports-selector d-none']);
+        $mform->addElement(
+            'textarea',
+            'config_tabs_selected_reports',
+            get_string('configtabsreports', 'block_adeptus_insights'),
+            ['rows' => 4, 'class' => 'tabs-reports-selector d-none']
+        );
         $mform->setType('config_tabs_selected_reports', PARAM_RAW);
         $mform->hideIf('config_tabs_selected_reports', 'config_display_mode', 'neq', 'tabs');
 
@@ -265,24 +288,35 @@ class block_adeptus_insights_edit_form extends block_edit_form {
         $mform->addHelpButton('config_header_alerts', 'config_header_alerts', 'block_adeptus_insights');
 
         // Proactive monitoring concept explanation.
-        $mform->addElement('static', 'alert_info', '',
+        $mform->addElement(
+            'static',
+            'alert_info',
+            '',
             '<div class="alert alert-info">' .
             '<i class="fa fa-bell mr-2"></i>' .
             '<strong>' . get_string('insurance_policy_title', 'block_adeptus_insights') . '</strong><br>' .
             get_string('insurance_policy_desc', 'block_adeptus_insights') .
-            '</div>');
+            '</div>'
+        );
         $mform->hideIf('alert_info', 'config_display_mode', 'neq', 'kpi');
 
         // Enable alerts master toggle.
-        $mform->addElement('advcheckbox', 'config_alerts_enabled',
-            get_string('config_alerts_enabled', 'block_adeptus_insights'));
+        $mform->addElement(
+            'advcheckbox',
+            'config_alerts_enabled',
+            get_string('config_alerts_enabled', 'block_adeptus_insights')
+        );
         $mform->setDefault('config_alerts_enabled', 0);
         $mform->addHelpButton('config_alerts_enabled', 'config_alerts_enabled', 'block_adeptus_insights');
         $mform->hideIf('config_alerts_enabled', 'config_display_mode', 'neq', 'kpi');
 
         // Alert configurations (stored as JSON array).
-        $mform->addElement('textarea', 'config_alerts_json', '',
-            ['rows' => 2, 'class' => 'd-none', 'id' => 'id_config_alerts_json']);
+        $mform->addElement(
+            'textarea',
+            'config_alerts_json',
+            '',
+            ['rows' => 2, 'class' => 'd-none', 'id' => 'id_config_alerts_json']
+        );
         $mform->setType('config_alerts_json', PARAM_RAW);
         $mform->setDefault('config_alerts_json', '[]');
 
@@ -297,7 +331,8 @@ class block_adeptus_insights_edit_form extends block_edit_form {
         $roles = $this->get_alert_roles();
 
         // Multi-alert configuration UI container.
-        $mform->addElement('html',
+        $mform->addElement(
+            'html',
             '<div id="alerts-manager-container" class="alerts-manager-ui mb-3" style="display:none;"
                   data-existing-alerts="' . htmlspecialchars($existingalertsjson, ENT_QUOTES, 'UTF-8') . '"
                   data-operators="' . htmlspecialchars(json_encode($operators), ENT_QUOTES, 'UTF-8') . '"
@@ -431,7 +466,8 @@ class block_adeptus_insights_edit_form extends block_edit_form {
                         <button type="button" class="btn btn-primary alert-panel-save">' . get_string('savechanges') . '</button>
                     </div>
                 </div>
-            </div>');
+            </div>'
+        );
 
         $mform->hideIf('alerts-manager-container', 'config_display_mode', 'neq', 'kpi');
     }
