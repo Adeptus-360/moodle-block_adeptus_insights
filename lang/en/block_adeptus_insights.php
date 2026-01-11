@@ -468,3 +468,8 @@ $string['cooldown_4h'] = '4 hours';
 $string['cooldown_8h'] = '8 hours';
 $string['cooldown_24h'] = '24 hours';
 $string['cooldown_48h'] = '48 hours';
+
+// Feature Permissions.
+$string['feature_locked'] = 'Feature Not Available';
+$string['alerts_upgrade_required'] = 'Alert configuration is available on Pro and Enterprise plans. Upgrade your subscription to enable proactive monitoring and automated notifications.';
+$string['upgrade_to_unlock'] = 'Upgrade to Unlock';

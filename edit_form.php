@@ -287,6 +287,38 @@ class block_adeptus_insights_edit_form extends block_edit_form {
         $mform->addElement('header', 'config_header_alerts', get_string('config_header_alerts', 'block_adeptus_insights'));
         $mform->addHelpButton('config_header_alerts', 'config_header_alerts', 'block_adeptus_insights');
 
+        // Check if alerts feature is enabled for this subscription (backend permission).
+        $alertspermission = $this->check_alerts_permission();
+
+        if (!$alertspermission) {
+            // Show upgrade prompt - alerts feature not available for this subscription tier.
+            $upgradeurl = new \moodle_url('/report/adeptus_insights/subscription.php');
+            $mform->addElement(
+                'static',
+                'alerts_upgrade_prompt',
+                '',
+                '<div class="alert alert-warning">' .
+                '<i class="fa fa-lock mr-2"></i>' .
+                '<strong>' . get_string('feature_locked', 'block_adeptus_insights') . '</strong><br>' .
+                get_string('alerts_upgrade_required', 'block_adeptus_insights') .
+                '<br><br>' .
+                '<a href="' . $upgradeurl->out() . '" class="btn btn-primary btn-sm" style="color: #fff; background-color: #0f6cbf; border-color: #0f6cbf;">' .
+                '<i class="fa fa-arrow-up mr-1"></i>' .
+                get_string('upgrade_to_unlock', 'block_adeptus_insights') .
+                '</a>' .
+                '</div>'
+            );
+            $mform->hideIf('alerts_upgrade_prompt', 'config_display_mode', 'neq', 'kpi');
+
+            // Add hidden fields with default values for form processing.
+            $mform->addElement('hidden', 'config_alerts_enabled', 0);
+            $mform->setType('config_alerts_enabled', PARAM_INT);
+            $mform->addElement('hidden', 'config_alerts_json', '[]');
+            $mform->setType('config_alerts_json', PARAM_RAW);
+
+            return;
+        }
+
         // Proactive monitoring concept explanation.
         $mform->addElement(
             'static',
@@ -529,6 +561,28 @@ class block_adeptus_insights_edit_form extends block_edit_form {
     }
 
     /**
+     * Check if the alerts feature is enabled for the current subscription.
+     *
+     * This calls the backend API to check permissions at the product-price level.
+     * The backend is the single source of truth for feature permissions.
+     *
+     * @return bool True if alerts are enabled for this subscription
+     */
+    private function check_alerts_permission() {
+        global $CFG;
+
+        try {
+            require_once($CFG->dirroot . '/report/adeptus_insights/classes/installation_manager.php');
+            $installationmanager = new \report_adeptus_insights\installation_manager();
+
+            return $installationmanager->is_feature_enabled('alerts');
+        } catch (\Exception $e) {
+            debugging('Failed to check alerts permission: ' . $e->getMessage(), DEBUG_DEVELOPER);
+            return false;
+        }
+    }
+
+    /**
      * Get course options for the autocomplete.
      *
      * @return array
@@ -571,7 +625,7 @@ class block_adeptus_insights_edit_form extends block_edit_form {
      * Initialize the JavaScript for the report selector UI.
      */
     private function init_report_selector_js() {
-        global $CFG;
+        global $CFG, $PAGE;
 
         // Get API key from parent plugin.
         $apikey = '';
@@ -583,7 +637,8 @@ class block_adeptus_insights_edit_form extends block_edit_form {
             debugging('Failed to get API key for report selector: ' . $e->getMessage(), DEBUG_DEVELOPER);
         }
 
-        $this->block->page->requires->js_call_amd(
+        // Use global $PAGE as $this->page may not be fully initialized during form definition.
+        $PAGE->requires->js_call_amd(
             'block_adeptus_insights/edit_form',
             'init',
             [['apiKey' => $apikey]]
