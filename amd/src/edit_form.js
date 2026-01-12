@@ -256,7 +256,7 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
 
             this.container.find('.report-search-loading').show();
 
-            var baseUrl = 'https://a360backend.stagingwithswift.com/api/v1';
+            var baseUrl = 'https://backend.adeptus360.com/api/v1';
 
             // Fetch both wizard and AI reports
             $.when(
@@ -1172,7 +1172,7 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                 return;
             }
 
-            var baseUrl = 'https://a360backend.stagingwithswift.com/api/v1';
+            var baseUrl = 'https://backend.adeptus360.com/api/v1';
 
             $.when(
                 $.ajax({

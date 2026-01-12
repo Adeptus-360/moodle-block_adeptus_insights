@@ -80,6 +80,9 @@ define([
         this.embeddedXAxis = '';
         this.embeddedYAxis = '';
 
+        // Backend API URL
+        this.backendUrl = 'https://backend.adeptus360.com/api/v1';
+
         // Cache settings
         this.cacheKey = 'adeptus_block_reports_' + this.blockId;
         this.cacheTTL = 5 * 60 * 1000; // 5 minutes
@@ -567,7 +570,7 @@ define([
                 }
 
                 $.ajax({
-                    url: 'https://a360backend.stagingwithswift.com/api/v1/ai-reports/' + slug,
+                    url: '' + this.backendUrl + '/ai-reports/' + slug,
                     method: 'GET',
                     headers: {
                         'Authorization': 'Bearer ' + token,
@@ -697,7 +700,7 @@ define([
          * @return {Promise}
          */
         fetchFromApi: function(endpoint, token) {
-            var baseUrl = 'https://a360backend.stagingwithswift.com/api/v1';
+            var baseUrl = '' + this.backendUrl + '';
 
             return $.ajax({
                 url: baseUrl + endpoint,
@@ -1218,7 +1221,7 @@ define([
                 }
 
                 $.ajax({
-                    url: 'https://a360backend.stagingwithswift.com/api/v1/ai-reports/' + slug,
+                    url: '' + this.backendUrl + '/ai-reports/' + slug,
                     method: 'GET',
                     headers: {
                         'Authorization': 'Bearer ' + token,
@@ -1777,7 +1780,7 @@ define([
                 }
 
                 $.ajax({
-                    url: 'https://a360backend.stagingwithswift.com/api/v1/ai-reports/' + report.slug,
+                    url: '' + this.backendUrl + '/ai-reports/' + report.slug,
                     method: 'GET',
                     headers: {
                         'Authorization': 'Bearer ' + token,
@@ -2253,7 +2256,7 @@ define([
                 }
 
                 $.ajax({
-                    url: 'https://a360backend.stagingwithswift.com/api/v1/ai-reports/' + slug,
+                    url: '' + this.backendUrl + '/ai-reports/' + slug,
                     method: 'GET',
                     headers: {
                         'Authorization': 'Bearer ' + token,
@@ -2896,7 +2899,7 @@ define([
                 }
 
                 $.ajax({
-                    url: 'https://a360backend.stagingwithswift.com/api/v1/ai-reports/' + slug,
+                    url: '' + this.backendUrl + '/ai-reports/' + slug,
                     method: 'GET',
                     headers: {
                         'Authorization': 'Bearer ' + token,
