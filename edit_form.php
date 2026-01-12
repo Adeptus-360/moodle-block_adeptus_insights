@@ -625,7 +625,7 @@ class block_adeptus_insights_edit_form extends block_edit_form {
      * Initialize the JavaScript for the report selector UI.
      */
     private function init_report_selector_js() {
-        global $CFG, $PAGE;
+        global $CFG;
 
         // Get API key from parent plugin.
         $apikey = '';
@@ -637,8 +637,8 @@ class block_adeptus_insights_edit_form extends block_edit_form {
             debugging('Failed to get API key for report selector: ' . $e->getMessage(), DEBUG_DEVELOPER);
         }
 
-        // Use global $PAGE as $this->page may not be fully initialized during form definition.
-        $PAGE->requires->js_call_amd(
+        // Access page through the block instance.
+        $this->block->page->requires->js_call_amd(
             'block_adeptus_insights/edit_form',
             'init',
             [['apiKey' => $apikey]]
