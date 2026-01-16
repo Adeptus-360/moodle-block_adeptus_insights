@@ -80,8 +80,8 @@ define([
         this.embeddedXAxis = '';
         this.embeddedYAxis = '';
 
-        // Backend API URL
-        this.backendUrl = 'https://backend.adeptus360.com/api/v1';
+        // Backend API URL - use config value or fall back to default
+        this.backendUrl = this.config.backendUrl || 'https://backend.adeptus360.com/api/v1';
 
         // Cache settings
         this.cacheKey = 'adeptus_block_reports_' + this.blockId;
@@ -730,26 +730,28 @@ define([
                 this.populateCategoryFilter();
             }
 
-            // Filter reports based on selected category
-            var reports = this.filterReports();
+            // Filter reports based on selected category (for links/embedded modes)
+            var filteredReports = this.filterReports();
 
             switch (mode) {
                 case 'embedded':
-                    this.renderEmbedded(reports);
+                    this.renderEmbedded(filteredReports);
                     break;
                 case 'kpi':
-                    // For KPI mode, use specifically selected reports if configured
-                    var kpiReports = this.getSelectedReportsForMode('kpi', reports);
+                    // For KPI mode, use ALL reports for matching since user explicitly selected them
+                    // (category filter doesn't apply - user chose specific reports)
+                    var kpiReports = this.getSelectedReportsForMode('kpi', this.reports);
                     this.renderKpi(kpiReports);
                     break;
                 case 'tabs':
-                    // For Tabs mode, use specifically selected reports if configured
-                    var tabsReports = this.getSelectedReportsForMode('tabs', reports);
+                    // For Tabs mode, use ALL reports for matching since user explicitly selected them
+                    // (category filter doesn't apply - user chose specific reports)
+                    var tabsReports = this.getSelectedReportsForMode('tabs', this.reports);
                     this.renderTabs(tabsReports);
                     break;
                 case 'links':
                 default:
-                    this.renderLinks(reports);
+                    this.renderLinks(filteredReports);
                     break;
             }
 
@@ -807,9 +809,9 @@ define([
             var categoryMap = {};
             var config = this.config;
 
-            // If reportSource is 'category', pre-set the selected category from config
-            // and lock it (user cannot change it).
-            var categoryLocked = (config.reportSource === 'category' && config.reportCategory);
+            // If category is configured in block settings, pre-select it.
+            // The category filter from config is always applied (locked).
+            var categoryLocked = !!config.reportCategory;
             if (categoryLocked) {
                 this.selectedCategory = config.reportCategory;
             }
@@ -832,10 +834,10 @@ define([
                 }
             });
 
-            // If category is locked and not found in reports, add it as a fallback
-            // This ensures the dropdown shows the configured category even if no reports match
+            // If category is configured but not found in reports, add it as a fallback.
+            // This ensures the dropdown shows the configured category even if no reports match.
             if (categoryLocked && !categoryMap[config.reportCategory]) {
-                // Format slug as display name (capitalize, replace dashes/underscores with spaces)
+                // Format slug as display name (capitalize, replace dashes/underscores with spaces).
                 var displayName = config.reportCategory
                     .replace(/[-_]/g, ' ')
                     .replace(/\b\w/g, function(l) { return l.toUpperCase(); });
@@ -903,15 +905,9 @@ define([
                 }
                 dropdown.find('.searchable-dropdown-text').text(selectedText);
 
-                // If category is locked via config, disable the dropdown
+                // If category is locked via config, hide the entire category filter
                 if (categoryLocked) {
-                    dropdown.addClass('disabled');
-                    dropdown.find('.searchable-dropdown-toggle')
-                        .addClass('disabled')
-                        .attr('disabled', true)
-                        .css('pointer-events', 'none')
-                        .attr('title', 'Category is set by block configuration');
-                    select.prop('disabled', true);
+                    this.container.find('.block-adeptus-category-filter').hide();
                 }
             }
         },
@@ -1008,36 +1004,21 @@ define([
             var reports = this.reports.slice();
             var config = this.config;
 
-            // Filter by selected category (from dropdown - runtime selection).
-            if (this.selectedCategory) {
-                reports = reports.filter(function(r) {
-                    var catSlug = r.category_info ? r.category_info.slug : (r.category || '');
-                    return catSlug === self.selectedCategory;
-                });
-            }
-
-            // Filter by category from block config (when reportSource === 'category').
-            if (config.reportSource === 'category' && config.reportCategory) {
+            // Filter by category from block config (always apply if set).
+            if (config.reportCategory) {
                 reports = reports.filter(function(r) {
                     var catSlug = r.category_info ? r.category_info.slug : (r.category || '');
                     return catSlug === config.reportCategory;
                 });
             }
 
-            // Filter to manually selected reports (from block config).
-            // manualSelectedReports is an array of objects: [{slug, source, name}, ...]
-            if (config.reportSource === 'manual' && config.manualSelectedReports && config.manualSelectedReports.length) {
-                var selected = config.manualSelectedReports;
-                // Extract slugs from the objects for filtering.
-                var selectedSlugs = selected.map(function(item) {
-                    return typeof item === 'string' ? item : item.slug;
-                });
+            // Filter by selected category from dropdown (runtime selection, further filters config).
+            if (this.selectedCategory && this.selectedCategory !== config.reportCategory) {
                 reports = reports.filter(function(r) {
-                    return selectedSlugs.indexOf(r.slug) !== -1;
+                    var catSlug = r.category_info ? r.category_info.slug : (r.category || '');
+                    return catSlug === self.selectedCategory;
                 });
             }
-
-            // Note: We don't limit here anymore - pagination handles display limits
 
             // Sort by name (try multiple possible name fields).
             reports.sort(function(a, b) {
@@ -1550,7 +1531,7 @@ define([
             var gridContainer = this.container.find('.block-adeptus-kpi-grid');
             var template = $('#block-adeptus-kpi-card-template-' + this.blockId);
             var maxCards = parseInt(this.config.kpiColumns, 10) || 2;
-            maxCards = Math.min(maxCards * 2, 4); // Max 4 KPI cards
+            maxCards = Math.max(1, Math.min(4, maxCards)); // Clamp between 1-4
 
             gridContainer.empty();
 
@@ -1625,8 +1606,6 @@ define([
                 return r.report_template_id || r.id || r.name || r.slug;
             });
 
-            console.log('[AdeptusKPI] Starting batch load for ' + reportIds.length + ' wizard reports');
-
             $.ajax({
                 url: M.cfg.wwwroot + '/report/adeptus_insights/ajax/batch_kpi_data.php',
                 method: 'POST',
@@ -1637,10 +1616,6 @@ define([
                 dataType: 'json',
                 timeout: 30000
             }).done(function(response) {
-                var elapsed = Math.round(performance.now() - startTime);
-                console.log('[AdeptusKPI] Batch load completed in ' + elapsed + 'ms for ' +
-                    reportIds.length + ' reports (server: ' + (response.total_time_ms || '?') + 'ms)');
-
                 if (response.success && response.reports) {
                     // Update each card with its data
                     reports.forEach(function(report) {
@@ -1656,10 +1631,6 @@ define([
                         var cacheKey = report.slug + '_' + report.source;
 
                         if (reportData && reportData.success) {
-                            console.log('[AdeptusKPI] Card ' + cardInfo.index + ' (' + report.slug +
-                                ') loaded in batch (' + (reportData.time_ms || '?') + 'ms, ' +
-                                reportData.count + ' rows)');
-
                             // Cache the results
                             self.reportDataCache[cacheKey] = {
                                 report: report,
@@ -1669,15 +1640,12 @@ define([
                             // Render the KPI value
                             self.renderKpiValue($card, reportData.results || []);
                         } else {
-                            console.warn('[AdeptusKPI] Card ' + cardInfo.index + ' (' + report.slug +
-                                ') failed in batch:', reportData ? reportData.error : 'No data');
                             $card.find('.kpi-card-value').text('--');
                             $card.find('.kpi-card-trend').addClass('d-none');
                         }
                     });
                 } else {
                     // Batch failed, fall back to individual loading
-                    console.warn('[AdeptusKPI] Batch load failed, falling back to individual requests');
                     reports.forEach(function(report, index) {
                         var cardInfo = cardMap[report.slug];
                         setTimeout(function() {
@@ -1685,11 +1653,7 @@ define([
                         }, index * 100);
                     });
                 }
-            }).fail(function(jqXHR, textStatus, errorThrown) {
-                var elapsed = Math.round(performance.now() - startTime);
-                console.error('[AdeptusKPI] Batch load failed after ' + elapsed + 'ms:',
-                    textStatus, errorThrown);
-
+            }).fail(function() {
                 // Fall back to individual loading
                 reports.forEach(function(report, index) {
                     var cardInfo = cardMap[report.slug];
@@ -1718,14 +1682,12 @@ define([
             // Check cache first
             if (this.reportDataCache[cacheKey]) {
                 var cached = this.reportDataCache[cacheKey];
-                console.log('[AdeptusKPI] Card ' + cardIndex + ' (' + report.slug + ') loaded from cache');
                 this.renderKpiValue($card, cached.results);
                 return;
             }
 
             // Get the report ID - try multiple possible fields
             var reportId = report.report_template_id || report.id || report.name || report.slug;
-            console.log('[AdeptusKPI] Card ' + cardIndex + ' (' + report.slug + ') starting request...');
 
             // Load data based on source
             if (report.source === 'wizard') {
@@ -1739,28 +1701,19 @@ define([
                     dataType: 'json',
                     timeout: 30000
                 }).done(function(response) {
-                    var elapsed = Math.round(performance.now() - startTime);
                     if (response.success) {
-                        console.log('[AdeptusKPI] Card ' + cardIndex + ' (' + report.slug + ') loaded in ' + elapsed + 'ms');
                         self.reportDataCache[cacheKey] = {
                             report: report,
                             results: response.results || []
                         };
                         self.renderKpiValue($card, response.results || []);
                     } else {
-                        console.warn('[AdeptusKPI] Card ' + cardIndex + ' (' + report.slug + ') failed in ' + elapsed + 'ms:',
-                            response.error || 'Unknown error');
                         $card.find('.kpi-card-value').text('--');
                         $card.find('.kpi-card-trend').addClass('d-none');
                     }
-                }).fail(function(jqXHR, textStatus, errorThrown) {
-                    var elapsed = Math.round(performance.now() - startTime);
-                    console.error('[AdeptusKPI] Card ' + cardIndex + ' (' + report.slug + ') AJAX error after ' + elapsed + 'ms:',
-                        textStatus, errorThrown, 'Status:', jqXHR.status);
-
+                }).fail(function(jqXHR, textStatus) {
                     // Retry on timeout or server error
                     if (retryCount < maxRetries && (textStatus === 'timeout' || jqXHR.status >= 500)) {
-                        console.log('[AdeptusKPI] Retrying card ' + cardIndex + ' (attempt ' + (retryCount + 2) + ')');
                         setTimeout(function() {
                             self.loadKpiData(report, $card, cardIndex, retryCount + 1);
                         }, 1000 * (retryCount + 1));
@@ -1773,7 +1726,6 @@ define([
                 // AI reports
                 var token = this.apiKey || (window.adeptusAuthData ? window.adeptusAuthData.api_key : null);
                 if (!token) {
-                    console.warn('[AdeptusKPI] Card ' + cardIndex + ' (' + report.slug + '): No API token available');
                     $card.find('.kpi-card-value').text('--');
                     $card.find('.kpi-card-trend').addClass('d-none');
                     return;
@@ -1788,28 +1740,19 @@ define([
                     },
                     timeout: 30000
                 }).done(function(response) {
-                    var elapsed = Math.round(performance.now() - startTime);
                     if (response.success && response.data) {
-                        console.log('[AdeptusKPI] Card ' + cardIndex + ' (' + report.slug + ') AI loaded in ' + elapsed + 'ms');
                         self.reportDataCache[cacheKey] = {
                             report: response.report || report,
                             results: response.data || []
                         };
                         self.renderKpiValue($card, response.data || []);
                     } else {
-                        console.warn('[AdeptusKPI] Card ' + cardIndex + ' (' + report.slug + ') AI failed in ' + elapsed + 'ms:',
-                            response.error || 'No data returned');
                         $card.find('.kpi-card-value').text('--');
                         $card.find('.kpi-card-trend').addClass('d-none');
                     }
-                }).fail(function(jqXHR, textStatus, errorThrown) {
-                    var elapsed = Math.round(performance.now() - startTime);
-                    console.error('[AdeptusKPI] Card ' + cardIndex + ' (' + report.slug + ') AI error after ' + elapsed + 'ms:',
-                        textStatus, errorThrown, 'Status:', jqXHR.status);
-
+                }).fail(function(jqXHR, textStatus) {
                     // Retry on timeout or server error
                     if (retryCount < maxRetries && (textStatus === 'timeout' || jqXHR.status >= 500)) {
-                        console.log('[AdeptusKPI] Retrying AI card ' + cardIndex + ' (attempt ' + (retryCount + 2) + ')');
                         setTimeout(function() {
                             self.loadKpiData(report, $card, cardIndex, retryCount + 1);
                         }, 1000 * (retryCount + 1));

@@ -127,6 +127,11 @@ class block_adeptus_insights extends block_base {
             return $this->content;
         }
 
+        // Ensure config is initialized (handles unconfigured blocks).
+        if (!isset($this->config) || !is_object($this->config)) {
+            $this->config = new stdClass();
+        }
+
         // Get display mode from config (default to 'links')
         $displaymode = $this->config->display_mode ?? 'links';
 
@@ -148,16 +153,6 @@ class block_adeptus_insights extends block_base {
             default:
                 $this->content->text = $this->render_links_mode($contextdata);
                 break;
-        }
-
-        // Add footer with link to full reports (admin only)
-        if (($this->config->show_footer ?? true) && is_siteadmin()) {
-            $reporturl = new moodle_url('/report/adeptus_insights/index.php');
-            $this->content->footer = html_writer::link(
-                $reporturl,
-                get_string('viewallreports', 'block_adeptus_insights'),
-                ['class' => 'block-adeptus-footer-link']
-            );
         }
 
         // Initialize JavaScript for the block (must be done in get_content to ensure instance is available)
@@ -195,6 +190,16 @@ class block_adeptus_insights extends block_base {
             'init',
             [$jsparams]
         );
+
+        // Also load edit_form module if user can edit (for modal config).
+        // This ensures the module is available when the block settings modal opens.
+        if ($this->page->user_is_editing()) {
+            $this->page->requires->js_call_amd(
+                'block_adeptus_insights/edit_form',
+                'init',
+                [['apiKey' => $apikey]]
+            );
+        }
     }
 
     /**
@@ -245,19 +250,16 @@ class block_adeptus_insights extends block_base {
 
         // Add configuration
         $data['display_mode'] = $this->config->display_mode ?? 'links';
-        $data['report_source'] = $this->config->report_source ?? 'all';
-        $data['selected_reports'] = $this->config->selected_reports ?? [];
-        $data['selected_category'] = $this->config->selected_category ?? '';
-        $data['show_chart'] = $this->config->show_chart ?? true;
-        $data['show_table'] = $this->config->show_table ?? true;
-        $data['chart_height'] = $this->config->chart_height ?? 250;
-        $data['table_max_rows'] = $this->config->table_max_rows ?? 10;
-        $data['click_action'] = $this->config->click_action ?? 'modal';
+        $data['report_category'] = $this->config->report_category ?? '';
+
+        // Validate and sanitize numeric CSS values to prevent injection.
+        $chartheight = (int) ($this->config->chart_height ?? 250);
+        $data['chart_height'] = max(100, min(800, $chartheight)); // Clamp between 100-800px.
+
+        $data['click_action'] = 'modal'; // Always use modal to keep users on the page.
         $data['auto_refresh'] = $this->config->auto_refresh ?? 'never';
         $data['show_refresh_button'] = $this->config->show_refresh_button ?? true;
-        $data['show_export'] = $this->config->show_export ?? true;
         $data['show_timestamp'] = $this->config->show_timestamp ?? true;
-        $data['compact_mode'] = $this->config->compact_mode ?? false;
 
         return $data;
     }
@@ -320,6 +322,8 @@ class block_adeptus_insights extends block_base {
      * @return array
      */
     private function get_js_config() {
+        global $CFG;
+
         // Parse selected reports for KPI mode.
         $kpiselectedreports = [];
         if (!empty($this->config->kpi_selected_reports)) {
@@ -338,38 +342,31 @@ class block_adeptus_insights extends block_base {
             }
         }
 
-        // Parse manually selected reports (for report_source = 'manual').
-        $manualselectedreports = [];
-        if (!empty($this->config->selected_reports_json)) {
-            $decoded = json_decode($this->config->selected_reports_json, true);
-            if (is_array($decoded)) {
-                $manualselectedreports = $decoded;
-            }
-        }
-
         // Get alert status for this block.
         $alertstatus = $this->get_alert_status();
 
+        // Get backend URL from parent plugin config.
+        $backendurl = 'https://backend.adeptus360.com/api/v1'; // Default fallback.
+        try {
+            require_once($CFG->dirroot . '/report/adeptus_insights/classes/api_config.php');
+            $backendurl = \report_adeptus_insights\api_config::get_backend_url();
+        } catch (\Exception $e) {
+            debugging('Failed to get backend URL: ' . $e->getMessage(), DEBUG_DEVELOPER);
+        }
+
         return [
+            'backendUrl' => $backendurl,
             'displayMode' => $this->config->display_mode ?? 'links',
-            'reportSource' => $this->config->report_source ?? 'all',
-            'selectedReports' => $this->config->selected_reports ?? [],
-            'manualSelectedReports' => $manualselectedreports,
             'reportCategory' => $this->config->report_category ?? '',
             'kpiSelectedReports' => $kpiselectedreports,
             'tabsSelectedReports' => $tabsselectedreports,
             'kpiColumns' => $this->config->kpi_columns ?? 2,
             'kpiHistoryInterval' => (int) ($this->config->kpi_history_interval ?? 3600),
-            'showChart' => $this->config->show_chart ?? true,
-            'showTable' => $this->config->show_table ?? true,
             'chartHeight' => $this->config->chart_height ?? 250,
-            'tableMaxRows' => $this->config->table_max_rows ?? 10,
-            'clickAction' => $this->config->click_action ?? 'modal',
+            'clickAction' => 'modal', // Always use modal to keep users on the page.
             'autoRefresh' => $this->config->auto_refresh ?? 'never',
             'showRefreshButton' => $this->config->show_refresh_button ?? true,
-            'showExport' => $this->config->show_export ?? true,
             'showTimestamp' => $this->config->show_timestamp ?? true,
-            'compactMode' => $this->config->compact_mode ?? false,
             'maxLinkItems' => $this->config->max_link_items ?? 10,
             'contextType' => $this->get_context_filter()['type'],
             'contextId' => $this->get_context_filter()['id'],
@@ -437,6 +434,16 @@ class block_adeptus_insights extends block_base {
         $data['is_embedded'] = true;
         $data['loading'] = true;
 
+        // Pass selected reports JSON for embedded mode (when using manual selection).
+        $selectedreports = [];
+        if (!empty($this->config->selected_reports_json)) {
+            $decoded = json_decode($this->config->selected_reports_json, true);
+            if (is_array($decoded)) {
+                $selectedreports = $decoded;
+            }
+        }
+        $data['selected_reports_json'] = htmlspecialchars(json_encode($selectedreports), ENT_QUOTES, 'UTF-8');
+
         return $OUTPUT->render_from_template('block_adeptus_insights/embedded_report', $data);
     }
 
@@ -451,7 +458,10 @@ class block_adeptus_insights extends block_base {
 
         $data['is_kpi'] = true;
         $data['loading'] = true;
-        $data['kpi_columns'] = $this->config->kpi_columns ?? 2;
+
+        // Validate kpi_columns to be between 1-4.
+        $kpicolumns = (int) ($this->config->kpi_columns ?? 2);
+        $data['kpi_columns'] = max(1, min(4, $kpicolumns));
 
         // Pass selected reports JSON for the template data attribute.
         $selectedreports = [];

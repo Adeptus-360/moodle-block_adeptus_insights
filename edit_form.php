@@ -36,9 +36,6 @@ class block_adeptus_insights_edit_form extends block_edit_form {
     protected function specific_definition($mform) {
         global $CFG, $DB;
 
-        // Initialize the report selector JavaScript.
-        $this->init_report_selector_js();
-
         // =====================================
         // GENERAL SETTINGS
         // =====================================
@@ -60,56 +57,19 @@ class block_adeptus_insights_edit_form extends block_edit_form {
         $mform->setDefault('config_display_mode', 'links');
         $mform->addHelpButton('config_display_mode', 'configdisplaymode', 'block_adeptus_insights');
 
-        // =====================================
-        // REPORT SOURCE SETTINGS
-        // =====================================
-        $mform->addElement('header', 'config_header_source', get_string('configreportsource', 'block_adeptus_insights'));
-
-        // Report source.
-        $reportsources = [
-            'all' => get_string('reportsource_all', 'block_adeptus_insights'),
-            'wizard' => get_string('reportsource_wizard', 'block_adeptus_insights'),
-            'ai' => get_string('reportsource_ai', 'block_adeptus_insights'),
-            'category' => get_string('reportsource_category', 'block_adeptus_insights'),
-            'manual' => get_string('reportsource_manual', 'block_adeptus_insights'),
-        ];
-        $mform->addElement('select', 'config_report_source', get_string('configreportsource', 'block_adeptus_insights'), $reportsources);
-        $mform->setDefault('config_report_source', 'all');
-        $mform->addHelpButton('config_report_source', 'configreportsource', 'block_adeptus_insights');
-
-        // Report category filter (available for all sources except manual).
+        // Report category filter - filters reports shown in this block.
+        // Only applicable to Report Links and Embedded modes (KPI and Tabs have their own report selectors).
         $reportcategories = $this->get_report_category_options();
         $mform->addElement('select', 'config_report_category', get_string('configselectedcategory', 'block_adeptus_insights'), $reportcategories);
         $mform->setDefault('config_report_category', '');
         $mform->addHelpButton('config_report_category', 'configselectedcategory', 'block_adeptus_insights');
-        $mform->hideIf('config_report_category', 'config_report_source', 'eq', 'manual');
-
-        // Selected reports (for manual selection).
-        // Hidden textarea to store the JSON data.
-        $mform->addElement(
-            'textarea',
-            'config_selected_reports_json',
-            get_string('configselectedreports', 'block_adeptus_insights'),
-            ['rows' => 4, 'class' => 'manual-reports-selector d-none']
-        );
-        $mform->setType('config_selected_reports_json', PARAM_RAW);
-        $mform->hideIf('config_selected_reports_json', 'config_report_source', 'neq', 'manual');
-
-        // Manual report selector UI (rendered via JavaScript).
-        $mform->addElement('html', '<div id="manual-report-selector-container" class="manual-report-selector-ui mb-3" style="display:none;"></div>');
+        $mform->hideIf('config_report_category', 'config_display_mode', 'eq', 'kpi');
+        $mform->hideIf('config_report_category', 'config_display_mode', 'eq', 'tabs');
 
         // =====================================
         // DISPLAY OPTIONS
         // =====================================
-        $mform->addElement('header', 'config_header_display', get_string('configshowchart', 'block_adeptus_insights'));
-
-        // Show chart.
-        $mform->addElement('advcheckbox', 'config_show_chart', get_string('configshowchart', 'block_adeptus_insights'));
-        $mform->setDefault('config_show_chart', 1);
-
-        // Show table.
-        $mform->addElement('advcheckbox', 'config_show_table', get_string('configshowtable', 'block_adeptus_insights'));
-        $mform->setDefault('config_show_table', 1);
+        $mform->addElement('header', 'config_header_display', get_string('settings_display', 'block_adeptus_insights'));
 
         // Chart height.
         $chartheights = [];
@@ -119,22 +79,10 @@ class block_adeptus_insights_edit_form extends block_edit_form {
         $mform->addElement('select', 'config_chart_height', get_string('configchartheight', 'block_adeptus_insights'), $chartheights);
         $mform->setDefault('config_chart_height', 250);
 
-        // Max table rows.
-        $maxrows = [5 => '5', 10 => '10', 25 => '25', 50 => '50'];
-        $mform->addElement('select', 'config_table_max_rows', get_string('configtablemaxrows', 'block_adeptus_insights'), $maxrows);
-        $mform->setDefault('config_table_max_rows', 10);
-
-        // Compact mode.
-        $mform->addElement('advcheckbox', 'config_compact_mode', get_string('configcompactmode', 'block_adeptus_insights'));
-        $mform->setDefault('config_compact_mode', 0);
-
-        // Show footer.
-        $mform->addElement('advcheckbox', 'config_show_footer', get_string('configshowfooter', 'block_adeptus_insights'));
-        $mform->setDefault('config_show_footer', 1);
-
-        // Show category badges.
+        // Show category badges (links mode only).
         $mform->addElement('advcheckbox', 'config_show_category_badges', get_string('configshowcategorybadges', 'block_adeptus_insights'));
         $mform->setDefault('config_show_category_badges', 1);
+        $mform->hideIf('config_show_category_badges', 'config_display_mode', 'neq', 'links');
 
         // KPI columns (for KPI mode).
         $kpicolumns = [1 => '1', 2 => '2', 3 => '3', 4 => '4'];
@@ -174,7 +122,7 @@ class block_adeptus_insights_edit_form extends block_edit_form {
         );
         $mform->hideIf('config_kpi_reports_label', 'config_display_mode', 'neq', 'kpi');
 
-        // KPI selected reports (stored as JSON).
+        // KPI selected reports (stored as JSON - hidden, used by JS).
         $mform->addElement(
             'textarea',
             'config_kpi_selected_reports',
@@ -184,8 +132,16 @@ class block_adeptus_insights_edit_form extends block_edit_form {
         $mform->setType('config_kpi_selected_reports', PARAM_RAW);
         $mform->hideIf('config_kpi_selected_reports', 'config_display_mode', 'neq', 'kpi');
 
-        // KPI report selector UI (rendered via JavaScript).
-        $mform->addElement('html', '<div id="kpi-report-selector-container" class="kpi-report-selector-ui mb-3" style="display:none;"></div>');
+        // KPI report selector UI container (rendered via JavaScript).
+        $mform->addElement(
+            'static',
+            'kpi_report_selector_container',
+            '',
+            '<div id="kpi-report-selector-container" class="kpi-report-selector-ui mb-3">' .
+            '<div class="kpi-selector-loading text-center py-3">' .
+            '<i class="fa fa-spinner fa-spin"></i> Loading report selector...</div></div>'
+        );
+        $mform->hideIf('kpi_report_selector_container', 'config_display_mode', 'neq', 'kpi');
 
         // Tabs report selection (for tabs mode).
         $mform->addElement(
@@ -199,7 +155,7 @@ class block_adeptus_insights_edit_form extends block_edit_form {
         );
         $mform->hideIf('config_tabs_reports_label', 'config_display_mode', 'neq', 'tabs');
 
-        // Tabs selected reports (stored as JSON).
+        // Tabs selected reports (stored as JSON - hidden, used by JS).
         $mform->addElement(
             'textarea',
             'config_tabs_selected_reports',
@@ -209,8 +165,16 @@ class block_adeptus_insights_edit_form extends block_edit_form {
         $mform->setType('config_tabs_selected_reports', PARAM_RAW);
         $mform->hideIf('config_tabs_selected_reports', 'config_display_mode', 'neq', 'tabs');
 
-        // Tabs report selector UI (rendered via JavaScript).
-        $mform->addElement('html', '<div id="tabs-report-selector-container" class="tabs-report-selector-ui mb-3" style="display:none;"></div>');
+        // Tabs report selector UI container (rendered via JavaScript).
+        $mform->addElement(
+            'static',
+            'tabs_report_selector_container',
+            '',
+            '<div id="tabs-report-selector-container" class="tabs-report-selector-ui mb-3">' .
+            '<div class="tabs-selector-loading text-center py-3">' .
+            '<i class="fa fa-spinner fa-spin"></i> Loading report selector...</div></div>'
+        );
+        $mform->hideIf('tabs_report_selector_container', 'config_display_mode', 'neq', 'tabs');
 
         // Max link items (for links mode).
         $maxitems = [5 => '5', 10 => '10', 15 => '15', 20 => '20'];
@@ -219,18 +183,9 @@ class block_adeptus_insights_edit_form extends block_edit_form {
         $mform->hideIf('config_max_link_items', 'config_display_mode', 'neq', 'links');
 
         // =====================================
-        // BEHAVIOR SETTINGS
+        // DATA REFRESH SETTINGS
         // =====================================
-        $mform->addElement('header', 'config_header_behavior', get_string('configclickaction', 'block_adeptus_insights'));
-
-        // Click action.
-        $clickactions = [
-            'modal' => get_string('clickaction_modal', 'block_adeptus_insights'),
-            'newtab' => get_string('clickaction_newtab', 'block_adeptus_insights'),
-            'expand' => get_string('clickaction_expand', 'block_adeptus_insights'),
-        ];
-        $mform->addElement('select', 'config_click_action', get_string('configclickaction', 'block_adeptus_insights'), $clickactions);
-        $mform->setDefault('config_click_action', 'modal');
+        $mform->addElement('header', 'config_header_behavior', get_string('settings_datarefresh', 'block_adeptus_insights'));
 
         // Auto-refresh.
         $refreshintervals = [
@@ -246,10 +201,6 @@ class block_adeptus_insights_edit_form extends block_edit_form {
         // Show refresh button.
         $mform->addElement('advcheckbox', 'config_show_refresh_button', get_string('configshowrefreshbutton', 'block_adeptus_insights'));
         $mform->setDefault('config_show_refresh_button', 1);
-
-        // Show export.
-        $mform->addElement('advcheckbox', 'config_show_export', get_string('configshowexport', 'block_adeptus_insights'));
-        $mform->setDefault('config_show_export', 1);
 
         // Show timestamp.
         $mform->addElement('advcheckbox', 'config_show_timestamp', get_string('configshowtimestamp', 'block_adeptus_insights'));
@@ -513,6 +464,11 @@ class block_adeptus_insights_edit_form extends block_edit_form {
         );
 
         $mform->hideIf('alerts-manager-container', 'config_display_mode', 'neq', 'kpi');
+
+        // Load JavaScript for report selector initialization.
+        // For modal: JS is pre-loaded by block_adeptus_insights.php when editing mode is on.
+        // For full page: We load it here as a fallback since the block may not render.
+        $this->init_edit_form_javascript();
     }
 
     /**
@@ -622,10 +578,12 @@ class block_adeptus_insights_edit_form extends block_edit_form {
     }
 
     /**
-     * Initialize the JavaScript for the report selector UI.
+     * Initialize the JavaScript for the edit form.
+     * This handles full-page edit scenarios where the block may not render.
+     * For modal scenarios, the JS is pre-loaded by the block itself.
      */
-    private function init_report_selector_js() {
-        global $CFG;
+    private function init_edit_form_javascript() {
+        global $CFG, $PAGE;
 
         // Get API key from parent plugin.
         $apikey = '';
@@ -637,8 +595,10 @@ class block_adeptus_insights_edit_form extends block_edit_form {
             debugging('Failed to get API key for report selector: ' . $e->getMessage(), DEBUG_DEVELOPER);
         }
 
-        // Access page through the block instance.
-        $this->block->page->requires->js_call_amd(
+        // Load the edit_form module. This works for full-page edit scenarios.
+        // For modal scenarios, the module may already be loaded by the block,
+        // but calling init again is safe as the MutationObserver handles duplicates.
+        $PAGE->requires->js_call_amd(
             'block_adeptus_insights/edit_form',
             'init',
             [['apiKey' => $apikey]]
@@ -653,7 +613,7 @@ class block_adeptus_insights_edit_form extends block_edit_form {
     private function get_report_category_options() {
         global $CFG;
 
-        $categories = ['' => get_string('reportsource_all', 'block_adeptus_insights')];
+        $categories = ['' => get_string('allcategories', 'block_adeptus_insights')];
 
         // Try to fetch categories from the parent plugin.
         try {
@@ -669,7 +629,7 @@ class block_adeptus_insights_edit_form extends block_edit_form {
                 curl_setopt($ch, CURLOPT_URL, $apiurl . '/reports/categories');
                 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
                 curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
                 curl_setopt($ch, CURLOPT_HTTPHEADER, [
                     'Content-Type: application/json',
                     'Accept: application/json',
@@ -773,7 +733,7 @@ class block_adeptus_insights_edit_form extends block_edit_form {
                 curl_setopt($ch, CURLOPT_URL, $apiurl . '/reports/definitions');
                 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
                 curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
                 curl_setopt($ch, CURLOPT_HTTPHEADER, [
                     'Content-Type: application/json',
                     'Accept: application/json',
@@ -834,7 +794,7 @@ class block_adeptus_insights_edit_form extends block_edit_form {
             curl_setopt($ch, CURLOPT_URL, $apiurl . '/wizard-reports/' . urlencode($slug));
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_TIMEOUT, 5);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
             curl_setopt($ch, CURLOPT_HTTPHEADER, [
                 'Content-Type: application/json',
                 'Accept: application/json',
@@ -860,7 +820,7 @@ class block_adeptus_insights_edit_form extends block_edit_form {
             curl_setopt($ch, CURLOPT_URL, $apiurl . '/ai-reports/' . urlencode($slug));
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_TIMEOUT, 5);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
             curl_setopt($ch, CURLOPT_HTTPHEADER, [
                 'Content-Type: application/json',
                 'Accept: application/json',
@@ -916,13 +876,6 @@ class block_adeptus_insights_edit_form extends block_edit_form {
      */
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
-
-        // Validate that at least chart or table is shown for embedded mode.
-        if (isset($data['config_display_mode']) && $data['config_display_mode'] === 'embedded') {
-            if (empty($data['config_show_chart']) && empty($data['config_show_table'])) {
-                $errors['config_show_chart'] = get_string('errorloadingreport', 'block_adeptus_insights');
-            }
-        }
 
         // Validate multi-alert configuration (alerts_json is validated via JavaScript).
         // Server-side validation of JSON structure.
