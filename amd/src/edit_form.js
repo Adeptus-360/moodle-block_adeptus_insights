@@ -24,6 +24,7 @@
 define(['jquery', 'core/str', 'core/notification'], function($, Str, Notification) {
     'use strict';
 
+
     /**
      * Report Selector class for managing report selection in the edit form.
      *
@@ -121,17 +122,8 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                 // Bind events
                 self.bindEvents();
 
-                // Show container (except for manual mode which is controlled by report_source toggle).
-                // KPI and Tabs visibility is controlled by display_mode toggle in bindEvents().
-                if (self.mode === 'manual') {
-                    // Manual mode visibility is controlled by report_source, trigger check now.
-                    var reportSource = $('[name="config_report_source"]').val();
-                    if (reportSource === 'manual') {
-                        self.container.show();
-                    }
-                } else {
-                    self.container.show();
-                }
+                // Show container - Moodle's hideIf handles visibility based on display_mode.
+                self.container.show();
             });
         },
 
@@ -970,20 +962,7 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                 self.removeReport(slug, source);
             });
 
-            // Display mode change - show/hide containers
-            $('[name="config_display_mode"]').on('change', function() {
-                var mode = $(this).val();
-                if (mode === 'kpi') {
-                    $('#kpi-report-selector-container').show();
-                    $('#tabs-report-selector-container').hide();
-                } else if (mode === 'tabs') {
-                    $('#kpi-report-selector-container').hide();
-                    $('#tabs-report-selector-container').show();
-                } else {
-                    $('#kpi-report-selector-container').hide();
-                    $('#tabs-report-selector-container').hide();
-                }
-            }).trigger('change');
+            // Note: Container visibility is handled by Moodle's hideIf based on display_mode.
         },
 
         /**
@@ -1718,51 +1697,87 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
         }
     };
 
+    // Track if module has been initialized to prevent duplicates.
+    var moduleInitialized = false;
+
     return {
         /**
          * Initialize report selectors for the edit form.
+         * Uses MutationObserver to detect when modal content is loaded.
          *
          * @param {Object} options Configuration options
          */
         init: function(options) {
-            // Initialize KPI report selector.
-            new ReportSelector({
-                mode: 'kpi',
-                apiKey: options.apiKey,
-                containerId: 'kpi-report-selector-container',
-                textareaName: 'config_kpi_selected_reports'
-            });
+            // Prevent duplicate initialization (can happen when both block and edit_form load the module).
+            if (moduleInitialized) {
+                return;
+            }
+            moduleInitialized = true;
 
-            // Initialize Tabs report selector.
-            new ReportSelector({
-                mode: 'tabs',
-                apiKey: options.apiKey,
-                containerId: 'tabs-report-selector-container',
-                textareaName: 'config_tabs_selected_reports'
-            });
+            var initialized = {
+                kpi: false,
+                tabs: false,
+                alerts: false
+            };
 
-            // Initialize Manual report selector (for Report Source = Manual).
-            new ReportSelector({
-                mode: 'manual',
-                apiKey: options.apiKey,
-                containerId: 'manual-report-selector-container',
-                textareaName: 'config_selected_reports_json'
-            });
-
-            // Initialize Alerts manager.
-            new AlertsManager({
-                apiKey: options.apiKey
-            });
-
-            // Handle report source visibility toggle.
-            $('[name="config_report_source"]').on('change', function() {
-                var source = $(this).val();
-                if (source === 'manual') {
-                    $('#manual-report-selector-container').show();
-                } else {
-                    $('#manual-report-selector-container').hide();
+            /**
+             * Try to initialize selectors if their containers exist.
+             */
+            var tryInitialize = function() {
+                // Initialize KPI report selector.
+                if (!initialized.kpi && $('#kpi-report-selector-container').length) {
+                    new ReportSelector({
+                        mode: 'kpi',
+                        apiKey: options.apiKey,
+                        containerId: 'kpi-report-selector-container',
+                        textareaName: 'config_kpi_selected_reports'
+                    });
+                    initialized.kpi = true;
                 }
-            }).trigger('change');
+
+                // Initialize Tabs report selector.
+                if (!initialized.tabs && $('#tabs-report-selector-container').length) {
+                    new ReportSelector({
+                        mode: 'tabs',
+                        apiKey: options.apiKey,
+                        containerId: 'tabs-report-selector-container',
+                        textareaName: 'config_tabs_selected_reports'
+                    });
+                    initialized.tabs = true;
+                }
+
+                // Initialize Alerts manager.
+                if (!initialized.alerts && $('#alerts-manager-container').length) {
+                    new AlertsManager({
+                        apiKey: options.apiKey
+                    });
+                    initialized.alerts = true;
+                }
+            };
+
+            // Try immediately in case elements exist.
+            tryInitialize();
+
+            // Watch for modal content to be added to DOM.
+            var observer = new MutationObserver(function() {
+                tryInitialize();
+
+                // Stop observing once all are initialized.
+                if (initialized.kpi && initialized.tabs && initialized.alerts) {
+                    observer.disconnect();
+                }
+            });
+
+            // Observe the entire document for added nodes.
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+
+            // Also listen for Moodle modal events.
+            $(document).on('modal-shown', function() {
+                setTimeout(tryInitialize, 100);
+            });
         }
     };
 });

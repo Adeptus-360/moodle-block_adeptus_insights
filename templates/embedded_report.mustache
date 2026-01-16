@@ -21,16 +21,13 @@
 
     Context variables required for this template:
     * blockid - Block instance ID
-    * show_chart - Whether to show chart option
-    * show_table - Whether to show table option
     * chart_height - Height of chart in pixels
     * show_refresh_button - Whether to show refresh button
+    * show_timestamp - Whether to show timestamp
 
     Example context (json):
     {
         "blockid": 123,
-        "show_chart": true,
-        "show_table": true,
         "chart_height": 250
     }
 }}
@@ -39,7 +36,8 @@
      data-contextid="{{contextid}}"
      data-mode="embedded"
      data-context-type="{{context_type}}"
-     data-context-id="{{context_id}}">
+     data-context-id="{{context_id}}"
+     data-selected-reports="{{selected_reports_json}}">
 
     {{! Toolbar with filters }}
     <div class="block-adeptus-toolbar embedded-toolbar">
