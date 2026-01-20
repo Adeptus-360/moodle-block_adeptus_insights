@@ -94,6 +94,9 @@ define([
         this.tabPaneStates = {};
         this.tabChartInstances = {};
 
+        // Snapshot schedule registration tracking
+        this.registeredSnapshots = {};
+
         this.init();
     };
 
@@ -579,9 +582,35 @@ define([
                     timeout: 15000
                 }).done(function(response) {
                     if (response.success && response.report) {
+                        var reportData = response.report;
+                        var data = response.data || [];
+
+                        // Check if local execution is required (SaaS model)
+                        var sqlQuery = response.sql || (reportData && reportData.sql_query) || (reportData && reportData.sql);
+                        var needsLocalExecution = response.execution_required || ((!data || data.length === 0) && sqlQuery);
+
+                        if (needsLocalExecution && sqlQuery) {
+                            // Execute SQL locally against Moodle database
+                            self.executeReportLocally(sqlQuery, reportData.params || {})
+                                .then(function(executionResult) {
+                                    var localData = executionResult.data || [];
+                                    self.reportDataCache[cacheKey] = {
+                                        report: reportData,
+                                        results: localData,
+                                        chartData: null,
+                                        chartType: null
+                                    };
+                                    self.preloadingSlug = null;
+                                })
+                                .catch(function() {
+                                    self.preloadingSlug = null;
+                                });
+                            return;
+                        }
+
                         self.reportDataCache[cacheKey] = {
-                            report: response.report,
-                            results: response.data || [],
+                            report: reportData,
+                            results: data,
                             chartData: null,
                             chartType: null
                         };
@@ -1210,18 +1239,48 @@ define([
                     },
                     timeout: 15000
                 }).done(function(response) {
-                    self.hideEmbeddedLoadingOverlay();
                     if (response.success && response.report) {
+                        var reportData = response.report;
+                        var data = response.data || [];
+
+                        // Check if local execution is required (SaaS model)
+                        var sqlQuery = response.sql || (reportData && reportData.sql_query) || (reportData && reportData.sql);
+                        var needsLocalExecution = response.execution_required || ((!data || data.length === 0) && sqlQuery);
+
+                        if (needsLocalExecution && sqlQuery) {
+                            // Execute SQL locally against Moodle database
+                            self.executeReportLocally(sqlQuery, reportData.params || {})
+                                .then(function(executionResult) {
+                                    self.hideEmbeddedLoadingOverlay();
+                                    var localData = executionResult.data || [];
+                                    self.reportDataCache[cacheKey] = {
+                                        report: reportData,
+                                        results: localData,
+                                        chartData: null,
+                                        chartType: null
+                                    };
+                                    self.embeddedData = localData;
+                                    self.renderEmbeddedContent(reportData, localData);
+                                })
+                                .catch(function(error) {
+                                    self.hideEmbeddedLoadingOverlay();
+                                    self.showError('Failed to execute report');
+                                });
+                            return;
+                        }
+
+                        self.hideEmbeddedLoadingOverlay();
                         // Cache the result
                         self.reportDataCache[cacheKey] = {
-                            report: response.report,
-                            results: response.data || [],
+                            report: reportData,
+                            results: data,
                             chartData: null,
                             chartType: null
                         };
-                        self.embeddedData = response.data || [];
-                        self.renderEmbeddedContent(response.report, response.data || []);
+                        self.embeddedData = data;
+                        self.renderEmbeddedContent(reportData, data);
                     } else {
+                        self.hideEmbeddedLoadingOverlay();
                         self.showError('Failed to load report');
                     }
                 }).fail(function() {
@@ -1740,12 +1799,42 @@ define([
                     },
                     timeout: 30000
                 }).done(function(response) {
-                    if (response.success && response.data) {
-                        self.reportDataCache[cacheKey] = {
-                            report: response.report || report,
-                            results: response.data || []
-                        };
-                        self.renderKpiValue($card, response.data || []);
+                    if (response.success) {
+                        var reportData = response.report || report;
+                        var data = response.data || [];
+
+                        // Check if local execution is required (SaaS model)
+                        var sqlQuery = response.sql || (reportData && reportData.sql_query) || (reportData && reportData.sql);
+                        var needsLocalExecution = response.execution_required || ((!data || data.length === 0) && sqlQuery);
+
+                        if (needsLocalExecution && sqlQuery) {
+                            // Execute SQL locally against Moodle database
+                            self.executeReportLocally(sqlQuery, reportData.params || {})
+                                .then(function(executionResult) {
+                                    var localData = executionResult.data || [];
+                                    self.reportDataCache[cacheKey] = {
+                                        report: reportData,
+                                        results: localData
+                                    };
+                                    self.renderKpiValue($card, localData);
+                                })
+                                .catch(function(error) {
+                                    $card.find('.kpi-card-value').text('--');
+                                    $card.find('.kpi-card-trend').addClass('d-none');
+                                });
+                            return;
+                        }
+
+                        if (data && data.length > 0) {
+                            self.reportDataCache[cacheKey] = {
+                                report: reportData,
+                                results: data
+                            };
+                            self.renderKpiValue($card, data);
+                        } else {
+                            $card.find('.kpi-card-value').text('--');
+                            $card.find('.kpi-card-trend').addClass('d-none');
+                        }
                     } else {
                         $card.find('.kpi-card-value').text('--');
                         $card.find('.kpi-card-trend').addClass('d-none');
@@ -1837,7 +1926,8 @@ define([
         },
 
         /**
-         * Save KPI history to server via AJAX and update trend/sparkline.
+         * Save KPI snapshot to backend and update trend/sparkline.
+         * This is an enterprise feature - requires snapshots permission.
          *
          * @param {jQuery} $card
          * @param {string} slug
@@ -1845,74 +1935,308 @@ define([
          * @param {string} source Report source (wizard/ai)
          * @param {string} label Metric label
          * @param {number} rowCount Number of data rows
+         * @param {number} executionTimeMs Execution time in milliseconds (optional)
          */
-        saveKpiHistoryToServer: function($card, slug, value, source, label, rowCount) {
+        saveKpiHistoryToServer: function($card, slug, value, source, label, rowCount, executionTimeMs) {
             var self = this;
 
-            // Get configured history interval (default 1 hour = 3600 seconds)
-            var historyInterval = parseInt(this.config.kpiHistoryInterval, 10) || 3600;
+            // Check if snapshots feature is enabled (enterprise feature)
+            if (!this.config.snapshotsEnabled) {
+                // Feature not enabled - hide trend and sparkline
+                $card.find('.kpi-card-trend').addClass('d-none');
+                $card.find('.kpi-card-sparkline').addClass('d-none');
+                return;
+            }
 
-            require(['core/ajax'], function(Ajax) {
-                var promises = Ajax.call([{
-                    methodname: 'block_adeptus_insights_save_kpi_history',
-                    args: {
-                        blockinstanceid: self.blockId,
-                        reportslug: slug,
-                        value: value,
-                        source: source || 'wizard',
-                        label: label || '',
-                        rowcount: rowCount || 0,
-                        contexttype: 'site',
-                        contextid: 0,
-                        interval: historyInterval
-                    }
-                }]);
+            // For AI reports, use the backend snapshots API
+            if (source === 'ai') {
+                this.postSnapshotToBackend($card, slug, value, executionTimeMs || 0);
+                return;
+            }
 
-                promises[0].done(function(response) {
-                    if (response.success) {
-                        // Update trend indicator from server response
-                        self.updateKpiTrendFromServer($card, response.trend_direction, response.trend_percentage);
-                    }
-                }).fail(function() {
-                    // Silent fail - trend won't update but KPI value is still shown
-                });
-            });
-
-            // Also fetch history for sparkline (separate call for better UX)
-            this.loadKpiSparklineFromServer($card, slug, value);
+            // For wizard reports, also use backend API
+            this.postSnapshotToBackend($card, slug, value, executionTimeMs || 0);
         },
 
         /**
-         * Load KPI history from server for sparkline.
+         * Post snapshot to backend API and update trend/sparkline from response.
+         *
+         * @param {jQuery} $card
+         * @param {string} slug Report slug
+         * @param {number} metricValue The actual metric value (e.g., 122 users)
+         * @param {number} executionTimeMs Execution time in milliseconds
+         */
+        postSnapshotToBackend: function($card, slug, metricValue, executionTimeMs) {
+            var self = this;
+            var token = this.apiKey;
+            var source = $card.data('source') || 'wizard';
+
+            if (!token) {
+                $card.find('.kpi-card-trend').addClass('d-none');
+                $card.find('.kpi-card-sparkline').addClass('d-none');
+                return;
+            }
+
+            // Use correct endpoint based on report source
+            var endpoint = (source === 'ai') ? '/ai-reports/' : '/wizard-reports/';
+
+            $.ajax({
+                url: this.backendUrl + endpoint + encodeURIComponent(slug) + '/snapshots',
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + token,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                data: JSON.stringify({
+                    row_count: metricValue,
+                    execution_time_ms: executionTimeMs,
+                    evaluate_alerts: true
+                }),
+                timeout: 15000
+            }).done(function(response) {
+                if (response.success) {
+                    // Register snapshot schedule for cron-based execution on first run
+                    self.registerSnapshotSchedule(slug, source, metricValue);
+
+                    // Update trend from response
+                    if (response.trend && response.trend.has_previous) {
+                        self.updateKpiTrendFromBackend($card, response.trend);
+                    } else {
+                        // First execution - no previous data
+                        $card.find('.kpi-card-trend').addClass('d-none');
+                    }
+
+                    // Update sparkline from history
+                    if (response.history && response.history.length >= 2) {
+                        self.renderKpiSparklineFromBackend($card, slug, response.history);
+                    } else {
+                        $card.find('.kpi-card-sparkline').addClass('d-none');
+                    }
+
+                    // Handle any triggered alerts - pass context we have here.
+                    if (response.alerts && response.alerts.triggered_count > 0) {
+                        self.handleTriggeredAlerts(response.alerts.triggered, slug, metricValue);
+                    }
+                }
+            }).fail(function() {
+                // Silent fail - trend won't update but KPI value is still shown
+                $card.find('.kpi-card-trend').addClass('d-none');
+                $card.find('.kpi-card-sparkline').addClass('d-none');
+            });
+        },
+
+        /**
+         * Register a report for cron-based snapshot scheduling.
+         *
+         * Called on first successful snapshot POST to ensure subsequent
+         * snapshots are taken automatically by cron at the configured interval.
+         *
+         * @param {string} slug Report slug
+         * @param {string} source Report source (wizard or ai)
+         * @param {number} metricValue Initial metric value
+         */
+        registerSnapshotSchedule: function(slug, source, metricValue) {
+            var self = this;
+            var scheduleKey = this.blockId + '_' + slug;
+
+            // Only register once per session per report
+            if (this.registeredSnapshots[scheduleKey]) {
+                return;
+            }
+
+            // Get the history interval from config (in seconds)
+            var intervalSeconds = this.config.kpiHistoryInterval || 3600; // Default 1 hour
+
+            // Call Moodle AJAX to register the schedule
+            Ajax.call([{
+                methodname: 'block_adeptus_insights_register_snapshot_schedule',
+                args: {
+                    blockinstanceid: this.blockId,
+                    reportslug: slug,
+                    reportsource: source,
+                    intervalseconds: intervalSeconds,
+                    rowcount: metricValue
+                }
+            }])[0].done(function(response) {
+                if (response.success) {
+                    // Mark as registered for this session
+                    self.registeredSnapshots[scheduleKey] = true;
+                }
+            }).fail(function() {
+                // Silent fail - schedule registration is not critical for UI
+            });
+        },
+
+        /**
+         * Update KPI trend indicator from backend response.
+         *
+         * @param {jQuery} $card
+         * @param {Object} trend Trend data from backend
+         */
+        updateKpiTrendFromBackend: function($card, trend) {
+            var trendContainer = $card.find('.kpi-card-trend');
+            trendContainer.removeClass('d-none trend-up trend-down trend-neutral');
+
+            var direction = trend.direction;
+            var percentage = Math.abs(trend.change_percent || 0);
+            var changeText;
+
+            if (percentage >= 100) {
+                changeText = Math.round(percentage) + '%';
+            } else if (percentage >= 10) {
+                changeText = percentage.toFixed(0) + '%';
+            } else {
+                changeText = percentage.toFixed(1) + '%';
+            }
+
+            if (direction === 'increase') {
+                trendContainer.addClass('trend-up');
+                trendContainer.find('.trend-icon').html('<i class="fa fa-arrow-up"></i>');
+                trendContainer.find('.trend-value').text('+' + changeText + ' vs previous');
+            } else if (direction === 'decrease') {
+                trendContainer.addClass('trend-down');
+                trendContainer.find('.trend-icon').html('<i class="fa fa-arrow-down"></i>');
+                trendContainer.find('.trend-value').text('-' + changeText + ' vs previous');
+            } else {
+                trendContainer.addClass('trend-neutral');
+                trendContainer.find('.trend-icon').html('<i class="fa fa-minus"></i>');
+                trendContainer.find('.trend-value').text('No change');
+            }
+        },
+
+        /**
+         * Render sparkline from backend history data.
+         *
+         * @param {jQuery} $card
+         * @param {string} slug
+         * @param {Array} history History data from backend
+         */
+        renderKpiSparklineFromBackend: function($card, slug, history) {
+            // Convert backend history format to sparkline data
+            var sparklineData = history.map(function(point) {
+                return point.row_count;
+            }).reverse(); // Oldest first for chart
+
+            this.renderKpiSparklineFromData($card, slug, sparklineData, sparklineData[sparklineData.length - 1]);
+        },
+
+        /**
+         * Handle triggered alerts from snapshot response.
+         *
+         * Sends notifications via Moodle's messaging system to configured recipients.
+         * Notifications appear in the bell icon notification area.
+         *
+         * @param {Array} triggeredAlerts Array of triggered alert objects
+         * @param {string} reportSlug Report slug from snapshot context
+         * @param {number} currentValue Current metric value from snapshot context
+         */
+        handleTriggeredAlerts: function(triggeredAlerts, reportSlug, currentValue) {
+            var self = this;
+
+            if (!triggeredAlerts || triggeredAlerts.length === 0) {
+                return;
+            }
+
+            // Prepare alerts data for the Moodle notification API.
+            // Alerts fire once and are archived - no cooldown period needed.
+            // Use context values (reportSlug, currentValue) as fallbacks since backend may not include them.
+            var alertsToSend = triggeredAlerts.map(function(alert) {
+                return {
+                    alert_id: alert.id || alert.alert_id || 0,
+                    alert_name: alert.alert_name || alert.name || 'Alert',
+                    message: alert.message || '',
+                    severity: alert.severity || (alert.is_critical ? 'critical' : 'warning'),
+                    report_name: alert.report_name || '',
+                    report_slug: alert.report_slug || alert.slug || reportSlug || '',
+                    current_value: String(alert.current_value || alert.actual_value || alert.value || currentValue || ''),
+                    threshold: String(alert.threshold || alert.threshold_value || ''),
+                    notify_users: JSON.stringify(alert.notify_users || [])
+                };
+            });
+
+            // Send notifications via Moodle's messaging system (silent - no on-page alerts).
+            require(['core/ajax'], function(Ajax) {
+                Ajax.call([{
+                    methodname: 'block_adeptus_insights_send_alert_notification',
+                    args: {
+                        blockinstanceid: self.blockId,
+                        alerts: alertsToSend
+                    }
+                }])[0].done(function(response) {
+                    if (response.success && response.sent_count > 0) {
+                        // Trigger notification area refresh so bell icon updates.
+                        // Small delay to ensure notification is fully committed to database.
+                        setTimeout(function() {
+                            self.refreshNotificationArea();
+                        }, 500);
+                    }
+                }).fail(function() {
+                    // Silent fail - notifications will appear on next poll.
+                });
+            });
+        },
+
+        /**
+         * Refresh the Moodle notification area to show new notifications.
+         * Calls the Moodle API to get the unread count and updates the badge.
+         */
+        refreshNotificationArea: function() {
+            require(['jquery', 'core/ajax'], function($, Ajax) {
+                try {
+                    // Find the notification popover container and get user ID.
+                    var $popover = $('#nav-notification-popover-container');
+                    if (!$popover.length) {
+                        return;
+                    }
+
+                    var userId = $popover.attr('data-userid');
+                    if (!userId) {
+                        return;
+                    }
+
+                    // Call Moodle API to get unread notification count.
+                    Ajax.call([{
+                        methodname: 'message_popup_get_unread_popup_notification_count',
+                        args: {
+                            useridto: parseInt(userId, 10)
+                        }
+                    }])[0].done(function(count) {
+                        // Update the notification badge in the DOM.
+                        var $countContainer = $popover.find('[data-region="count-container"]');
+                        if ($countContainer.length) {
+                            if (count > 0) {
+                                $countContainer.text(count);
+                                $countContainer.removeClass('hidden');
+                            } else {
+                                $countContainer.addClass('hidden');
+                            }
+                        }
+                    }).fail(function() {
+                        // Silent fail - notifications will appear on next page load.
+                    });
+                } catch (e) {
+                    // Silent fail.
+                }
+            });
+        },
+
+        /**
+         * Load KPI history from server for sparkline (legacy - kept for backward compatibility).
          *
          * @param {jQuery} $card
          * @param {string} slug
          * @param {number} currentValue
+         * @deprecated Use postSnapshotToBackend instead which returns history in response
          */
         loadKpiSparklineFromServer: function($card, slug, currentValue) {
-            var self = this;
-
-            require(['core/ajax'], function(Ajax) {
-                var promises = Ajax.call([{
-                    methodname: 'block_adeptus_insights_get_kpi_history',
-                    args: {
-                        blockinstanceid: self.blockId,
-                        reportslug: slug,
-                        limit: 10
-                    }
-                }]);
-
-                promises[0].done(function(response) {
-                    if (response.success && response.sparkline && response.sparkline.length >= 2) {
-                        self.renderKpiSparklineFromData($card, slug, response.sparkline, currentValue);
-                    } else {
-                        // Not enough history for sparkline
-                        $card.find('.kpi-card-sparkline').addClass('d-none');
-                    }
-                }).fail(function() {
-                    $card.find('.kpi-card-sparkline').addClass('d-none');
-                });
-            });
+            // This is now handled by postSnapshotToBackend which returns history in response
+            // Keeping this method for any legacy code paths
+            if (!this.config.snapshotsEnabled) {
+                $card.find('.kpi-card-sparkline').addClass('d-none');
+                return;
+            }
+            // Sparkline is now loaded from snapshot response, no separate call needed
         },
 
         /**
@@ -2208,11 +2532,38 @@ define([
                     timeout: 15000
                 }).done(function(response) {
                     if (response.success) {
+                        var reportData = response.report || report;
+                        var data = response.data || [];
+
+                        // Check if local execution is required (SaaS model)
+                        var sqlQuery = response.sql || (reportData && reportData.sql_query) || (reportData && reportData.sql);
+                        var needsLocalExecution = response.execution_required || ((!data || data.length === 0) && sqlQuery);
+
+                        if (needsLocalExecution && sqlQuery) {
+                            // Execute SQL locally against Moodle database
+                            self.executeReportLocally(sqlQuery, reportData.params || {})
+                                .then(function(executionResult) {
+                                    var localData = executionResult.data || [];
+                                    self.reportDataCache[cacheKey] = {
+                                        report: reportData,
+                                        results: localData
+                                    };
+                                    self.renderTabContent(pane, reportData, localData);
+                                })
+                                .catch(function(error) {
+                                    pane.find('.tab-pane-loading').addClass('d-none');
+                                    pane.find('.tab-pane-content')
+                                        .removeClass('d-none')
+                                        .html('<div class="text-center text-muted py-4"><i class="fa fa-exclamation-circle"></i><p class="mt-2">Failed to execute report</p></div>');
+                                });
+                            return;
+                        }
+
                         self.reportDataCache[cacheKey] = {
-                            report: response.report || report,
-                            results: response.data || []
+                            report: reportData,
+                            results: data
                         };
-                        self.renderTabContent(pane, response.report || report, response.data || []);
+                        self.renderTabContent(pane, reportData, data);
                     } else {
                         pane.find('.tab-pane-loading').addClass('d-none');
                         pane.find('.tab-pane-content')
@@ -2850,18 +3201,46 @@ define([
                     },
                     timeout: 15000
                 }).done(function(response) {
-                    modalBody.find('.modal-loading').addClass('d-none');
-
                     if (response.success && response.report) {
+                        var reportData = response.report;
+                        var data = response.data || [];
+
+                        // Check if local execution is required (SaaS model)
+                        var sqlQuery = response.sql || (reportData && reportData.sql_query) || (reportData && reportData.sql);
+                        var needsLocalExecution = response.execution_required || ((!data || data.length === 0) && sqlQuery);
+
+                        if (needsLocalExecution && sqlQuery) {
+                            // Execute SQL locally against Moodle database
+                            self.executeReportLocally(sqlQuery, reportData.params || {})
+                                .then(function(executionResult) {
+                                    modalBody.find('.modal-loading').addClass('d-none');
+                                    var localData = executionResult.data || [];
+                                    self.reportDataCache[cacheKey] = {
+                                        report: reportData,
+                                        results: localData,
+                                        chartData: null,
+                                        chartType: null
+                                    };
+                                    self.renderModalContent(modalBody, reportData, localData, null, null);
+                                })
+                                .catch(function(error) {
+                                    modalBody.find('.modal-loading').addClass('d-none');
+                                    modalBody.find('.modal-error').removeClass('d-none');
+                                });
+                            return;
+                        }
+
+                        modalBody.find('.modal-loading').addClass('d-none');
                         // Cache the result for future use
                         self.reportDataCache[cacheKey] = {
-                            report: response.report,
-                            results: response.data || [],
+                            report: reportData,
+                            results: data,
                             chartData: null,
                             chartType: null
                         };
-                        self.renderModalContent(modalBody, response.report, response.data || [], null, null);
+                        self.renderModalContent(modalBody, reportData, data, null, null);
                     } else {
+                        modalBody.find('.modal-loading').addClass('d-none');
                         modalBody.find('.modal-error').removeClass('d-none');
                     }
                 }).fail(function() {
@@ -2992,6 +3371,52 @@ define([
             });
 
             return numericCols;
+        },
+
+        /**
+         * Execute AI report SQL locally against Moodle database.
+         * Used when backend returns SQL query but no data (SaaS model).
+         *
+         * @param {string} sql - The SQL query to execute
+         * @param {Object} params - Query parameters
+         * @return {Promise}
+         */
+        executeReportLocally: function(sql, params) {
+            params = params || {};
+
+            return new Promise(function(resolve, reject) {
+                $.ajax({
+                    url: M.cfg.wwwroot + '/report/adeptus_insights/ajax/execute_ai_report.php',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        sql: sql,
+                        params: params,
+                        sesskey: M.cfg.sesskey
+                    }),
+                    timeout: 60000,
+                    success: function(response) {
+                        if (response.success) {
+                            resolve({
+                                data: response.data || [],
+                                headers: response.headers || [],
+                                row_count: response.row_count || 0,
+                                error: null
+                            });
+                        } else {
+                            resolve({
+                                data: [],
+                                headers: [],
+                                row_count: 0,
+                                error: response.message || 'Query execution failed'
+                            });
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        reject(new Error('Failed to execute report: ' + error));
+                    }
+                });
+            });
         },
 
         /**

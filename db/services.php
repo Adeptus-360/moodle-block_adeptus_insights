@@ -25,34 +25,45 @@
 defined('MOODLE_INTERNAL') || die();
 
 $functions = [
-    // Save KPI value to history.
-    'block_adeptus_insights_save_kpi_history' => [
-        'classname'     => 'block_adeptus_insights\external\save_kpi_history',
-        'methodname'    => 'execute',
-        'description'   => 'Save a KPI value to history for trend tracking',
-        'type'          => 'write',
-        'ajax'          => true,
-        'loginrequired' => true,
-        'capabilities'  => 'block/adeptus_insights:view',
-    ],
-
-    // Get KPI history for trend and sparkline.
-    'block_adeptus_insights_get_kpi_history' => [
-        'classname'     => 'block_adeptus_insights\external\get_kpi_history',
-        'methodname'    => 'execute',
-        'description'   => 'Get KPI history for trend calculation and sparkline',
-        'type'          => 'read',
-        'ajax'          => true,
-        'loginrequired' => true,
-        'capabilities'  => 'block/adeptus_insights:view',
-    ],
-
-    // Search reports for autocomplete.
+    // Search reports for autocomplete (used in alert configuration UI).
     'block_adeptus_insights_search_reports' => [
         'classname'     => 'block_adeptus_insights\external\search_reports',
         'methodname'    => 'execute',
         'description'   => 'Search available reports for alert configuration autocomplete',
         'type'          => 'read',
+        'ajax'          => true,
+        'loginrequired' => true,
+        'capabilities'  => 'block/adeptus_insights:addinstance',
+    ],
+
+    // Get users by role for alert recipient selection.
+    'block_adeptus_insights_get_users_by_role' => [
+        'classname'     => 'block_adeptus_insights\external\get_users_by_role',
+        'methodname'    => 'execute',
+        'description'   => 'Get users filtered by role for alert notification recipient selection',
+        'type'          => 'read',
+        'ajax'          => true,
+        'loginrequired' => true,
+        'capabilities'  => 'block/adeptus_insights:addinstance',
+    ],
+
+    // Register snapshot schedule for cron-based KPI history.
+    'block_adeptus_insights_register_snapshot_schedule' => [
+        'classname'     => 'block_adeptus_insights\external\register_snapshot_schedule',
+        'methodname'    => 'execute',
+        'description'   => 'Register a report for scheduled snapshot execution via cron',
+        'type'          => 'write',
+        'ajax'          => true,
+        'loginrequired' => true,
+        'capabilities'  => 'block/adeptus_insights:addinstance',
+    ],
+
+    // Send alert notifications via Moodle's messaging system.
+    'block_adeptus_insights_send_alert_notification' => [
+        'classname'     => 'block_adeptus_insights\external\send_alert_notification',
+        'methodname'    => 'execute',
+        'description'   => 'Send alert notifications to users via Moodle messaging system',
+        'type'          => 'write',
         'ajax'          => true,
         'loginrequired' => true,
         'capabilities'  => 'block/adeptus_insights:addinstance',

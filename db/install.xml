@@ -1,102 +1,49 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="blocks/adeptus_insights/db" VERSION="20251230" COMMENT="XMLDB file for Adeptus Insights block plugin">
+<XMLDB PATH="blocks/adeptus_insights/db" VERSION="20260119" COMMENT="XMLDB file for Adeptus Insights block plugin">
   <TABLES>
-    <TABLE NAME="block_adeptus_kpi_history" COMMENT="Stores historical KPI values for trend indicators and sparklines">
+    <TABLE NAME="block_adeptus_snap_sched" COMMENT="Scheduled snapshot execution for KPI history tracking">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
-        <FIELD NAME="blockinstanceid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Block instance ID from block_instances table"/>
-        <FIELD NAME="report_slug" TYPE="char" LENGTH="255" NOTNULL="true" COMMENT="Report slug identifier"/>
-        <FIELD NAME="report_source" TYPE="char" LENGTH="50" NOTNULL="false" DEFAULT="wizard" COMMENT="Report source: wizard or ai"/>
-        <FIELD NAME="metric_value" TYPE="number" LENGTH="15" DECIMALS="4" NOTNULL="true" COMMENT="The KPI numeric value"/>
-        <FIELD NAME="metric_label" TYPE="char" LENGTH="255" NOTNULL="false" COMMENT="Label describing what was measured"/>
-        <FIELD NAME="row_count" TYPE="int" LENGTH="10" NOTNULL="false" DEFAULT="0" COMMENT="Number of rows in the report data"/>
-        <FIELD NAME="context_type" TYPE="char" LENGTH="50" NOTNULL="false" DEFAULT="site" COMMENT="Context type: site, course, or category"/>
-        <FIELD NAME="context_id" TYPE="int" LENGTH="10" NOTNULL="false" DEFAULT="0" COMMENT="Context ID (course or category ID)"/>
-        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="User who triggered the capture"/>
-        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Unix timestamp when value was captured"/>
-      </FIELDS>
-      <KEYS>
-        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="blockinstanceid" TYPE="foreign" FIELDS="blockinstanceid" REFTABLE="block_instances" REFFIELDS="id"/>
-        <KEY NAME="userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
-      </KEYS>
-      <INDEXES>
-        <INDEX NAME="block_report_time" UNIQUE="false" FIELDS="blockinstanceid, report_slug, timecreated" COMMENT="For fetching history by block and report"/>
-        <INDEX NAME="timecreated" UNIQUE="false" FIELDS="timecreated" COMMENT="For cleanup of old records"/>
-        <INDEX NAME="context" UNIQUE="false" FIELDS="context_type, context_id" COMMENT="For context-based queries"/>
-      </INDEXES>
-    </TABLE>
-
-    <TABLE NAME="block_adeptus_alerts" COMMENT="Alert threshold configurations for KPI monitoring">
-      <FIELDS>
-        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
-        <FIELD NAME="blockinstanceid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Block instance ID"/>
-        <FIELD NAME="report_slug" TYPE="char" LENGTH="255" NOTNULL="true" COMMENT="Report slug to monitor"/>
-        <FIELD NAME="metric_field" TYPE="char" LENGTH="100" NOTNULL="true" DEFAULT="value" COMMENT="Which metric field to check"/>
-        <FIELD NAME="alert_name" TYPE="char" LENGTH="255" NOTNULL="false" COMMENT="Custom alert name"/>
-        <FIELD NAME="alert_description" TYPE="text" NOTNULL="false" COMMENT="Alert description"/>
-        <FIELD NAME="operator" TYPE="char" LENGTH="20" NOTNULL="true" COMMENT="Comparison operator: gt, lt, eq, gte, lte, change_pct, increase_pct, decrease_pct"/>
-        <FIELD NAME="warning_value" TYPE="number" LENGTH="15" DECIMALS="4" NOTNULL="false" COMMENT="Warning threshold value"/>
-        <FIELD NAME="critical_value" TYPE="number" LENGTH="15" DECIMALS="4" NOTNULL="false" COMMENT="Critical threshold value"/>
-        <FIELD NAME="baseline_value" TYPE="number" LENGTH="15" DECIMALS="4" NOTNULL="false" COMMENT="Baseline for percentage calculations"/>
-        <FIELD NAME="baseline_period" TYPE="char" LENGTH="20" NOTNULL="false" DEFAULT="previous" COMMENT="Baseline period: previous, day, week, month"/>
-        <FIELD NAME="check_interval" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="3600" COMMENT="Seconds between threshold checks"/>
-        <FIELD NAME="cooldown_seconds" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="3600" COMMENT="Minimum seconds between notifications"/>
-        <FIELD NAME="current_status" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="ok" COMMENT="Current status: ok, warning, critical"/>
-        <FIELD NAME="last_checked" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="Last check timestamp"/>
-        <FIELD NAME="last_value" TYPE="number" LENGTH="15" DECIMALS="4" NOTNULL="false" COMMENT="Last recorded metric value"/>
-        <FIELD NAME="last_alert_time" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="Last notification sent timestamp"/>
-        <FIELD NAME="notify_roles" TYPE="text" NOTNULL="false" COMMENT="JSON array of role IDs for Moodle message notifications"/>
-        <FIELD NAME="notify_emails" TYPE="text" NOTNULL="false" COMMENT="Email addresses for direct email notifications (one per line)"/>
-        <FIELD NAME="notify_email" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" COMMENT="Send email notifications"/>
-        <FIELD NAME="notify_message" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" COMMENT="Send Moodle message notifications"/>
-        <FIELD NAME="notify_on_warning" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" COMMENT="Notify on warning status"/>
-        <FIELD NAME="notify_on_critical" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" COMMENT="Notify on critical status"/>
-        <FIELD NAME="notify_on_recovery" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" COMMENT="Notify when status recovers to OK"/>
-        <FIELD NAME="enabled" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" COMMENT="Alert enabled status"/>
+        <FIELD NAME="blockinstanceid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Reference to block_instances.id"/>
+        <FIELD NAME="report_slug" TYPE="char" LENGTH="255" NOTNULL="true" COMMENT="Report identifier slug"/>
+        <FIELD NAME="report_source" TYPE="char" LENGTH="50" NOTNULL="true" DEFAULT="wizard" COMMENT="Source type: wizard or ai"/>
+        <FIELD NAME="interval_seconds" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="86400" COMMENT="Snapshot frequency in seconds"/>
+        <FIELD NAME="last_snapshot_time" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="Unix timestamp of last successful snapshot"/>
+        <FIELD NAME="next_snapshot_due" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="Unix timestamp when next snapshot is due"/>
+        <FIELD NAME="last_row_count" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="Row count from last snapshot"/>
+        <FIELD NAME="is_active" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" COMMENT="Whether scheduling is active"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true"/>
-        <FIELD NAME="createdby" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="User who created the alert"/>
-        <FIELD NAME="modifiedby" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="User who last modified the alert"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
         <KEY NAME="blockinstanceid" TYPE="foreign" FIELDS="blockinstanceid" REFTABLE="block_instances" REFFIELDS="id"/>
-        <KEY NAME="createdby" TYPE="foreign" FIELDS="createdby" REFTABLE="user" REFFIELDS="id"/>
-        <KEY NAME="modifiedby" TYPE="foreign" FIELDS="modifiedby" REFTABLE="user" REFFIELDS="id"/>
       </KEYS>
       <INDEXES>
-        <INDEX NAME="block_report" UNIQUE="false" FIELDS="blockinstanceid, report_slug" COMMENT="For fetching alerts by block and report"/>
-        <INDEX NAME="status" UNIQUE="false" FIELDS="current_status" COMMENT="For querying active alerts"/>
-        <INDEX NAME="enabled_check" UNIQUE="false" FIELDS="enabled, last_checked" COMMENT="For scheduled task queries"/>
+        <INDEX NAME="report_slug" UNIQUE="false" FIELDS="report_slug"/>
+        <INDEX NAME="next_due_active" UNIQUE="false" FIELDS="next_snapshot_due, is_active" COMMENT="For efficient cron query"/>
+        <INDEX NAME="block_report" UNIQUE="true" FIELDS="blockinstanceid, report_slug" COMMENT="One schedule per block-report combination"/>
       </INDEXES>
     </TABLE>
-
-    <TABLE NAME="block_adeptus_alert_history" COMMENT="Historical record of alert events for audit and analysis">
+    <TABLE NAME="block_adeptus_alert_log" COMMENT="Log of triggered alert notifications (fire-once archive)">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
-        <FIELD NAME="alertid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Alert configuration ID"/>
-        <FIELD NAME="blockinstanceid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Block instance ID for faster queries"/>
-        <FIELD NAME="report_slug" TYPE="char" LENGTH="255" NOTNULL="true" COMMENT="Report slug for reference"/>
-        <FIELD NAME="previous_status" TYPE="char" LENGTH="20" NOTNULL="false" COMMENT="Status before this event"/>
-        <FIELD NAME="new_status" TYPE="char" LENGTH="20" NOTNULL="true" COMMENT="Status after this event"/>
-        <FIELD NAME="metric_value" TYPE="number" LENGTH="15" DECIMALS="4" NOTNULL="true" COMMENT="Metric value at time of event"/>
-        <FIELD NAME="threshold_value" TYPE="number" LENGTH="15" DECIMALS="4" NOTNULL="false" COMMENT="Threshold that was breached"/>
-        <FIELD NAME="threshold_type" TYPE="char" LENGTH="20" NOTNULL="false" COMMENT="warning or critical"/>
-        <FIELD NAME="evaluation_details" TYPE="text" NOTNULL="false" COMMENT="JSON with full evaluation details"/>
-        <FIELD NAME="notified" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" COMMENT="Whether notification was sent"/>
-        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="blockinstanceid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Reference to block_instances.id"/>
+        <FIELD NAME="alert_id" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Backend alert ID"/>
+        <FIELD NAME="severity" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="warning" COMMENT="Alert severity: warning, critical, or recovery"/>
+        <FIELD NAME="report_slug" TYPE="char" LENGTH="255" NOTNULL="true" COMMENT="Report identifier slug"/>
+        <FIELD NAME="alert_name" TYPE="char" LENGTH="255" NOTNULL="false" COMMENT="Alert name for reference"/>
+        <FIELD NAME="triggered_value" TYPE="char" LENGTH="100" NOTNULL="false" COMMENT="Value that triggered the alert"/>
+        <FIELD NAME="threshold_value" TYPE="char" LENGTH="100" NOTNULL="false" COMMENT="Threshold that was exceeded"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="When notification was sent"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="alertid" TYPE="foreign" FIELDS="alertid" REFTABLE="block_adeptus_alerts" REFFIELDS="id"/>
         <KEY NAME="blockinstanceid" TYPE="foreign" FIELDS="blockinstanceid" REFTABLE="block_instances" REFFIELDS="id"/>
       </KEYS>
       <INDEXES>
-        <INDEX NAME="alert_time" UNIQUE="false" FIELDS="alertid, timecreated" COMMENT="For fetching alert history"/>
-        <INDEX NAME="block_time" UNIQUE="false" FIELDS="blockinstanceid, timecreated" COMMENT="For block-level history"/>
-        <INDEX NAME="status_time" UNIQUE="false" FIELDS="new_status, timecreated" COMMENT="For status-based queries"/>
-        <INDEX NAME="timecreated" UNIQUE="false" FIELDS="timecreated" COMMENT="For cleanup of old records"/>
+        <INDEX NAME="block_alert_severity" UNIQUE="true" FIELDS="blockinstanceid, alert_id, severity" COMMENT="Unique constraint for fire-once per severity"/>
+        <INDEX NAME="block_alert" UNIQUE="false" FIELDS="blockinstanceid, alert_id"/>
       </INDEXES>
     </TABLE>
   </TABLES>

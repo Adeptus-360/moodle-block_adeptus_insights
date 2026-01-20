@@ -25,34 +25,14 @@
 defined('MOODLE_INTERNAL') || die();
 
 $tasks = [
-    // Cleanup old KPI history entries (runs daily at 3 AM).
     [
-        'classname' => 'block_adeptus_insights\task\cleanup_kpi_history',
+        'classname' => 'block_adeptus_insights\task\process_scheduled_snapshots',
         'blocking' => 0,
-        'minute' => '0',
-        'hour' => '3',
-        'day' => '*',
-        'month' => '*',
-        'dayofweek' => '*',
-    ],
-    // Check alert thresholds (runs every 15 minutes).
-    [
-        'classname' => 'block_adeptus_insights\task\check_alert_thresholds',
-        'blocking' => 0,
-        'minute' => '*/15',
+        'minute' => '*/5',
         'hour' => '*',
         'day' => '*',
         'month' => '*',
         'dayofweek' => '*',
-    ],
-    // Cleanup old alert history entries (runs daily at 4 AM).
-    [
-        'classname' => 'block_adeptus_insights\task\cleanup_alert_history',
-        'blocking' => 0,
-        'minute' => '0',
-        'hour' => '4',
-        'day' => '*',
-        'month' => '*',
-        'dayofweek' => '*',
+        'disabled' => 0,
     ],
 ];
