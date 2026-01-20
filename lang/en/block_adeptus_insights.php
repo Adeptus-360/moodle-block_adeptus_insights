@@ -490,3 +490,15 @@ $string['errorloadingkpi'] = 'Error loading KPI data.';
 
 // Alert Configuration notices.
 $string['alerts_kpi_only_notice'] = 'These settings are only applicable when using KPI Cards display mode. Please select "KPI cards" from the Display Mode option above to configure alerts and snapshot settings.';
+
+// Privacy API strings.
+$string['privacy:metadata:block_adeptus_snap_sched'] = 'Stores snapshot scheduling configuration for KPI metrics. This is administrative data associated with block instances, not individual users.';
+$string['privacy:metadata:block_adeptus_snap_sched:blockinstanceid'] = 'The ID of the block instance.';
+$string['privacy:metadata:block_adeptus_snap_sched:report_slug'] = 'The identifier of the report being tracked.';
+$string['privacy:metadata:block_adeptus_snap_sched:interval_seconds'] = 'How often snapshots are taken.';
+$string['privacy:metadata:block_adeptus_alert_log'] = 'Stores a log of triggered alert notifications. This is system data associated with block instances, not individual users.';
+$string['privacy:metadata:block_adeptus_alert_log:blockinstanceid'] = 'The ID of the block instance.';
+$string['privacy:metadata:block_adeptus_alert_log:alert_id'] = 'The backend alert identifier.';
+$string['privacy:metadata:block_adeptus_alert_log:severity'] = 'The severity level of the alert.';
+$string['privacy:metadata:adeptus_backend'] = 'Report data is sent to the Adeptus 360 backend API for processing and trend analysis. No personal user data is transmitted.';
+$string['privacy:metadata:adeptus_backend:report_data'] = 'Aggregated report metrics such as row counts and execution times.';

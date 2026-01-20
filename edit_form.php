@@ -644,7 +644,7 @@ class block_adeptus_insights_edit_form extends block_edit_form {
      * For modal scenarios, the JS is pre-loaded by the block itself.
      */
     private function init_edit_form_javascript() {
-        global $CFG, $PAGE;
+        global $CFG;
 
         // Get API key from parent plugin.
         $apikey = '';
@@ -659,7 +659,8 @@ class block_adeptus_insights_edit_form extends block_edit_form {
         // Load the edit_form module. This works for full-page edit scenarios.
         // For modal scenarios, the module may already be loaded by the block,
         // but calling init again is safe as the MutationObserver handles duplicates.
-        $PAGE->requires->js_call_amd(
+        // Access page through block instance to comply with Moodle coding standards.
+        $this->block->page->requires->js_call_amd(
             'block_adeptus_insights/edit_form',
             'init',
             [['apiKey' => $apikey]]

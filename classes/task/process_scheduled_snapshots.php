@@ -35,7 +35,6 @@ defined('MOODLE_INTERNAL') || die();
  * Runs every 5 minutes to check for and execute due snapshot schedules.
  */
 class process_scheduled_snapshots extends \core\task\scheduled_task {
-
     /**
      * Get task name.
      *
