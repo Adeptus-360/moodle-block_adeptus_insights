@@ -127,6 +127,13 @@ class send_alert_notification extends external_api {
             // Find local config for this alert to get email settings.
             $localconfig = self::find_local_alert_config($localalerts, $alertid);
 
+            // Skip alerts that aren't in the local block config.
+            // This filters out old/orphaned backend alerts that were deleted from this block.
+            if ($alertid > 0 && $localconfig === null) {
+                $results['skipped_count']++;
+                continue;
+            }
+
             // Prepare alert array for notification manager.
             $alert = [
                 'alert_name' => $alertdata['alert_name'],

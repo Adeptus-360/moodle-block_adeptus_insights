@@ -454,6 +454,13 @@ class snapshot_scheduler {
             // Find local config for this alert to get email settings.
             $localconfig = $this->find_local_alert_config($localalerts, $alertid);
 
+            // Skip alerts that aren't in the local block config.
+            // This filters out old/orphaned backend alerts that were deleted from this block.
+            if ($alertid > 0 && $localconfig === null) {
+                $skippedcount++;
+                continue;
+            }
+
             // Prepare alert data for notification manager.
             $alert = [
                 'alert_name' => $alertdata['alert_name'] ?? $alertdata['name'] ?? 'Alert',
