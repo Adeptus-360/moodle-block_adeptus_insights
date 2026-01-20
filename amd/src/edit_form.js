@@ -2328,6 +2328,31 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                     });
                     initialized.alerts = true;
                 }
+
+                // Handle Alert Configuration notice visibility based on display mode.
+                // Shows a notice when non-KPI mode is selected, hides it for KPI mode.
+                var displayModeSelect = $('[name="config_display_mode"]');
+                var alertsNotice = $('#alerts-kpi-only-notice');
+                if (displayModeSelect.length && alertsNotice.length && !displayModeSelect.data('alerts-notice-bound')) {
+
+                    var updateAlertNoticeVisibility = function() {
+                        var isKpi = displayModeSelect.val() === 'kpi';
+                        if (isKpi) {
+                            alertsNotice.hide();
+                        } else {
+                            alertsNotice.show();
+                        }
+                    };
+
+                    // Bind change handler.
+                    displayModeSelect.on('change', updateAlertNoticeVisibility);
+
+                    // Set initial visibility.
+                    setTimeout(updateAlertNoticeVisibility, 50);
+
+                    // Mark as bound to prevent duplicate handlers.
+                    displayModeSelect.data('alerts-notice-bound', true);
+                }
             };
 
             // Try immediately in case elements exist.
