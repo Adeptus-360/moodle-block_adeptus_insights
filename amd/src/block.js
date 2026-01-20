@@ -2016,7 +2016,8 @@ define([
 
                     // Handle any triggered alerts - pass context we have here.
                     if (response.alerts && response.alerts.triggered_count > 0) {
-                        self.handleTriggeredAlerts(response.alerts.triggered, slug, metricValue);
+                        var reportName = $card.find('.kpi-card-label').text() || slug;
+                        self.handleTriggeredAlerts(response.alerts.triggered, slug, metricValue, response.trend, reportName);
                     }
                 }
             }).fail(function() {
@@ -2130,8 +2131,10 @@ define([
          * @param {Array} triggeredAlerts Array of triggered alert objects
          * @param {string} reportSlug Report slug from snapshot context
          * @param {number} currentValue Current metric value from snapshot context
+         * @param {Object} trend Trend data from snapshot response (optional)
+         * @param {string} reportName Human-readable report name (optional)
          */
-        handleTriggeredAlerts: function(triggeredAlerts, reportSlug, currentValue) {
+        handleTriggeredAlerts: function(triggeredAlerts, reportSlug, currentValue, trend, reportName) {
             var self = this;
 
             if (!triggeredAlerts || triggeredAlerts.length === 0) {
@@ -2142,14 +2145,40 @@ define([
             // Alerts fire once and are archived - no cooldown period needed.
             // Use context values (reportSlug, currentValue) as fallbacks since backend may not include them.
             var alertsToSend = triggeredAlerts.map(function(alert) {
+                var alertName = alert.alert_name || alert.name || 'Alert';
+                var value = alert.current_value || alert.actual_value || alert.value || currentValue || '';
+                var severity = alert.severity || (alert.is_critical ? 'critical' : 'warning');
+                var displayReportName = reportName || alert.report_name || reportSlug || 'Report';
+
+                // Build a meaningful message with context and trend info.
+                // Format: "Your {report_name} has reached {value}, exceeding your {severity} threshold.
+                //          {alert_name} increased/decreased by X (Y%) since last measurement."
+                var message = 'Your ' + displayReportName + ' has reached ' + value +
+                    ', exceeding your ' + severity + ' threshold.';
+
+                // Add trend information if available.
+                if (trend && trend.has_previous) {
+                    var direction = trend.direction || 'change';
+                    var changeAbs = Math.abs(trend.change_absolute || 0);
+                    var changePct = Math.abs(trend.change_percent || 0).toFixed(1);
+
+                    if (direction === 'increase') {
+                        message += ' ' + alertName + ' increased by ' + changeAbs + ' (' + changePct + '%) since last measurement.';
+                    } else if (direction === 'decrease') {
+                        message += ' ' + alertName + ' decreased by ' + changeAbs + ' (' + changePct + '%) since last measurement.';
+                    } else {
+                        message += ' ' + alertName + ' has remained stable since last measurement.';
+                    }
+                }
+
                 return {
                     alert_id: alert.id || alert.alert_id || 0,
-                    alert_name: alert.alert_name || alert.name || 'Alert',
-                    message: alert.message || '',
-                    severity: alert.severity || (alert.is_critical ? 'critical' : 'warning'),
-                    report_name: alert.report_name || '',
+                    alert_name: alertName,
+                    message: message,
+                    severity: severity,
+                    report_name: displayReportName,
                     report_slug: alert.report_slug || alert.slug || reportSlug || '',
-                    current_value: String(alert.current_value || alert.actual_value || alert.value || currentValue || ''),
+                    current_value: String(value),
                     threshold: String(alert.threshold || alert.threshold_value || ''),
                     notify_users: JSON.stringify(alert.notify_users || [])
                 };
