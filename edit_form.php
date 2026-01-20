@@ -90,26 +90,6 @@ class block_adeptus_insights_edit_form extends block_edit_form {
         $mform->setDefault('config_kpi_columns', 2);
         $mform->hideIf('config_kpi_columns', 'config_display_mode', 'neq', 'kpi');
 
-        // KPI history save interval (for KPI mode trend tracking).
-        $historyintervals = [
-            3600 => get_string('kpi_interval_1h', 'block_adeptus_insights'),
-            21600 => get_string('kpi_interval_6h', 'block_adeptus_insights'),
-            43200 => get_string('kpi_interval_12h', 'block_adeptus_insights'),
-            86400 => get_string('kpi_interval_1d', 'block_adeptus_insights'),
-            259200 => get_string('kpi_interval_3d', 'block_adeptus_insights'),
-            604800 => get_string('kpi_interval_1w', 'block_adeptus_insights'),
-            2592000 => get_string('kpi_interval_1m', 'block_adeptus_insights'),
-        ];
-        $mform->addElement(
-            'select',
-            'config_kpi_history_interval',
-            get_string('configkpihistoryinterval', 'block_adeptus_insights'),
-            $historyintervals
-        );
-        $mform->setDefault('config_kpi_history_interval', 3600);
-        $mform->addHelpButton('config_kpi_history_interval', 'configkpihistoryinterval', 'block_adeptus_insights');
-        $mform->hideIf('config_kpi_history_interval', 'config_display_mode', 'neq', 'kpi');
-
         // KPI report selection (for KPI mode).
         $mform->addElement(
             'static',
@@ -237,6 +217,27 @@ class block_adeptus_insights_edit_form extends block_edit_form {
         // =====================================
         $mform->addElement('header', 'config_header_alerts', get_string('config_header_alerts', 'block_adeptus_insights'));
         $mform->addHelpButton('config_header_alerts', 'config_header_alerts', 'block_adeptus_insights');
+
+        // Snapshot frequency - controls how often KPI metrics are captured for trend analysis.
+        // Available for all tiers (snapshots enable trend indicators and sparklines).
+        $snapshotintervals = [
+            3600 => get_string('kpi_interval_1h', 'block_adeptus_insights'),
+            21600 => get_string('kpi_interval_6h', 'block_adeptus_insights'),
+            43200 => get_string('kpi_interval_12h', 'block_adeptus_insights'),
+            86400 => get_string('kpi_interval_1d', 'block_adeptus_insights'),
+            259200 => get_string('kpi_interval_3d', 'block_adeptus_insights'),
+            604800 => get_string('kpi_interval_1w', 'block_adeptus_insights'),
+            2592000 => get_string('kpi_interval_1m', 'block_adeptus_insights'),
+        ];
+        $mform->addElement(
+            'select',
+            'config_kpi_history_interval',
+            get_string('configkpihistoryinterval', 'block_adeptus_insights'),
+            $snapshotintervals
+        );
+        $mform->setDefault('config_kpi_history_interval', 3600);
+        $mform->addHelpButton('config_kpi_history_interval', 'configkpihistoryinterval', 'block_adeptus_insights');
+        $mform->hideIf('config_kpi_history_interval', 'config_display_mode', 'neq', 'kpi');
 
         // Check if alerts feature is enabled for this subscription (backend permission).
         $alertspermission = $this->check_alerts_permission();
@@ -450,9 +451,26 @@ class block_adeptus_insights_edit_form extends block_edit_form {
                         <h6 class="text-muted mb-3"><i class="fa fa-comment mr-1"></i> Moodle Message Notifications</h6>
 
                         <div class="form-group">
-                            <label for="alert-edit-notify-roles">' . get_string('config_alert_notify_roles', 'block_adeptus_insights') . '</label>
-                            <select id="alert-edit-notify-roles" class="form-control" multiple size="4"></select>
-                            <small class="form-text text-muted">' . get_string('config_alert_notify_roles_desc', 'block_adeptus_insights') . '</small>
+                            <label for="alert-edit-role-filter">' . get_string('config_alert_role_filter', 'block_adeptus_insights') . '</label>
+                            <select id="alert-edit-role-filter" class="form-control">
+                                <option value="">' . get_string('config_alert_role_filter_all', 'block_adeptus_insights') . '</option>
+                            </select>
+                            <small class="form-text text-muted">' . get_string('config_alert_role_filter_desc', 'block_adeptus_insights') . '</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="alert-edit-notify-users">' . get_string('config_alert_notify_users', 'block_adeptus_insights') . '</label>
+                            <div class="alert-users-search-container position-relative mb-2">
+                                <input type="text" id="alert-edit-user-search" class="form-control"
+                                    placeholder="' . get_string('config_alert_user_search_placeholder', 'block_adeptus_insights') . '"
+                                    autocomplete="off">
+                                <div id="alert-user-dropdown" class="position-absolute w-100 bg-white border rounded shadow-sm"
+                                    style="display:none; z-index:1050; max-height:250px; overflow-y:auto; top:100%; left:0;">
+                                </div>
+                            </div>
+                            <div id="alert-selected-users" class="selected-users-list mb-2"></div>
+                            <input type="hidden" id="alert-edit-notify-users-data" value="[]">
+                            <small class="form-text text-muted">' . get_string('config_alert_notify_users_desc', 'block_adeptus_insights') . '</small>
                         </div>
                     </div>
                     <div class="card-footer text-right">
@@ -474,38 +492,52 @@ class block_adeptus_insights_edit_form extends block_edit_form {
     /**
      * Get existing alerts for the current block instance.
      *
+     * Alerts are stored in the block's config (config_alerts_json) and synced
+     * with the backend API. This method loads alerts from the block config.
+     *
      * @return array Array of alert configurations
      */
     private function get_existing_alerts() {
-        global $DB, $CFG;
-
         $blockinstanceid = $this->block->instance->id ?? 0;
         if (empty($blockinstanceid)) {
             return [];
         }
 
         try {
-            $alerts = $DB->get_records('block_adeptus_alerts', ['blockinstanceid' => $blockinstanceid], 'id ASC');
-            $result = [];
+            // Load alerts from block config (alerts_json field).
+            $config = $this->block->config ?? null;
+            if (empty($config) || empty($config->alerts_json)) {
+                return [];
+            }
 
+            $alerts = json_decode($config->alerts_json, true);
+            if (!is_array($alerts)) {
+                return [];
+            }
+
+            // Return the alerts with all their properties intact.
+            // The JavaScript UI expects these fields.
+            $result = [];
             foreach ($alerts as $alert) {
                 $result[] = [
-                    'id' => $alert->id,
-                    'report_slug' => $alert->report_slug,
-                    'report_name' => self::get_report_display_name($alert->report_slug),
-                    'alert_name' => $alert->alert_name,
-                    'operator' => $alert->operator,
-                    'warning_value' => $alert->warning_value,
-                    'critical_value' => $alert->critical_value,
-                    'check_interval' => $alert->check_interval,
-                    'cooldown_seconds' => $alert->cooldown_seconds,
-                    'notify_on_warning' => (bool) $alert->notify_on_warning,
-                    'notify_on_critical' => (bool) $alert->notify_on_critical,
-                    'notify_on_recovery' => (bool) $alert->notify_on_recovery,
-                    'notify_email' => (bool) $alert->notify_email,
-                    'notify_roles' => json_decode($alert->notify_roles, true) ?: [],
-                    'enabled' => (bool) $alert->enabled,
-                    'current_status' => $alert->current_status,
+                    'id' => $alert['id'] ?? $alert['backend_id'] ?? 0,
+                    'backend_id' => $alert['backend_id'] ?? 0,
+                    'report_slug' => $alert['report_slug'] ?? '',
+                    'report_name' => $alert['report_name'] ?? self::get_report_display_name($alert['report_slug'] ?? ''),
+                    'alert_name' => $alert['alert_name'] ?? $alert['name'] ?? '',
+                    'operator' => $alert['operator'] ?? 'gt',
+                    'warning_value' => $alert['warning_value'] ?? '',
+                    'critical_value' => $alert['critical_value'] ?? '',
+                    'check_interval' => $alert['check_interval'] ?? 3600,
+                    'cooldown_seconds' => $alert['cooldown_seconds'] ?? 3600,
+                    'notify_on_warning' => (bool) ($alert['notify_on_warning'] ?? true),
+                    'notify_on_critical' => (bool) ($alert['notify_on_critical'] ?? true),
+                    'notify_on_recovery' => (bool) ($alert['notify_on_recovery'] ?? true),
+                    'notify_email' => (bool) ($alert['notify_email'] ?? false),
+                    'email_addresses' => $alert['email_addresses'] ?? '',
+                    'notify_users' => $alert['notify_users'] ?? [],
+                    'enabled' => (bool) ($alert['enabled'] ?? true),
+                    'current_status' => $alert['current_status'] ?? 'normal',
                 ];
             }
 

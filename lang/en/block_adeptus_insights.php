@@ -222,6 +222,7 @@ $string['defaultchartheight'] = 'Default chart height';
 $string['defaultchartheight_desc'] = 'Default height for charts in pixels.';
 
 // KPI History and Trends.
+$string['task_process_snapshots'] = 'Process scheduled KPI snapshots';
 $string['task_cleanup_kpi_history'] = 'Cleanup old KPI history entries';
 $string['kpi_trend_up'] = 'Trending up';
 $string['kpi_trend_down'] = 'Trending down';
@@ -354,6 +355,14 @@ manager@example.com
 stakeholder@company.com';
 $string['config_alert_notify_roles'] = 'Moodle message recipients';
 $string['config_alert_notify_roles_desc'] = 'Select roles to receive Moodle notifications. Users must have accounts on this site.';
+$string['config_alert_role_filter'] = 'Filter by role';
+$string['config_alert_role_filter_all'] = 'All users';
+$string['config_alert_role_filter_desc'] = 'Optionally filter the user list by role to find recipients more easily.';
+$string['config_alert_notify_users'] = 'Select recipients';
+$string['config_alert_notify_users_desc'] = 'Search and select specific users to receive notifications for this alert.';
+$string['config_alert_user_search_placeholder'] = 'Search users by name or email...';
+$string['config_alert_no_users_selected'] = 'No recipients selected';
+$string['config_alert_users_loading'] = 'Loading users...';
 $string['config_no_alerts'] = 'No alerts configured. Click "Add alert" to create one.';
 $string['config_alerts_list'] = 'Configured Alerts';
 $string['config_alert_name_placeholder'] = 'e.g., Low Engagement Alert';
@@ -429,3 +438,24 @@ $string['cooldown_48h'] = '48 hours';
 $string['feature_locked'] = 'Feature Not Available';
 $string['alerts_upgrade_required'] = 'Alert configuration is available on Pro and Enterprise plans. Upgrade your subscription to enable proactive monitoring and automated notifications.';
 $string['upgrade_to_unlock'] = 'Upgrade to Unlock';
+
+// Alert Notifications.
+$string['alert_notification_subject'] = 'Adeptus Insights Alert: {$a}';
+$string['alert_notification_greeting'] = 'Hello,';
+$string['alert_critical_intro'] = 'A critical alert has been triggered that requires your immediate attention.';
+$string['alert_warning_intro'] = 'A warning alert has been triggered that may require your attention.';
+$string['alert_recovery_intro'] = 'Good news! A previously triggered alert has now recovered to normal levels.';
+$string['alert_name'] = 'Alert';
+$string['alert_message'] = 'Message';
+$string['alert_report'] = 'Report';
+$string['alert_current_value'] = 'Current Value';
+$string['alert_threshold'] = 'Threshold';
+$string['alert_details'] = 'Alert Details';
+$string['alert_notification_footer'] = 'This notification was sent from {$a}. You can manage your notification preferences in your profile settings.';
+$string['view_dashboard'] = 'View Dashboard';
+$string['view_metric'] = 'View Metric';
+$string['viewdetails'] = 'View Details';
+$string['alert_powered_by'] = 'This alert was powered by Adeptus 360 - www.adeptus360.com';
+$string['messageprovider:alertnotification'] = 'KPI alert notifications';
+$string['messageprovider:criticalalert'] = 'Critical KPI alert notifications';
+$string['messageprovider:alertrecovery'] = 'Alert recovery notifications';

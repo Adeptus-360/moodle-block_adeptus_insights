@@ -993,7 +993,7 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
          * Save selection to textarea.
          */
         saveSelection: function() {
-            this.textarea.val(JSON.stringify(this.selectedReports));
+            this.textarea.val(JSON.stringify(this.selectedReports)).trigger('change');
         },
 
         /**
@@ -1030,7 +1030,10 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
         this.roles = {};
         this.editingIndex = -1;
         this.isDropdownOpen = false;
+        this.isUserDropdownOpen = false;
         this.searchTimeout = null;
+        this.userSearchTimeout = null;
+        this.selectedUsers = [];
         this.strings = {};
 
         this.init();
@@ -1061,6 +1064,12 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                 // Load existing alerts.
                 var existingAlerts = JSON.parse(self.container.attr('data-existing-alerts') || '[]');
                 self.alerts = existingAlerts;
+
+                // Clean up any orphaned backend alerts that no longer exist in local config.
+                // This ensures backend stays in sync with Moodle's source of truth.
+                if (existingAlerts.length > 0) {
+                    self.cleanupOrphanedAlerts();
+                }
 
                 // Populate select options.
                 self.populateSelectOptions();
@@ -1133,76 +1142,87 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                 cooldownSelect.append($('<option>', {value: key, text: value}));
             });
 
-            // Populate roles.
-            var rolesSelect = $('#alert-edit-notify-roles');
-            rolesSelect.empty();
-            $.each(this.roles, function(key, value) {
-                rolesSelect.append($('<option>', {value: key, text: value}));
-            });
+            // Populate role filter dropdown.
+            var roleFilter = $('#alert-edit-role-filter');
+            if (roleFilter.length) {
+                roleFilter.find('option:not(:first)').remove(); // Keep "All users" option.
+                $.each(this.roles, function(key, value) {
+                    roleFilter.append($('<option>', {value: key, text: value}));
+                });
+            } else {
+                // Element not found yet, might be in a modal - will be populated on openEditPanel.
+                console.warn('Role filter element not found during init, will populate on panel open');
+            }
         },
 
         /**
-         * Fetch reports from the API.
+         * Load reports from the block's selected reports.
+         *
+         * Only shows reports that are already configured in the block's
+         * KPI or Tabs report selectors, not all available reports.
          */
         fetchReports: function() {
             var self = this;
+            var allReports = [];
 
-            if (!this.apiKey) {
-                return;
+            // Get selected reports from the KPI report selector textarea.
+            var kpiTextarea = $('[name="config_kpi_selected_reports"]');
+            if (kpiTextarea.length && kpiTextarea.val()) {
+                try {
+                    var kpiReports = JSON.parse(kpiTextarea.val());
+                    if (Array.isArray(kpiReports)) {
+                        kpiReports.forEach(function(r) {
+                            r.displayName = r.name || r.title || r.display_name || r.slug;
+                            r.categoryName = r.category_info ? r.category_info.name : (r.source === 'ai' ? 'AI Generated' : 'General');
+                            allReports.push(r);
+                        });
+                    }
+                } catch (e) {
+                    // Invalid JSON, ignore.
+                }
             }
 
-            var baseUrl = 'https://backend.adeptus360.com/api/v1';
+            // Get selected reports from the Tabs report selector textarea.
+            var tabsTextarea = $('[name="config_tabs_selected_reports"]');
+            if (tabsTextarea.length && tabsTextarea.val()) {
+                try {
+                    var tabsReports = JSON.parse(tabsTextarea.val());
+                    if (Array.isArray(tabsReports)) {
+                        tabsReports.forEach(function(r) {
+                            // Avoid duplicates (same slug).
+                            var exists = allReports.some(function(existing) {
+                                return existing.slug === r.slug;
+                            });
+                            if (!exists) {
+                                r.displayName = r.name || r.title || r.display_name || r.slug;
+                                r.categoryName = r.category_info ? r.category_info.name : (r.source === 'ai' ? 'AI Generated' : 'General');
+                                allReports.push(r);
+                            }
+                        });
+                    }
+                } catch (e) {
+                    // Invalid JSON, ignore.
+                }
+            }
 
-            $.when(
-                $.ajax({
-                    url: baseUrl + '/wizard-reports',
-                    method: 'GET',
-                    headers: {
-                        'Authorization': 'Bearer ' + this.apiKey,
-                        'Accept': 'application/json'
-                    },
-                    timeout: 15000
-                }),
-                $.ajax({
-                    url: baseUrl + '/ai-reports',
-                    method: 'GET',
-                    headers: {
-                        'Authorization': 'Bearer ' + this.apiKey,
-                        'Accept': 'application/json'
-                    },
-                    timeout: 15000
-                })
-            ).then(function(wizardResult, aiResult) {
-                var allReports = [];
-
-                var wizardReports = wizardResult[0].reports || wizardResult[0].data || [];
-                wizardReports.forEach(function(r) {
-                    r.source = 'wizard';
-                    r.displayName = r.name || r.title || r.display_name || r.slug;
-                    r.categoryName = r.category_info ? r.category_info.name : 'General';
-                    allReports.push(r);
-                });
-
-                var aiReports = aiResult[0].reports || aiResult[0].data || [];
-                aiReports.forEach(function(r) {
-                    r.source = 'ai';
-                    r.displayName = r.name || r.title || r.display_name || r.slug;
-                    r.categoryName = r.category_info ? r.category_info.name : 'AI Generated';
-                    allReports.push(r);
-                });
-
-                allReports.sort(function(a, b) {
-                    return a.displayName.localeCompare(b.displayName);
-                });
-
-                self.reports = allReports;
-                self.filteredReports = allReports;
-            }).fail(function() {
-                Notification.addNotification({
-                    message: 'Failed to load reports for alerts',
-                    type: 'error'
-                });
+            // Sort alphabetically by display name.
+            allReports.sort(function(a, b) {
+                return (a.displayName || '').localeCompare(b.displayName || '');
             });
+
+            this.reports = allReports;
+            this.filteredReports = allReports;
+
+            // Update UI to show message if no reports selected.
+            if (allReports.length === 0) {
+                this.container.find('.alert-report-empty-message').remove();
+                this.container.find('.alerts-edit-panel').prepend(
+                    '<div class="alert alert-info alert-report-empty-message">' +
+                    '<i class="fa fa-info-circle"></i> ' +
+                    'No reports configured in this block. Add reports in the KPI or Tabs settings first.' +
+                    '</div>'
+                );
+            }
         },
 
         /**
@@ -1234,6 +1254,12 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
          */
         bindEvents: function() {
             var self = this;
+
+            // Listen for changes to the report selector textareas.
+            // When reports are added/removed from KPI or Tabs, refresh the alerts report list.
+            $('[name="config_kpi_selected_reports"], [name="config_tabs_selected_reports"]').on('change', function() {
+                self.fetchReports();
+            });
 
             // Add alert button.
             this.container.on('click', '#add-alert-btn', function() {
@@ -1311,6 +1337,48 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                 if (!$(e.target).closest('#alert-edit-report-search, #alert-report-dropdown').length) {
                     self.closeReportDropdown();
                 }
+                if (!$(e.target).closest('#alert-edit-user-search, #alert-user-dropdown').length) {
+                    self.closeUserDropdown();
+                }
+            });
+
+            // Role filter change - reload users.
+            $('#alert-edit-role-filter').on('change', function() {
+                // Clear search and reload with new filter.
+                $('#alert-edit-user-search').val('');
+                self.loadUsers();
+            });
+
+            // User search input.
+            var userSearchInput = $('#alert-edit-user-search');
+            var userDropdown = $('#alert-user-dropdown');
+
+            userSearchInput.on('focus', function() {
+                self.openUserDropdown();
+            });
+
+            userSearchInput.on('input', function() {
+                var query = $(this).val();
+                self.handleUserSearch(query);
+            });
+
+            userSearchInput.on('keydown', function(e) {
+                if (e.keyCode === 27) { // Escape.
+                    self.closeUserDropdown();
+                }
+            });
+
+            userDropdown.on('click', '.user-dropdown-item', function() {
+                var userId = $(this).data('userid');
+                var userName = $(this).data('name');
+                var userEmail = $(this).data('email');
+                self.addSelectedUser(userId, userName, userEmail);
+            });
+
+            // Remove selected user.
+            this.container.on('click', '.remove-selected-user', function() {
+                var userId = $(this).data('userid');
+                self.removeSelectedUser(userId);
             });
         },
 
@@ -1402,8 +1470,17 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
          * @param {number} index Alert index (-1 for new)
          */
         openEditPanel: function(index) {
+            var self = this;
             var panel = $('#alert-edit-panel');
             this.editingIndex = index;
+
+            // Ensure role filter is populated (might not have been during init).
+            var roleFilter = $('#alert-edit-role-filter');
+            if (roleFilter.length && roleFilter.find('option').length <= 1) {
+                $.each(this.roles, function(key, value) {
+                    roleFilter.append($('<option>', {value: key, text: value}));
+                });
+            }
 
             // Reset form.
             $('#alert-edit-report').val('');
@@ -1421,7 +1498,9 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
             $('#alert-edit-notify-email').prop('checked', false);
             $('#alert-edit-email-addresses').val('');
             $('#email-addresses-group').hide();
-            $('#alert-edit-notify-roles').val([]);
+            $('#alert-edit-role-filter').val('');
+            this.selectedUsers = [];
+            this.renderSelectedUsers();
 
             // Populate if editing existing.
             if (index >= 0 && this.alerts[index]) {
@@ -1443,7 +1522,9 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                 if (alert.notify_email) {
                     $('#email-addresses-group').show();
                 }
-                $('#alert-edit-notify-roles').val(alert.notify_roles || []);
+                // Load selected users from alert data.
+                this.selectedUsers = alert.notify_users || [];
+                this.renderSelectedUsers();
 
                 panel.find('.alert-panel-title').text(this.strings.editAlert);
             } else {
@@ -1462,13 +1543,33 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
         },
 
         /**
-         * Save the edit panel data.
+         * Get the API endpoint base URL for a report based on its source.
+         *
+         * @param {string} reportSlug Report slug.
+         * @return {string} API endpoint path ('/wizard-reports/' or '/ai-reports/').
+         */
+        getReportEndpoint: function(reportSlug) {
+            // Find the report in our list to get its source.
+            var report = this.reports.find(function(r) {
+                return r.slug === reportSlug;
+            });
+
+            // Default to wizard-reports if source is 'wizard' or unknown.
+            if (report && report.source === 'ai') {
+                return '/ai-reports/';
+            }
+            return '/wizard-reports/';
+        },
+
+        /**
+         * Save the edit panel data - syncs to backend API.
          */
         saveEditPanel: function() {
+            var self = this;
             var reportSlug = $('#alert-edit-report').val();
             var reportName = $('#alert-edit-report-search').val();
-            var warningValue = $('#alert-edit-warning').val();
-            var criticalValue = $('#alert-edit-critical').val();
+            var thresholdValue = $('#alert-edit-warning').val() || $('#alert-edit-critical').val();
+            var operator = $('#alert-edit-operator').val();
 
             // Validation.
             if (!reportSlug) {
@@ -1479,21 +1580,54 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                 return;
             }
 
-            if (!warningValue && !criticalValue) {
+            if (!thresholdValue) {
                 Notification.addNotification({
-                    message: 'At least one threshold (warning or critical) is required.',
+                    message: 'Please enter a threshold value.',
                     type: 'error'
                 });
                 return;
             }
 
+            // Map operator to condition_type for backend API.
+            var conditionType = 'threshold';
+            var backendOperator = operator;
+            if (operator === 'change_pct') {
+                conditionType = 'change_percent';
+                backendOperator = 'gte'; // Change by X% or more.
+            } else if (operator === 'increase_pct') {
+                conditionType = 'change_percent';
+                backendOperator = 'gte';
+            } else if (operator === 'decrease_pct') {
+                conditionType = 'change_percent';
+                backendOperator = 'lte';
+                thresholdValue = -Math.abs(parseFloat(thresholdValue)); // Negative for decrease.
+            }
+
+            // Prepare backend API payload.
+            // Note: cooldown_minutes is set to 0 to disable backend cooldown.
+            // Moodle handles fire-once logic per severity (warning/critical/recovery)
+            // via the block_adeptus_alert_log table.
+            var notifyEmail = $('#alert-edit-notify-email').is(':checked');
+            var backendPayload = {
+                name: $('#alert-edit-name').val() || reportName,
+                condition_type: conditionType,
+                operator: backendOperator,
+                value: parseFloat(thresholdValue) || 0,
+                cooldown_minutes: 0,
+                is_enabled: true,
+                notification_channels: notifyEmail ? ['email'] : ['moodle']
+            };
+
+            // Local alert data for UI.
             var alertData = {
                 report_slug: reportSlug,
                 report_name: reportName,
-                alert_name: $('#alert-edit-name').val(),
-                operator: $('#alert-edit-operator').val(),
-                warning_value: warningValue ? parseFloat(warningValue) : null,
-                critical_value: criticalValue ? parseFloat(criticalValue) : null,
+                alert_name: backendPayload.name,
+                operator: operator,
+                condition_type: conditionType,
+                threshold_value: parseFloat(thresholdValue),
+                warning_value: $('#alert-edit-warning').val() ? parseFloat($('#alert-edit-warning').val()) : null,
+                critical_value: $('#alert-edit-critical').val() ? parseFloat($('#alert-edit-critical').val()) : null,
                 check_interval: parseInt($('#alert-edit-interval').val(), 10),
                 cooldown_seconds: parseInt($('#alert-edit-cooldown').val(), 10),
                 notify_on_warning: $('#alert-edit-notify-warning').is(':checked'),
@@ -1501,36 +1635,287 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                 notify_on_recovery: $('#alert-edit-notify-recovery').is(':checked'),
                 notify_email: $('#alert-edit-notify-email').is(':checked'),
                 notify_emails: $('#alert-edit-email-addresses').val().trim(),
-                notify_roles: $('#alert-edit-notify-roles').val() || [],
+                notify_users: this.selectedUsers,
                 enabled: true
             };
 
-            if (this.editingIndex >= 0) {
-                // Update existing alert, preserve ID and status.
-                alertData.id = this.alerts[this.editingIndex].id;
-                alertData.current_status = this.alerts[this.editingIndex].current_status;
-                alertData.enabled = this.alerts[this.editingIndex].enabled;
-                this.alerts[this.editingIndex] = alertData;
-            } else {
-                // Add new alert.
-                alertData.current_status = 'ok';
-                this.alerts.push(alertData);
-            }
+            var isUpdate = this.editingIndex >= 0 && this.alerts[this.editingIndex] &&
+                           this.alerts[this.editingIndex].backend_id;
 
-            this.saveToTextarea();
-            this.renderAlertsList();
-            this.closeEditPanel();
+            if (isUpdate) {
+                // Update existing alert on backend.
+                var backendId = this.alerts[this.editingIndex].backend_id;
+                this.updateAlertOnBackend(reportSlug, backendId, backendPayload, alertData);
+            } else {
+                // Create new alert on backend.
+                this.createAlertOnBackend(reportSlug, backendPayload, alertData);
+            }
         },
 
         /**
-         * Delete an alert.
+         * Create a new alert on the backend.
+         *
+         * @param {string} reportSlug Report slug.
+         * @param {Object} payload Backend API payload.
+         * @param {Object} alertData Local alert data.
+         */
+        createAlertOnBackend: function(reportSlug, payload, alertData) {
+            var self = this;
+            var endpoint = this.getReportEndpoint(reportSlug);
+
+            $.ajax({
+                url: 'https://backend.adeptus360.com/api/v1' + endpoint +
+                     encodeURIComponent(reportSlug) + '/alerts',
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + this.apiKey,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                data: JSON.stringify(payload),
+                timeout: 15000
+            }).done(function(response) {
+                if (response.success && response.alert) {
+                    // Store backend ID for future updates.
+                    alertData.backend_id = response.alert.id;
+                    alertData.current_status = 'ok';
+
+                    if (self.editingIndex >= 0) {
+                        self.alerts[self.editingIndex] = alertData;
+                    } else {
+                        self.alerts.push(alertData);
+                    }
+
+                    self.saveToTextarea();
+                    self.renderAlertsList();
+                    self.closeEditPanel();
+
+                    Notification.addNotification({
+                        message: 'Alert created successfully.',
+                        type: 'success'
+                    });
+                } else {
+                    Notification.addNotification({
+                        message: response.message || 'Failed to create alert.',
+                        type: 'error'
+                    });
+                }
+            }).fail(function(xhr) {
+                var message = 'Failed to create alert.';
+                if (xhr.responseJSON) {
+                    if (xhr.responseJSON.message) {
+                        message = xhr.responseJSON.message;
+                    }
+                    // Show validation errors if present.
+                    if (xhr.responseJSON.errors) {
+                        var errors = xhr.responseJSON.errors;
+                        var errorDetails = [];
+                        for (var field in errors) {
+                            if (errors.hasOwnProperty(field)) {
+                                errorDetails.push(field + ': ' + errors[field].join(', '));
+                            }
+                        }
+                        if (errorDetails.length > 0) {
+                            message += ' - ' + errorDetails.join('; ');
+                        }
+                    }
+                }
+                console.error('Alert creation failed:', xhr.responseJSON);
+                Notification.addNotification({
+                    message: message,
+                    type: 'error'
+                });
+            });
+        },
+
+        /**
+         * Update an existing alert on the backend.
+         *
+         * @param {string} reportSlug Report slug.
+         * @param {number} alertId Backend alert ID.
+         * @param {Object} payload Backend API payload.
+         * @param {Object} alertData Local alert data.
+         */
+        updateAlertOnBackend: function(reportSlug, alertId, payload, alertData) {
+            var self = this;
+            var endpoint = this.getReportEndpoint(reportSlug);
+
+            $.ajax({
+                url: 'https://backend.adeptus360.com/api/v1' + endpoint +
+                     encodeURIComponent(reportSlug) + '/alerts/' + alertId,
+                method: 'PUT',
+                headers: {
+                    'Authorization': 'Bearer ' + this.apiKey,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                data: JSON.stringify(payload),
+                timeout: 15000
+            }).done(function(response) {
+                if (response.success) {
+                    alertData.backend_id = alertId;
+                    alertData.current_status = self.alerts[self.editingIndex].current_status;
+                    alertData.enabled = self.alerts[self.editingIndex].enabled;
+                    self.alerts[self.editingIndex] = alertData;
+
+                    self.saveToTextarea();
+                    self.renderAlertsList();
+                    self.closeEditPanel();
+
+                    Notification.addNotification({
+                        message: 'Alert updated successfully.',
+                        type: 'success'
+                    });
+                } else {
+                    Notification.addNotification({
+                        message: response.message || 'Failed to update alert.',
+                        type: 'error'
+                    });
+                }
+            }).fail(function(xhr) {
+                var message = 'Failed to update alert.';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    message = xhr.responseJSON.message;
+                }
+                Notification.addNotification({
+                    message: message,
+                    type: 'error'
+                });
+            });
+        },
+
+        /**
+         * Delete an alert - syncs to backend API.
          *
          * @param {number} index Alert index
          */
         deleteAlert: function(index) {
-            this.alerts.splice(index, 1);
-            this.saveToTextarea();
-            this.renderAlertsList();
+            var self = this;
+            var alert = this.alerts[index];
+
+            if (!alert) {
+                return;
+            }
+
+            // If alert has backend ID, delete from backend first.
+            if (alert.backend_id && alert.report_slug) {
+                var endpoint = this.getReportEndpoint(alert.report_slug);
+                $.ajax({
+                    url: 'https://backend.adeptus360.com/api/v1' + endpoint +
+                         encodeURIComponent(alert.report_slug) + '/alerts/' + alert.backend_id,
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': 'Bearer ' + this.apiKey,
+                        'Accept': 'application/json'
+                    },
+                    timeout: 15000
+                }).done(function(response) {
+                    // Remove from local list.
+                    self.alerts.splice(index, 1);
+                    self.saveToTextarea();
+                    self.renderAlertsList();
+
+                    Notification.addNotification({
+                        message: 'Alert deleted successfully.',
+                        type: 'success'
+                    });
+                }).fail(function(xhr) {
+                    var message = 'Failed to delete alert from server.';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        message = xhr.responseJSON.message;
+                    }
+                    Notification.addNotification({
+                        message: message,
+                        type: 'error'
+                    });
+                });
+            } else {
+                // No backend ID, just remove locally.
+                this.alerts.splice(index, 1);
+                this.saveToTextarea();
+                this.renderAlertsList();
+            }
+        },
+
+        /**
+         * Clean up orphaned backend alerts that no longer exist in local config.
+         * This runs on initialization to sync backend with local Moodle config.
+         */
+        cleanupOrphanedAlerts: function() {
+            var self = this;
+
+            // Get unique report slugs from local alerts.
+            var reportSlugs = {};
+            var localBackendIds = {};
+
+            this.alerts.forEach(function(alert) {
+                if (alert.report_slug) {
+                    reportSlugs[alert.report_slug] = true;
+                    if (alert.backend_id) {
+                        if (!localBackendIds[alert.report_slug]) {
+                            localBackendIds[alert.report_slug] = [];
+                        }
+                        localBackendIds[alert.report_slug].push(alert.backend_id);
+                    }
+                }
+            });
+
+            // For each report slug, fetch backend alerts and delete orphans.
+            Object.keys(reportSlugs).forEach(function(reportSlug) {
+                var endpoint = self.getReportEndpoint(reportSlug);
+                var localIds = localBackendIds[reportSlug] || [];
+
+                $.ajax({
+                    url: 'https://backend.adeptus360.com/api/v1' + endpoint +
+                         encodeURIComponent(reportSlug) + '/alerts',
+                    method: 'GET',
+                    headers: {
+                        'Authorization': 'Bearer ' + self.apiKey,
+                        'Accept': 'application/json'
+                    },
+                    timeout: 10000
+                }).done(function(response) {
+                    if (response.success && response.alerts) {
+                        var backendAlerts = response.alerts;
+
+                        // Find orphans (backend alerts not in local config).
+                        backendAlerts.forEach(function(backendAlert) {
+                            if (localIds.indexOf(backendAlert.id) === -1) {
+                                // This backend alert is orphaned - delete it.
+                                self.deleteOrphanedAlert(reportSlug, backendAlert.id);
+                            }
+                        });
+                    }
+                }).fail(function() {
+                    // Silently fail - orphan cleanup is best-effort.
+                    console.warn('Failed to fetch backend alerts for orphan cleanup:', reportSlug);
+                });
+            });
+        },
+
+        /**
+         * Delete an orphaned alert from the backend (no local state changes).
+         *
+         * @param {string} reportSlug Report slug.
+         * @param {number} alertId Backend alert ID to delete.
+         */
+        deleteOrphanedAlert: function(reportSlug, alertId) {
+            var endpoint = this.getReportEndpoint(reportSlug);
+
+            $.ajax({
+                url: 'https://backend.adeptus360.com/api/v1' + endpoint +
+                     encodeURIComponent(reportSlug) + '/alerts/' + alertId,
+                method: 'DELETE',
+                headers: {
+                    'Authorization': 'Bearer ' + this.apiKey,
+                    'Accept': 'application/json'
+                },
+                timeout: 10000
+            }).done(function() {
+                console.log('Cleaned up orphaned backend alert:', alertId, 'for report:', reportSlug);
+            }).fail(function() {
+                console.warn('Failed to delete orphaned alert:', alertId, 'for report:', reportSlug);
+            });
         },
 
         /**
@@ -1679,6 +2064,196 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
             $('#alert-edit-report-search').val(name);
             $('#alert-edit-report-display').text('Selected: ' + name);
             this.closeReportDropdown();
+        },
+
+        /**
+         * Open the user search dropdown.
+         */
+        openUserDropdown: function() {
+            if (this.isUserDropdownOpen) {
+                return;
+            }
+
+            this.isUserDropdownOpen = true;
+            var dropdown = $('#alert-user-dropdown');
+            dropdown.show();
+
+            // Load users if not already loaded.
+            this.loadUsers();
+        },
+
+        /**
+         * Close the user search dropdown.
+         */
+        closeUserDropdown: function() {
+            this.isUserDropdownOpen = false;
+            $('#alert-user-dropdown').hide();
+        },
+
+        /**
+         * Load users from the server.
+         */
+        loadUsers: function() {
+            var self = this;
+            var roleId = $('#alert-edit-role-filter').val() || 0;
+            var search = $('#alert-edit-user-search').val() || '';
+
+            var dropdown = $('#alert-user-dropdown');
+            dropdown.html('<div class="p-3 text-center text-muted"><i class="fa fa-spinner fa-spin"></i> Loading...</div>');
+
+            require(['core/ajax'], function(Ajax) {
+                Ajax.call([{
+                    methodname: 'block_adeptus_insights_get_users_by_role',
+                    args: {
+                        roleid: parseInt(roleId, 10),
+                        search: search,
+                        limit: 50
+                    }
+                }])[0].done(function(response) {
+                    self.renderUserDropdown(response.users);
+                }).fail(function() {
+                    dropdown.html('<div class="p-3 text-center text-danger">Failed to load users</div>');
+                });
+            });
+        },
+
+        /**
+         * Handle user search input with debouncing.
+         *
+         * @param {string} query Search query
+         */
+        handleUserSearch: function(query) {
+            var self = this;
+
+            if (this.userSearchTimeout) {
+                clearTimeout(this.userSearchTimeout);
+            }
+
+            this.userSearchTimeout = setTimeout(function() {
+                self.loadUsers();
+            }, 300);
+        },
+
+        /**
+         * Render the user dropdown.
+         *
+         * @param {Array} users Array of user objects
+         */
+        renderUserDropdown: function(users) {
+            var self = this;
+            var dropdown = $('#alert-user-dropdown');
+            dropdown.empty();
+
+            if (users.length === 0) {
+                dropdown.html('<div class="p-3 text-center text-muted">No users found</div>');
+                return;
+            }
+
+            users.forEach(function(user) {
+                // Check if already selected.
+                var isSelected = self.selectedUsers.some(function(s) {
+                    return s.id === user.id;
+                });
+
+                if (isSelected) {
+                    return; // Skip already selected users.
+                }
+
+                var html = '<div class="user-dropdown-item px-3 py-2 d-flex align-items-center" ' +
+                    'style="cursor:pointer;" ' +
+                    'data-userid="' + user.id + '" ' +
+                    'data-name="' + self.escapeHtml(user.fullname) + '" ' +
+                    'data-email="' + self.escapeHtml(user.email) + '">' +
+                    '<img src="' + user.profileimageurl + '" class="rounded-circle mr-2" ' +
+                    'width="32" height="32" alt="">' +
+                    '<div class="flex-grow-1 min-width-0">' +
+                    '<div class="text-truncate font-weight-bold">' + self.escapeHtml(user.fullname) + '</div>' +
+                    '<small class="text-muted text-truncate d-block">' + self.escapeHtml(user.email) + '</small>' +
+                    '</div>' +
+                    '</div>';
+
+                dropdown.append(html);
+            });
+
+            if (dropdown.children().length === 0) {
+                dropdown.html('<div class="p-3 text-center text-muted">All matching users already selected</div>');
+            }
+
+            // Add hover effects.
+            dropdown.find('.user-dropdown-item').hover(
+                function() { $(this).addClass('bg-light'); },
+                function() { $(this).removeClass('bg-light'); }
+            );
+        },
+
+        /**
+         * Add a user to the selected list.
+         *
+         * @param {number} userId User ID
+         * @param {string} userName User full name
+         * @param {string} userEmail User email
+         */
+        addSelectedUser: function(userId, userName, userEmail) {
+            // Check if already selected.
+            var exists = this.selectedUsers.some(function(u) {
+                return u.id === userId;
+            });
+
+            if (exists) {
+                return;
+            }
+
+            this.selectedUsers.push({
+                id: userId,
+                name: userName,
+                email: userEmail
+            });
+
+            this.renderSelectedUsers();
+            this.closeUserDropdown();
+            $('#alert-edit-user-search').val('');
+        },
+
+        /**
+         * Remove a user from the selected list.
+         *
+         * @param {number} userId User ID
+         */
+        removeSelectedUser: function(userId) {
+            this.selectedUsers = this.selectedUsers.filter(function(u) {
+                return u.id !== userId;
+            });
+
+            this.renderSelectedUsers();
+        },
+
+        /**
+         * Render the selected users list.
+         */
+        renderSelectedUsers: function() {
+            var self = this;
+            var container = $('#alert-selected-users');
+            container.empty();
+
+            if (this.selectedUsers.length === 0) {
+                container.html('<div class="text-muted small py-2"><i class="fa fa-user-o mr-1"></i> No recipients selected</div>');
+                return;
+            }
+
+            this.selectedUsers.forEach(function(user) {
+                var html = '<div class="selected-user-chip d-inline-flex align-items-center bg-light border rounded px-2 py-1 mr-2 mb-2">' +
+                    '<span class="mr-2">' + self.escapeHtml(user.name) + '</span>' +
+                    '<button type="button" class="btn btn-sm btn-link p-0 text-danger remove-selected-user" ' +
+                    'data-userid="' + user.id + '" title="Remove">' +
+                    '<i class="fa fa-times"></i>' +
+                    '</button>' +
+                    '</div>';
+
+                container.append(html);
+            });
+
+            // Update hidden input with user data.
+            $('#alert-edit-notify-users-data').val(JSON.stringify(this.selectedUsers));
         },
 
         /**

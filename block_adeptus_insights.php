@@ -345,6 +345,16 @@ class block_adeptus_insights extends block_base {
         // Get alert status for this block.
         $alertstatus = $this->get_alert_status();
 
+        // Check if snapshots feature is enabled (enterprise feature).
+        $snapshotsenabled = false;
+        try {
+            require_once($CFG->dirroot . '/report/adeptus_insights/classes/installation_manager.php');
+            $installationmanager = new \report_adeptus_insights\installation_manager();
+            $snapshotsenabled = $installationmanager->is_feature_enabled('snapshots');
+        } catch (\Exception $e) {
+            debugging('Failed to check snapshots permission: ' . $e->getMessage(), DEBUG_DEVELOPER);
+        }
+
         // Get backend URL from parent plugin config.
         $backendurl = 'https://backend.adeptus360.com/api/v1'; // Default fallback.
         try {
@@ -372,6 +382,7 @@ class block_adeptus_insights extends block_base {
             'contextId' => $this->get_context_filter()['id'],
             'alertsEnabled' => !empty($this->config->alerts_enabled),
             'alertStatus' => $alertstatus,
+            'snapshotsEnabled' => $snapshotsenabled,
         ];
     }
 
@@ -395,29 +406,8 @@ class block_adeptus_insights extends block_base {
             return $status;
         }
 
-        try {
-            require_once($CFG->dirroot . '/blocks/adeptus_insights/classes/alert_manager.php');
-
-            $summary = \block_adeptus_insights\alert_manager::get_block_alert_status($this->instance->id);
-
-            $status['hasAlerts'] = ($summary['warning'] > 0 || $summary['critical'] > 0);
-            $status['warningCount'] = $summary['warning'];
-            $status['criticalCount'] = $summary['critical'];
-            $status['highestSeverity'] = $summary['highest_severity'];
-
-            // Include active alert details for display.
-            foreach ($summary['active_alerts'] as $alert) {
-                $status['activeAlerts'][] = [
-                    'id' => $alert->id,
-                    'name' => $alert->alert_name ?: $alert->report_slug,
-                    'status' => $alert->current_status,
-                    'value' => $alert->last_value,
-                    'reportSlug' => $alert->report_slug,
-                ];
-            }
-        } catch (\Exception $e) {
-            debugging('Failed to get alert status: ' . $e->getMessage(), DEBUG_DEVELOPER);
-        }
+        // Alert status is now managed via backend API - no local status checking needed
+        // The frontend JavaScript handles alert display from backend API responses
 
         return $status;
     }
@@ -563,91 +553,18 @@ class block_adeptus_insights extends block_base {
      * @param string $alertsjson JSON-encoded array of alert configurations
      */
     private function save_alerts_from_json($alertsjson) {
-        global $CFG, $DB;
-
-        try {
-            require_once($CFG->dirroot . '/blocks/adeptus_insights/classes/alert_manager.php');
-
-            $alerts = json_decode($alertsjson, true);
-            if (!is_array($alerts)) {
-                return;
-            }
-
-            // Get existing alert IDs for this block.
-            $existingids = $DB->get_fieldset_select(
-                'block_adeptus_alerts',
-                'id',
-                'blockinstanceid = ?',
-                [$this->instance->id]
-            );
-            $processedids = [];
-
-            // Save or update each alert.
-            foreach ($alerts as $alertdata) {
-                if (empty($alertdata['report_slug'])) {
-                    continue;
-                }
-
-                $alertconfig = [
-                    'operator' => $alertdata['operator'] ?? 'gt',
-                    'metric_field' => 'value',
-                    'warning_value' => isset($alertdata['warning_value']) && $alertdata['warning_value'] !== ''
-                        ? (float)$alertdata['warning_value'] : null,
-                    'critical_value' => isset($alertdata['critical_value']) && $alertdata['critical_value'] !== ''
-                        ? (float)$alertdata['critical_value'] : null,
-                    'check_interval' => (int)($alertdata['check_interval'] ?? 3600),
-                    'cooldown_seconds' => (int)($alertdata['cooldown_seconds'] ?? 3600),
-                    'alert_name' => $alertdata['alert_name'] ?? '',
-                    'notify_on_warning' => !empty($alertdata['notify_on_warning']),
-                    'notify_on_critical' => !empty($alertdata['notify_on_critical']),
-                    'notify_on_recovery' => !empty($alertdata['notify_on_recovery']),
-                    'notify_email' => !empty($alertdata['notify_email']),
-                    'notify_message' => true,
-                    'notify_roles' => $alertdata['notify_roles'] ?? [],
-                    'enabled' => isset($alertdata['enabled']) ? (bool)$alertdata['enabled'] : true,
-                ];
-
-                // If alert has an ID, it's an existing alert.
-                if (!empty($alertdata['id'])) {
-                    $alertconfig['id'] = (int)$alertdata['id'];
-                    $processedids[] = (int)$alertdata['id'];
-                }
-
-                // Save the alert (creates or updates).
-                $savedid = \block_adeptus_insights\alert_manager::save_alert(
-                    $this->instance->id,
-                    $alertdata['report_slug'],
-                    $alertconfig
-                );
-
-                if ($savedid && empty($alertdata['id'])) {
-                    $processedids[] = $savedid;
-                }
-            }
-
-            // Delete alerts that were removed (not in the processed list).
-            $todeleteids = array_diff($existingids, $processedids);
-            foreach ($todeleteids as $deleteid) {
-                \block_adeptus_insights\alert_manager::delete_alert($deleteid);
-            }
-        } catch (\Exception $e) {
-            debugging('Failed to save alert configurations: ' . $e->getMessage(), DEBUG_DEVELOPER);
-        }
+        // Alerts are now managed via backend API - no local storage needed
+        // Alert configurations are saved directly to backend via JavaScript (edit_form.js)
+        // This function is kept as a stub for backward compatibility
+        return;
     }
 
     /**
      * Disable all alerts for this block instance.
      */
     private function disable_all_alerts() {
-        global $DB;
-
-        try {
-            $DB->set_field('block_adeptus_alerts', 'enabled', 0, [
-                'blockinstanceid' => $this->instance->id,
-            ]);
-        } catch (\Exception $e) {
-            debugging('Failed to disable alerts: ' . $e->getMessage(), DEBUG_DEVELOPER);
-        }
+        // Alerts are now managed via backend API - no local database to disable
+        return;
     }
 
     /**
@@ -656,24 +573,8 @@ class block_adeptus_insights extends block_base {
      * @return bool
      */
     public function instance_delete() {
-        global $CFG;
-
-        // Delete all alerts and history for this block instance.
-        try {
-            require_once($CFG->dirroot . '/blocks/adeptus_insights/classes/alert_manager.php');
-            \block_adeptus_insights\alert_manager::delete_block_alerts($this->instance->id);
-        } catch (\Exception $e) {
-            debugging('Failed to delete block alerts: ' . $e->getMessage(), DEBUG_DEVELOPER);
-        }
-
-        // Delete KPI history for this block instance.
-        try {
-            require_once($CFG->dirroot . '/blocks/adeptus_insights/classes/kpi_history_manager.php');
-            \block_adeptus_insights\kpi_history_manager::delete_block_history($this->instance->id);
-        } catch (\Exception $e) {
-            debugging('Failed to delete block KPI history: ' . $e->getMessage(), DEBUG_DEVELOPER);
-        }
-
+        // Alerts and KPI history are now managed via backend API
+        // No local cleanup needed - data is stored at backend.adeptus360.com
         return true;
     }
 }
