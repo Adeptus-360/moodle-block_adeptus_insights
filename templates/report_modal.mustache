@@ -58,10 +58,16 @@
                 </button>
             </div>
 
-            {{! Export buttons }}
+            {{! Export buttons - visibility controlled by JavaScript based on subscription }}
             <div class="export-buttons d-flex gap-2">
-                <button class="btn btn-outline-primary btn-sm modal-export" data-format="csv">
+                <button class="btn btn-outline-danger btn-sm modal-export" data-format="pdf" title="Export as PDF">
+                    <i class="fa fa-file-pdf-o"></i> PDF
+                </button>
+                <button class="btn btn-outline-primary btn-sm modal-export" data-format="csv" title="Export as CSV">
                     <i class="fa fa-file-excel-o"></i> CSV
+                </button>
+                <button class="btn btn-outline-secondary btn-sm modal-export" data-format="json" title="Export as JSON">
+                    <i class="fa fa-file-code-o"></i> JSON
                 </button>
             </div>
         </div>
