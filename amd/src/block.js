@@ -4450,13 +4450,12 @@ define([
                 parameters: {}
             };
 
-            // Build form data
-            var formData = new FormData();
-            formData.append('reportid', report ? report.slug : 'block_export');
-            formData.append('format', format);
-            formData.append('sesskey', M.cfg.sesskey);
-            formData.append('view', self.currentView || 'table');
-            formData.append('report_data', JSON.stringify(reportData));
+            // Build URL-encoded body (same format as main plugin)
+            var body = 'reportid=' + encodeURIComponent(report ? report.slug : 'block_export');
+            body += '&format=' + encodeURIComponent(format);
+            body += '&sesskey=' + encodeURIComponent(M.cfg.sesskey);
+            body += '&view=' + encodeURIComponent(self.currentView || 'table');
+            body += '&report_data=' + encodeURIComponent(JSON.stringify(reportData));
 
             // For PDF, capture chart image if in chart view
             var chartPromise = Promise.resolve(null);
@@ -4467,14 +4466,17 @@ define([
             }
 
             chartPromise.then(function(chartImage) {
-                if (chartImage) {
-                    formData.append('chart_image', chartImage);
+                if (chartImage && chartImage.length > 100) {
+                    body += '&chart_image=' + encodeURIComponent(chartImage);
                 }
 
                 // Use fetch to submit and handle file download
                 fetch(M.cfg.wwwroot + '/report/adeptus_insights/ajax/export_report.php', {
                     method: 'POST',
-                    body: formData
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: body
                 }).then(function(response) {
                     var contentType = response.headers.get('content-type');
                     if (contentType && contentType.includes('application/json')) {
