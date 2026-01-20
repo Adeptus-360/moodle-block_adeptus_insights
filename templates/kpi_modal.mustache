@@ -1,0 +1,114 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template block_adeptus_insights/kpi_modal
+
+    Modal for displaying enhanced KPI metrics with interactive chart.
+
+    This template is used for KPI card clicks when alerts feature is enabled.
+
+    Example context (json):
+    {
+        "blockid": 123
+    }
+}}
+<div class="block-adeptus-kpi-modal-content" data-blockid="{{blockid}}">
+    {{! Loading state }}
+    <div class="kpi-modal-loading">
+        <div class="text-center py-5">
+            <i class="fa fa-spinner fa-spin fa-3x text-primary"></i>
+            <p class="text-muted mt-3">{{#str}}loading, block_adeptus_insights{{/str}}</p>
+        </div>
+    </div>
+
+    {{! Content }}
+    <div class="kpi-modal-content-area d-none">
+        {{! Header with metric and date range }}
+        <div class="kpi-modal-header d-flex justify-content-between align-items-start mb-4">
+            {{! Current metric value }}
+            <div class="kpi-modal-metric">
+                <div class="kpi-modal-value-container">
+                    <span class="kpi-modal-value">--</span>
+                </div>
+                <div class="kpi-modal-trends mt-2">
+                    <span class="kpi-modal-trend-baseline text-muted">--</span>
+                    <span class="trend-separator mx-2">|</span>
+                    <span class="kpi-modal-trend-previous text-muted">--</span>
+                </div>
+            </div>
+
+            {{! Date range filter }}
+            <div class="kpi-modal-date-filter">
+                <label class="form-label small text-muted mb-1">{{#str}}daterange, block_adeptus_insights{{/str}}</label>
+                <select class="form-select form-select-sm kpi-date-range-select">
+                    <option value="7d">{{#str}}last7days, block_adeptus_insights{{/str}}</option>
+                    <option value="30d" selected>{{#str}}last30days, block_adeptus_insights{{/str}}</option>
+                    <option value="90d">{{#str}}last90days, block_adeptus_insights{{/str}}</option>
+                    <option value="all">{{#str}}alltime, block_adeptus_insights{{/str}}</option>
+                </select>
+            </div>
+        </div>
+
+        {{! Interactive chart }}
+        <div class="kpi-modal-chart-container mb-4">
+            <canvas class="kpi-modal-chart"></canvas>
+        </div>
+
+        {{! Statistics row }}
+        <div class="kpi-modal-stats">
+            <div class="row g-3">
+                <div class="col-4">
+                    <div class="kpi-stat-card">
+                        <div class="kpi-stat-label text-muted small">{{#str}}minimum, block_adeptus_insights{{/str}}</div>
+                        <div class="kpi-stat-value kpi-stat-min">--</div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="kpi-stat-card">
+                        <div class="kpi-stat-label text-muted small">{{#str}}maximum, block_adeptus_insights{{/str}}</div>
+                        <div class="kpi-stat-value kpi-stat-max">--</div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="kpi-stat-card">
+                        <div class="kpi-stat-label text-muted small">{{#str}}average, block_adeptus_insights{{/str}}</div>
+                        <div class="kpi-stat-value kpi-stat-avg">--</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{! Footer with data points info }}
+        <div class="kpi-modal-footer mt-3 pt-3 border-top d-flex justify-content-between align-items-center">
+            <span class="kpi-modal-datapoints text-muted small">
+                <i class="fa fa-info-circle"></i> <span class="datapoints-count">0</span> {{#str}}datapoints, block_adeptus_insights{{/str}}
+            </span>
+            <span class="kpi-modal-last-updated text-muted small"></span>
+        </div>
+    </div>
+
+    {{! Error state }}
+    <div class="kpi-modal-error d-none">
+        <div class="text-center py-5">
+            <i class="fa fa-exclamation-triangle fa-3x text-warning"></i>
+            <p class="text-muted mt-3">{{#str}}errorloadingkpi, block_adeptus_insights{{/str}}</p>
+            <button type="button" class="btn btn-outline-secondary kpi-modal-retry">
+                <i class="fa fa-refresh"></i> {{#str}}refresh, block_adeptus_insights{{/str}}
+            </button>
+        </div>
+    </div>
+</div>

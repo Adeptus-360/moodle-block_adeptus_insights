@@ -475,3 +475,15 @@ $string['alert_powered_by'] = 'This alert was powered by Adeptus 360 - www.adept
 $string['messageprovider:alertnotification'] = 'KPI alert notifications';
 $string['messageprovider:criticalalert'] = 'Critical KPI alert notifications';
 $string['messageprovider:alertrecovery'] = 'Alert recovery notifications';
+
+// KPI Modal.
+$string['daterange'] = 'Date Range';
+$string['last7days'] = 'Last 7 days';
+$string['last30days'] = 'Last 30 days';
+$string['last90days'] = 'Last 90 days';
+$string['alltime'] = 'All time';
+$string['minimum'] = 'Minimum';
+$string['maximum'] = 'Maximum';
+$string['average'] = 'Average';
+$string['datapoints'] = 'data points';
+$string['errorloadingkpi'] = 'Error loading KPI data.';
