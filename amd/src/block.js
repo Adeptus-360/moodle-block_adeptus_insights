@@ -2144,17 +2144,48 @@ define([
             // Prepare alerts data for the Moodle notification API.
             // Alerts fire once and are archived - no cooldown period needed.
             // Use context values (reportSlug, currentValue) as fallbacks since backend may not include them.
+            var alertsConfig = self.config.alertsConfig || [];
+
             var alertsToSend = triggeredAlerts.map(function(alert) {
                 var alertName = alert.alert_name || alert.name || 'Alert';
-                var value = alert.current_value || alert.actual_value || alert.value || currentValue || '';
-                var severity = alert.severity || (alert.is_critical ? 'critical' : 'warning');
+                var value = parseFloat(alert.current_value || alert.actual_value || alert.value || currentValue || 0);
                 var displayReportName = reportName || alert.report_name || reportSlug || 'Report';
+                var alertId = alert.id || alert.alert_id || 0;
+
+                // Look up local config to determine correct severity based on thresholds.
+                var localConfig = null;
+                for (var i = 0; i < alertsConfig.length; i++) {
+                    if (alertsConfig[i].backend_id === alertId) {
+                        localConfig = alertsConfig[i];
+                        break;
+                    }
+                }
+
+                // Determine severity by comparing value against warning and critical thresholds.
+                var severity = 'warning';
+                var thresholdValue = alert.threshold || alert.threshold_value || '';
+                if (localConfig) {
+                    var warningThreshold = parseFloat(localConfig.warning_value) || 0;
+                    var criticalThreshold = parseFloat(localConfig.critical_value) || 0;
+
+                    // Check which threshold was exceeded (critical takes priority).
+                    if (criticalThreshold > 0 && value >= criticalThreshold) {
+                        severity = 'critical';
+                        thresholdValue = criticalThreshold;
+                    } else if (warningThreshold > 0 && value >= warningThreshold) {
+                        severity = 'warning';
+                        thresholdValue = warningThreshold;
+                    }
+                } else {
+                    // Fall back to backend-provided severity if no local config.
+                    severity = alert.severity || (alert.is_critical ? 'critical' : 'warning');
+                }
 
                 // Build a meaningful message with context and trend info.
-                // Format: "Your {report_name} has reached {value}, exceeding your {severity} threshold.
+                // Format: "Your {report_name} has reached {value}, exceeding your {severity} threshold ({threshold}).
                 //          {alert_name} increased/decreased by X (Y%) since last measurement."
                 var message = 'Your ' + displayReportName + ' has reached ' + value +
-                    ', exceeding your ' + severity + ' threshold.';
+                    ', exceeding your ' + severity + ' threshold (' + thresholdValue + ').';
 
                 // Add trend information if available.
                 if (trend && trend.has_previous) {
@@ -2172,14 +2203,14 @@ define([
                 }
 
                 return {
-                    alert_id: alert.id || alert.alert_id || 0,
+                    alert_id: alertId,
                     alert_name: alertName,
                     message: message,
                     severity: severity,
                     report_name: displayReportName,
                     report_slug: alert.report_slug || alert.slug || reportSlug || '',
                     current_value: String(value),
-                    threshold: String(alert.threshold || alert.threshold_value || ''),
+                    threshold: String(thresholdValue),
                     notify_users: JSON.stringify(alert.notify_users || [])
                 };
             });
