@@ -1983,8 +1983,12 @@ define([
             // Get baseline period from config (default: all_time)
             var baselinePeriod = this.config.baselinePeriod || 'all_time';
 
+            // Determine history limit based on baseline period for sparkline display
+            var historyLimit = this.getHistoryLimitForBaseline(baselinePeriod);
+
             $.ajax({
-                url: this.backendUrl + endpoint + encodeURIComponent(slug) + '/snapshots?baseline_period=' + baselinePeriod,
+                url: this.backendUrl + endpoint + encodeURIComponent(slug) +
+                    '/snapshots?baseline_period=' + baselinePeriod + '&history_limit=' + historyLimit,
                 method: 'POST',
                 headers: {
                     'Authorization': 'Bearer ' + token,
@@ -2193,6 +2197,32 @@ define([
                 return percentage.toFixed(0) + '%';
             }
             return percentage.toFixed(1) + '%';
+        },
+
+        /**
+         * Get appropriate history limit based on baseline period.
+         *
+         * Returns a reasonable number of data points for the sparkline
+         * based on the selected baseline period.
+         *
+         * @param {string} baselinePeriod The baseline period setting
+         * @return {number} Number of history entries to request
+         */
+        getHistoryLimitForBaseline: function(baselinePeriod) {
+            switch (baselinePeriod) {
+                case 'all_time':
+                    return 100; // Get all available history
+                case 'rolling_30d':
+                    return 60; // ~2 per day for 30 days
+                case 'month_start':
+                    return 62; // ~2 per day for a month
+                case 'rolling_7d':
+                    return 14; // ~2 per day for 7 days
+                case 'week_start':
+                    return 14; // ~2 per day for a week
+                default:
+                    return 30; // Default reasonable limit
+            }
         },
 
         /**
