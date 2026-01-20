@@ -1980,8 +1980,11 @@ define([
             // Use correct endpoint based on report source
             var endpoint = (source === 'ai') ? '/ai-reports/' : '/wizard-reports/';
 
+            // Get baseline period from config (default: all_time)
+            var baselinePeriod = this.config.baselinePeriod || 'all_time';
+
             $.ajax({
-                url: this.backendUrl + endpoint + encodeURIComponent(slug) + '/snapshots',
+                url: this.backendUrl + endpoint + encodeURIComponent(slug) + '/snapshots?baseline_period=' + baselinePeriod,
                 method: 'POST',
                 headers: {
                     'Authorization': 'Bearer ' + token,
@@ -1991,7 +1994,8 @@ define([
                 data: JSON.stringify({
                     row_count: metricValue,
                     execution_time_ms: executionTimeMs,
-                    evaluate_alerts: true
+                    evaluate_alerts: true,
+                    baseline_period: baselinePeriod
                 }),
                 timeout: 15000
             }).done(function(response) {
@@ -1999,13 +2003,9 @@ define([
                     // Register snapshot schedule for cron-based execution on first run
                     self.registerSnapshotSchedule(slug, source, metricValue);
 
-                    // Update trend from response
-                    if (response.trend && response.trend.has_previous) {
-                        self.updateKpiTrendFromBackend($card, response.trend);
-                    } else {
-                        // First execution - no previous data
-                        $card.find('.kpi-card-trend').addClass('d-none');
-                    }
+                    // Update trend from response - now supports dual trends (vs_previous and vs_baseline)
+                    self.updateKpiTrendFromBackend($card, response.trend);
+
 
                     // Update sparkline from history
                     if (response.history && response.history.length >= 2) {
@@ -2079,17 +2079,21 @@ define([
             var trendContainer = $card.find('.kpi-card-trend');
             trendContainer.removeClass('d-none trend-up trend-down trend-neutral');
 
+            // Handle new dual trend structure (vs_baseline and vs_previous)
+            if (trend && (trend.vs_baseline || trend.vs_previous)) {
+                this.updateKpiDualTrend($card, trend);
+                return;
+            }
+
+            // Legacy single trend handling (backward compatibility)
+            if (!trend || !trend.has_previous) {
+                trendContainer.addClass('d-none');
+                return;
+            }
+
             var direction = trend.direction;
             var percentage = Math.abs(trend.change_percent || 0);
-            var changeText;
-
-            if (percentage >= 100) {
-                changeText = Math.round(percentage) + '%';
-            } else if (percentage >= 10) {
-                changeText = percentage.toFixed(0) + '%';
-            } else {
-                changeText = percentage.toFixed(1) + '%';
-            }
+            var changeText = this.formatPercentage(percentage);
 
             if (direction === 'increase') {
                 trendContainer.addClass('trend-up');
@@ -2104,6 +2108,91 @@ define([
                 trendContainer.find('.trend-icon').html('<i class="fa fa-minus"></i>');
                 trendContainer.find('.trend-value').text('No change');
             }
+        },
+
+        /**
+         * Update KPI card with dual trend metrics (overall vs baseline, and vs previous).
+         *
+         * @param {jQuery} $card The KPI card element
+         * @param {Object} trend Trend object with vs_baseline and vs_previous
+         */
+        updateKpiDualTrend: function($card, trend) {
+            var trendContainer = $card.find('.kpi-card-trend');
+            trendContainer.removeClass('d-none trend-up trend-down trend-neutral');
+
+            var vsBaseline = trend.vs_baseline || {};
+            var vsPrevious = trend.vs_previous || {};
+            var hasBaseline = vsBaseline.has_baseline;
+            var hasPrevious = vsPrevious.has_previous;
+
+            // If no trend data at all, hide the container
+            if (!hasBaseline && !hasPrevious) {
+                trendContainer.addClass('d-none');
+                return;
+            }
+
+            // Build the dual trend display: "↑ 25% overall | ↑ 8% since last"
+            var parts = [];
+
+            // Overall trend (vs baseline)
+            if (hasBaseline) {
+                var baselinePct = this.formatPercentage(Math.abs(vsBaseline.change_percent || 0));
+                var baselineIcon = this.getTrendIcon(vsBaseline.direction);
+                var baselineSign = vsBaseline.direction === 'increase' ? '+' : (vsBaseline.direction === 'decrease' ? '-' : '');
+                parts.push(baselineIcon + ' ' + baselineSign + baselinePct + ' overall');
+            }
+
+            // Interval trend (vs previous)
+            if (hasPrevious) {
+                var previousPct = this.formatPercentage(Math.abs(vsPrevious.change_percent || 0));
+                var previousIcon = this.getTrendIcon(vsPrevious.direction);
+                var previousSign = vsPrevious.direction === 'increase' ? '+' : (vsPrevious.direction === 'decrease' ? '-' : '');
+                parts.push(previousIcon + ' ' + previousSign + previousPct + ' since last');
+            }
+
+            // Determine overall trend direction for styling (use baseline as primary)
+            var primaryDirection = hasBaseline ? vsBaseline.direction : vsPrevious.direction;
+            if (primaryDirection === 'increase') {
+                trendContainer.addClass('trend-up');
+            } else if (primaryDirection === 'decrease') {
+                trendContainer.addClass('trend-down');
+            } else {
+                trendContainer.addClass('trend-neutral');
+            }
+
+            // Update the display - hide the icon span and use trend-value for full display
+            trendContainer.find('.trend-icon').html('');
+            trendContainer.find('.trend-value').html(parts.join(' <span class="trend-separator">|</span> '));
+        },
+
+        /**
+         * Get trend icon HTML based on direction.
+         *
+         * @param {string} direction 'increase', 'decrease', or 'stable'
+         * @return {string} HTML for the icon
+         */
+        getTrendIcon: function(direction) {
+            if (direction === 'increase') {
+                return '<i class="fa fa-arrow-up trend-icon-up"></i>';
+            } else if (direction === 'decrease') {
+                return '<i class="fa fa-arrow-down trend-icon-down"></i>';
+            }
+            return '<i class="fa fa-minus trend-icon-neutral"></i>';
+        },
+
+        /**
+         * Format percentage for display.
+         *
+         * @param {number} percentage The percentage value
+         * @return {string} Formatted percentage string
+         */
+        formatPercentage: function(percentage) {
+            if (percentage >= 100) {
+                return Math.round(percentage) + '%';
+            } else if (percentage >= 10) {
+                return percentage.toFixed(0) + '%';
+            }
+            return percentage.toFixed(1) + '%';
         },
 
         /**
