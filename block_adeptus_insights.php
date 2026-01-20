@@ -393,6 +393,7 @@ class block_adeptus_insights extends block_base {
             'alertStatus' => $alertstatus,
             'alertsConfig' => $alertsconfig,
             'snapshotsEnabled' => $snapshotsenabled,
+            'baselinePeriod' => $this->config->baseline_period ?? 'all_time',
         ];
     }
 

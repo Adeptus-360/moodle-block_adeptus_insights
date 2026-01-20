@@ -1113,6 +1113,32 @@
     color: var(--adeptus-secondary);
 }
 
+/* Dual trend display styles */
+.kpi-card-trend .trend-separator {
+    color: var(--adeptus-secondary);
+    margin: 0 0.25rem;
+    opacity: 0.6;
+}
+
+.kpi-card-trend .trend-icon-up {
+    color: var(--adeptus-success);
+}
+
+.kpi-card-trend .trend-icon-down {
+    color: var(--adeptus-danger);
+}
+
+.kpi-card-trend .trend-icon-neutral {
+    color: var(--adeptus-secondary);
+}
+
+.kpi-card-trend .trend-value {
+    display: flex;
+    align-items: center;
+    gap: 0.15rem;
+    flex-wrap: wrap;
+}
+
 .kpi-card-sparkline {
     margin-top: 0.5rem;
 }

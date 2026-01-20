@@ -380,17 +380,32 @@ class snapshot_scheduler {
      * @return bool True on success
      */
     private function post_snapshot_to_backend($reportslug, $rowcount, $executiontimems, $reportsource = 'wizard', $blockinstanceid = 0) {
-        global $CFG;
+        global $CFG, $DB;
+
+        // Get baseline period from block config (default: all_time).
+        $baselineperiod = 'all_time';
+        if ($blockinstanceid > 0) {
+            try {
+                $block = $DB->get_record('block_instances', ['id' => $blockinstanceid]);
+                if ($block && !empty($block->configdata)) {
+                    $config = unserialize(base64_decode($block->configdata));
+                    $baselineperiod = $config->baseline_period ?? 'all_time';
+                }
+            } catch (\Exception $e) {
+                debugging('Failed to get baseline period: ' . $e->getMessage(), DEBUG_DEVELOPER);
+            }
+        }
 
         // Use the correct endpoint based on report source.
         $endpoint = ($reportsource === 'ai') ? '/ai-reports/' : '/wizard-reports/';
-        $url = $this->backendurl . $endpoint . urlencode($reportslug) . '/snapshots';
+        $url = $this->backendurl . $endpoint . urlencode($reportslug) . '/snapshots?baseline_period=' . urlencode($baselineperiod);
 
         $data = [
             'row_count' => $rowcount,
             'execution_time_ms' => $executiontimems,
             'source' => 'cron',
             'evaluate_alerts' => true,
+            'baseline_period' => $baselineperiod,
         ];
 
         $response = $this->make_api_request($url, 'POST', $data);

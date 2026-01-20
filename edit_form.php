@@ -239,6 +239,24 @@ class block_adeptus_insights_edit_form extends block_edit_form {
         $mform->addHelpButton('config_kpi_history_interval', 'configkpihistoryinterval', 'block_adeptus_insights');
         $mform->hideIf('config_kpi_history_interval', 'config_display_mode', 'neq', 'kpi');
 
+        // Baseline period - controls the reference point for overall trend calculation.
+        $baselineperiods = [
+            'all_time' => get_string('baseline_all_time', 'block_adeptus_insights'),
+            'month_start' => get_string('baseline_month_start', 'block_adeptus_insights'),
+            'week_start' => get_string('baseline_week_start', 'block_adeptus_insights'),
+            'rolling_30d' => get_string('baseline_rolling_30d', 'block_adeptus_insights'),
+            'rolling_7d' => get_string('baseline_rolling_7d', 'block_adeptus_insights'),
+        ];
+        $mform->addElement(
+            'select',
+            'config_baseline_period',
+            get_string('configbaselineperiod', 'block_adeptus_insights'),
+            $baselineperiods
+        );
+        $mform->setDefault('config_baseline_period', 'all_time');
+        $mform->addHelpButton('config_baseline_period', 'configbaselineperiod', 'block_adeptus_insights');
+        $mform->hideIf('config_baseline_period', 'config_display_mode', 'neq', 'kpi');
+
         // Check if alerts feature is enabled for this subscription (backend permission).
         $alertspermission = $this->check_alerts_permission();
 

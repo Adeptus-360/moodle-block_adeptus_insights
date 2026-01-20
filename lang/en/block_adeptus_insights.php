@@ -247,6 +247,22 @@ $string['kpi_interval_3d'] = 'Every 3 days';
 $string['kpi_interval_1w'] = 'Every week';
 $string['kpi_interval_1m'] = 'Every month';
 
+// Baseline Period Settings.
+$string['configbaselineperiod'] = 'Baseline period';
+$string['configbaselineperiod_help'] = 'The baseline period determines the reference point for calculating overall trend growth. The "overall" trend shows how much the metric has changed compared to this baseline.
+
+**Options:**
+- **All time**: Compare against the very first recorded value
+- **Start of month**: Compare against the first value from this month
+- **Start of week**: Compare against the first value from this week (Monday)
+- **Rolling 30 days**: Compare against the value from 30 days ago
+- **Rolling 7 days**: Compare against the value from 7 days ago';
+$string['baseline_all_time'] = 'All time (first snapshot)';
+$string['baseline_month_start'] = 'Start of this month';
+$string['baseline_week_start'] = 'Start of this week';
+$string['baseline_rolling_30d'] = 'Rolling 30 days';
+$string['baseline_rolling_7d'] = 'Rolling 7 days';
+
 // Alert System - Configuration Headers.
 $string['config_header_alerts'] = 'Alert Configuration';
 $string['config_header_alerts_desc'] = 'Configure alert thresholds to receive notifications when KPI metrics exceed defined limits.';
