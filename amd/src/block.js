@@ -4446,70 +4446,50 @@ define([
                 results: data,
                 headers: headers,
                 report_name: report ? report.name : 'Report',
-                report_category: report ? (report.category || '') : '',
-                parameters: {}
+                report_category: report ? (report.category || '') : ''
             };
 
-            // Build URL-encoded body (same format as main plugin)
-            var body = 'reportid=' + encodeURIComponent(report ? report.slug : 'block_export');
-            body += '&format=' + encodeURIComponent(format);
-            body += '&sesskey=' + encodeURIComponent(M.cfg.sesskey);
-            body += '&view=' + encodeURIComponent(self.currentView || 'table');
-            body += '&report_data=' + encodeURIComponent(JSON.stringify(reportData));
-
-            // For PDF, capture chart image if in chart view
+            // For PDF in chart view, capture chart image first
             var chartPromise = Promise.resolve(null);
             if (format === 'pdf' && self.currentView === 'chart') {
-                // Try to capture from modal chart, embedded chart, or tab chart
                 var chartSelector = '.modal-chart, .embedded-chart, .tab-chart';
                 chartPromise = self.captureChartImage(chartSelector);
             }
 
             chartPromise.then(function(chartImage) {
+                // Create form and submit to export endpoint (reliable method)
+                var form = document.createElement('form');
+                form.method = 'POST';
+                form.action = M.cfg.wwwroot + '/report/adeptus_insights/ajax/export_report.php';
+                form.target = '_blank';
+
+                // Add form fields
+                var fields = {
+                    'reportid': report ? report.slug : 'block_export',
+                    'format': format,
+                    'sesskey': M.cfg.sesskey,
+                    'view': self.currentView || 'table',
+                    'report_data': JSON.stringify(reportData)
+                };
+
+                // Add chart image if captured
                 if (chartImage && chartImage.length > 100) {
-                    body += '&chart_image=' + encodeURIComponent(chartImage);
+                    fields['chart_image'] = chartImage;
                 }
 
-                // Use fetch to submit and handle file download
-                fetch(M.cfg.wwwroot + '/report/adeptus_insights/ajax/export_report.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    },
-                    body: body
-                }).then(function(response) {
-                    var contentType = response.headers.get('content-type');
-                    if (contentType && contentType.includes('application/json')) {
-                        return response.json().then(function(errorData) {
-                            throw new Error(errorData.message || 'Export failed');
-                        });
+                for (var key in fields) {
+                    if (fields.hasOwnProperty(key)) {
+                        var input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = key;
+                        input.value = fields[key];
+                        form.appendChild(input);
                     }
-                    if (!response.ok) {
-                        throw new Error('Export failed with status: ' + response.status);
-                    }
-                    return response.blob();
-                }).then(function(blob) {
-                    // Trigger file download
-                    var reportName = report ? report.name : 'report';
-                    var sanitizedName = reportName.replace(/[^a-zA-Z0-9\s-]/g, '').replace(/\s+/g, '_').toLowerCase();
-                    var dateSuffix = new Date().toISOString().split('T')[0];
-                    var extensions = { 'pdf': 'pdf', 'csv': 'csv', 'json': 'json' };
-                    var filename = sanitizedName + '_' + dateSuffix + '.' + (extensions[format] || format);
+                }
 
-                    var url = URL.createObjectURL(blob);
-                    var link = document.createElement('a');
-                    link.href = url;
-                    link.download = filename;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    URL.revokeObjectURL(url);
-                }).catch(function(error) {
-                    Notification.addNotification({
-                        message: 'Export failed: ' + error.message,
-                        type: 'error'
-                    });
-                });
+                document.body.appendChild(form);
+                form.submit();
+                document.body.removeChild(form);
 
                 // Track export (soft-fail, don't disrupt user experience)
                 $.ajax({
