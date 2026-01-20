@@ -475,13 +475,29 @@ class snapshot_scheduler {
 
             // Prepare alert data for notification manager.
             $alertname = $alertdata['alert_name'] ?? $alertdata['name'] ?? 'Alert';
-            $value = $alertdata['current_value'] ?? $alertdata['actual_value'] ?? $alertdata['value'] ?? $currentvalue;
+            $value = floatval($alertdata['current_value'] ?? $alertdata['actual_value'] ?? $alertdata['value'] ?? $currentvalue);
             $displayreportname = $reportname ?: ($alertdata['report_name'] ?? $reportslug);
 
+            // Determine severity by comparing value against warning and critical thresholds.
+            $thresholdvalue = $alertdata['threshold'] ?? $alertdata['threshold_value'] ?? '';
+            if ($localconfig) {
+                $warningthreshold = floatval($localconfig['warning_value'] ?? 0);
+                $criticalthreshold = floatval($localconfig['critical_value'] ?? 0);
+
+                // Check which threshold was exceeded (critical takes priority).
+                if ($criticalthreshold > 0 && $value >= $criticalthreshold) {
+                    $severity = 'critical';
+                    $thresholdvalue = $criticalthreshold;
+                } else if ($warningthreshold > 0 && $value >= $warningthreshold) {
+                    $severity = 'warning';
+                    $thresholdvalue = $warningthreshold;
+                }
+            }
+
             // Build a meaningful message with context and trend info.
-            // Format: "Your {report_name} has reached {value}, exceeding your {severity} threshold.
+            // Format: "Your {report_name} has reached {value}, exceeding your {severity} threshold ({threshold}).
             //          {alert_name} increased/decreased by X (Y%) since last measurement."
-            $message = "Your {$displayreportname} has reached {$value}, exceeding your {$severity} threshold.";
+            $message = "Your {$displayreportname} has reached {$value}, exceeding your {$severity} threshold ({$thresholdvalue}).";
 
             // Add trend information if available.
             if ($trend && !empty($trend['has_previous'])) {
@@ -504,7 +520,7 @@ class snapshot_scheduler {
                 'severity' => $severity,
                 'report_name' => $displayreportname,
                 'current_value' => $value,
-                'threshold' => $alertdata['threshold'] ?? $alertdata['threshold_value'] ?? '',
+                'threshold' => $thresholdvalue,
                 'notify_users' => $localconfig['notify_users'] ?? $alertdata['notify_users'] ?? [],
                 'notify_email' => $localconfig['notify_email'] ?? false,
                 'notify_emails' => $localconfig['notify_emails'] ?? '',

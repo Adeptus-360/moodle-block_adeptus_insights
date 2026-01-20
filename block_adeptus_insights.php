@@ -342,6 +342,15 @@ class block_adeptus_insights extends block_base {
             }
         }
 
+        // Parse alerts configuration for threshold checking in JS.
+        $alertsconfig = [];
+        if (!empty($this->config->alerts_json)) {
+            $decoded = json_decode($this->config->alerts_json, true);
+            if (is_array($decoded)) {
+                $alertsconfig = $decoded;
+            }
+        }
+
         // Get alert status for this block.
         $alertstatus = $this->get_alert_status();
 
@@ -382,6 +391,7 @@ class block_adeptus_insights extends block_base {
             'contextId' => $this->get_context_filter()['id'],
             'alertsEnabled' => !empty($this->config->alerts_enabled),
             'alertStatus' => $alertstatus,
+            'alertsConfig' => $alertsconfig,
             'snapshotsEnabled' => $snapshotsenabled,
         ];
     }
