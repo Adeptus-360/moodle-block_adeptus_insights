@@ -94,6 +94,15 @@ define([
         this.tabPaneStates = {};
         this.tabChartInstances = {};
 
+        // KPI Modal state
+        this.kpiModal = null;
+        this.kpiModalChart = null;
+        this.kpiModalData = null;
+        this.kpiModalDateRange = '30d';
+
+        // KPI Snapshot data cache (stores responses from postSnapshotToBackend)
+        this.kpiSnapshotCache = {};
+
         // Snapshot schedule registration tracking
         this.registeredSnapshots = {};
 
@@ -2004,6 +2013,14 @@ define([
                 timeout: 15000
             }).done(function(response) {
                 if (response.success) {
+                    // Cache the snapshot response for KPI modal use
+                    self.kpiSnapshotCache[slug] = {
+                        history: response.history || [],
+                        trend: response.trend || {},
+                        currentValue: metricValue,
+                        timestamp: Date.now()
+                    };
+
                     // Register snapshot schedule for cron-based execution on first run
                     self.registerSnapshotSchedule(slug, source, metricValue);
 
@@ -2197,6 +2214,63 @@ define([
                 return percentage.toFixed(0) + '%';
             }
             return percentage.toFixed(1) + '%';
+        },
+
+        /**
+         * Format a number with thousands separator.
+         *
+         * @param {number|string} value The value to format
+         * @return {string} Formatted number string
+         */
+        formatNumber: function(value) {
+            if (value === null || value === undefined || value === '--') {
+                return '--';
+            }
+            var num = parseFloat(value);
+            if (isNaN(num)) {
+                return value.toString();
+            }
+            // For large numbers, add thousands separator
+            if (Math.abs(num) >= 1000) {
+                return num.toLocaleString();
+            }
+            // For decimals, limit to 2 decimal places
+            if (num % 1 !== 0) {
+                return num.toFixed(2);
+            }
+            return num.toString();
+        },
+
+        /**
+         * Format a timestamp to a readable date/time string.
+         *
+         * @param {string} timestamp The timestamp to format
+         * @return {string} Formatted date/time string
+         */
+        formatTimestamp: function(timestamp) {
+            if (!timestamp) {
+                return '';
+            }
+            var date = new Date(timestamp);
+            var now = new Date();
+            var diffMs = now - date;
+            var diffMins = Math.floor(diffMs / 60000);
+            var diffHours = Math.floor(diffMins / 60);
+            var diffDays = Math.floor(diffHours / 24);
+
+            if (diffMins < 1) {
+                return 'just now';
+            } else if (diffMins < 60) {
+                return diffMins + ' min ago';
+            } else if (diffHours < 24) {
+                return diffHours + ' hour' + (diffHours > 1 ? 's' : '') + ' ago';
+            } else if (diffDays < 7) {
+                return diffDays + ' day' + (diffDays > 1 ? 's' : '') + ' ago';
+            }
+            // For older dates, show full date
+            var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            return months[date.getMonth()] + ' ' + date.getDate() + ', ' + date.getFullYear();
         },
 
         /**
@@ -3138,6 +3212,13 @@ define([
         handleReportClick: function(slug, source) {
             var action = this.config.clickAction || 'modal';
 
+            // Check if we should open the enhanced KPI modal
+            // Only for KPI display mode with alerts feature enabled (enterprise gate)
+            if (this.config.displayMode === 'kpi' && this.config.alertsFeatureEnabled && action === 'modal') {
+                this.openKpiModal(slug, source);
+                return;
+            }
+
             switch (action) {
                 case 'modal':
                     this.openReportModal(slug, source);
@@ -3214,6 +3295,492 @@ define([
                     modal.show();
                     return modal;
                 }).catch(Notification.exception);
+        },
+
+        /**
+         * Open enhanced KPI modal with interactive chart and date range filter.
+         * This is used when displayMode is 'kpi' and alertsFeatureEnabled is true.
+         *
+         * @param {string} slug
+         * @param {string} source
+         */
+        openKpiModal: function(slug, source) {
+            var self = this;
+
+            // Find report data.
+            var report = this.reports.find(function(r) {
+                return r.slug === slug;
+            });
+
+            if (!report) {
+                return;
+            }
+
+            // Reset state
+            this.kpiModalData = null;
+            this.kpiModalDateRange = '30d';
+            if (this.kpiModalChart) {
+                this.kpiModalChart.destroy();
+                this.kpiModalChart = null;
+            }
+
+            // First render the template, then create the modal with the rendered body
+            Templates.render('block_adeptus_insights/kpi_modal', {blockid: this.blockId})
+                .then(function(html) {
+                    return ModalFactory.create({
+                        type: ModalFactory.types.DEFAULT,
+                        title: report.name,
+                        body: html,
+                        large: true
+                    });
+                })
+                .then(function(modal) {
+                    self.kpiModal = modal;
+
+                    // Bind KPI modal event handlers
+                    self.bindKpiModalEvents(modal, slug, source);
+
+                    // Load KPI data after modal is shown.
+                    modal.getRoot().on(ModalEvents.shown, function() {
+                        self.loadKpiModalData(slug, source, self.kpiModalDateRange);
+                    });
+
+                    // Cleanup on close.
+                    modal.getRoot().on(ModalEvents.hidden, function() {
+                        if (self.kpiModalChart) {
+                            self.kpiModalChart.destroy();
+                            self.kpiModalChart = null;
+                        }
+                        modal.destroy();
+                        self.kpiModal = null;
+                        self.kpiModalData = null;
+                    });
+
+                    modal.show();
+                    return modal;
+                }).catch(Notification.exception);
+        },
+
+        /**
+         * Bind event handlers for KPI modal UI elements.
+         *
+         * @param {Object} modal
+         * @param {string} slug
+         * @param {string} source
+         */
+        bindKpiModalEvents: function(modal, slug, source) {
+            var self = this;
+            var modalRoot = modal.getRoot();
+
+            // Date range selector change
+            modalRoot.on('change', '.kpi-date-range-select', function() {
+                var dateRange = $(this).val();
+                self.kpiModalDateRange = dateRange;
+                self.loadKpiModalData(slug, source, dateRange);
+            });
+
+            // Retry button
+            modalRoot.on('click', '.kpi-modal-retry', function(e) {
+                e.preventDefault();
+                self.loadKpiModalData(slug, source, self.kpiModalDateRange);
+            });
+        },
+
+        /**
+         * Load KPI modal data based on date range.
+         *
+         * @param {string} slug
+         * @param {string} source
+         * @param {string} dateRange - '7d', '30d', '90d', or 'all'
+         */
+        loadKpiModalData: function(slug, source, dateRange) {
+            var self = this;
+            var modalContent = this.kpiModal.getRoot().find('.block-adeptus-kpi-modal-content');
+
+            // Show loading
+            modalContent.find('.kpi-modal-loading').removeClass('d-none');
+            modalContent.find('.kpi-modal-content-area').addClass('d-none');
+            modalContent.find('.kpi-modal-error').addClass('d-none');
+
+            // Check cache first - use cached data if available and fresh (under 5 minutes old)
+            var cached = this.kpiSnapshotCache[slug];
+            var cacheMaxAge = 5 * 60 * 1000; // 5 minutes
+
+            if (cached && cached.history && (Date.now() - cached.timestamp) < cacheMaxAge) {
+                // Use cached data
+                self.kpiModalData = cached;
+                self.renderKpiModal(modalContent, cached, dateRange);
+                return;
+            }
+
+            // Fetch fresh data from backend via POST (same as KPI card refresh)
+            var token = this.apiKey;
+            if (!token) {
+                self.showKpiModalError(modalContent);
+                return;
+            }
+
+            var endpoint = source === 'ai' ? '/ai-reports/' : '/reports/';
+            var baselinePeriod = this.config.baselinePeriod || 'all_time';
+            var historyLimit = this.getKpiModalHistoryLimit(dateRange);
+
+            // Get current value from cache or use 0 (backend will return history regardless)
+            var currentValue = cached ? cached.currentValue : 0;
+
+            $.ajax({
+                url: this.backendUrl + endpoint + encodeURIComponent(slug) +
+                    '/snapshots?baseline_period=' + baselinePeriod + '&history_limit=' + historyLimit,
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + token,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                data: JSON.stringify({
+                    row_count: currentValue,
+                    execution_time_ms: 0,
+                    evaluate_alerts: false, // Don't trigger alerts from modal refresh
+                    baseline_period: baselinePeriod
+                }),
+                timeout: 15000,
+                success: function(response) {
+                    if (response && response.success && response.history) {
+                        // Update cache
+                        self.kpiSnapshotCache[slug] = {
+                            history: response.history || [],
+                            trend: response.trend || {},
+                            currentValue: currentValue,
+                            timestamp: Date.now()
+                        };
+
+                        self.kpiModalData = response;
+                        self.renderKpiModal(modalContent, response, dateRange);
+                    } else {
+                        self.showKpiModalError(modalContent);
+                    }
+                },
+                error: function() {
+                    self.showKpiModalError(modalContent);
+                }
+            });
+        },
+
+        /**
+         * Get history limit based on date range selection.
+         *
+         * @param {string} dateRange
+         * @return {number}
+         */
+        getKpiModalHistoryLimit: function(dateRange) {
+            switch (dateRange) {
+                case '7d':
+                    return 14;
+                case '30d':
+                    return 60;
+                case '90d':
+                    return 180;
+                case 'all':
+                    return 500;
+                default:
+                    return 60;
+            }
+        },
+
+        /**
+         * Render KPI modal with data.
+         *
+         * @param {jQuery} modalContent
+         * @param {Object} data
+         * @param {string} dateRange
+         */
+        renderKpiModal: function(modalContent, data, dateRange) {
+            // Hide loading, show content
+            modalContent.find('.kpi-modal-loading').addClass('d-none');
+            modalContent.find('.kpi-modal-content-area').removeClass('d-none');
+            modalContent.find('.kpi-modal-error').addClass('d-none');
+
+            // Get history data and sort chronologically (oldest first)
+            var history = (data.history || []).slice(); // Clone to avoid mutating original
+            history.sort(function(a, b) {
+                var dateA = new Date(a.recorded_at || a.created_at);
+                var dateB = new Date(b.recorded_at || b.created_at);
+                return dateA - dateB; // Ascending order (oldest first)
+            });
+
+            // Get trend data from response
+            var trend = data.trend || {};
+            var vsBaseline = trend.vs_baseline || {};
+            var vsPrevious = trend.vs_previous || {};
+
+            // Filter history by date range
+            var filteredHistory = this.filterKpiHistoryByDateRange(history, dateRange);
+
+            // Current value: use the cached currentValue (from KPI card) or latest history entry
+            var currentValue = data.currentValue;
+            if (!currentValue && filteredHistory.length > 0) {
+                currentValue = filteredHistory[filteredHistory.length - 1].row_count;
+            }
+            currentValue = currentValue || '--';
+
+            // Update metric value
+            modalContent.find('.kpi-modal-value').text(this.formatNumber(currentValue));
+
+            // Update dual trend display
+            this.renderKpiModalTrends(modalContent, vsBaseline, vsPrevious);
+
+            // Calculate stats
+            var stats = this.calculateKpiStats(filteredHistory);
+            modalContent.find('.kpi-stat-min').text(this.formatNumber(stats.min));
+            modalContent.find('.kpi-stat-max').text(this.formatNumber(stats.max));
+            modalContent.find('.kpi-stat-avg').text(this.formatNumber(stats.avg));
+
+            // Update data points count
+            modalContent.find('.datapoints-count').text(filteredHistory.length);
+
+            // Update last updated
+            if (filteredHistory.length > 0) {
+                var lastEntry = filteredHistory[filteredHistory.length - 1];
+                var lastUpdated = lastEntry.recorded_at || lastEntry.created_at;
+                if (lastUpdated) {
+                    modalContent.find('.kpi-modal-last-updated').text(
+                        'Last updated: ' + this.formatTimestamp(lastUpdated)
+                    );
+                }
+            }
+
+            // Render interactive chart
+            this.renderKpiModalChart(modalContent, filteredHistory);
+        },
+
+        /**
+         * Filter KPI history by date range.
+         *
+         * @param {Array} history
+         * @param {string} dateRange
+         * @return {Array}
+         */
+        filterKpiHistoryByDateRange: function(history, dateRange) {
+            if (dateRange === 'all' || !history || history.length === 0) {
+                return history;
+            }
+
+            var now = new Date();
+            var cutoffDate;
+
+            switch (dateRange) {
+                case '7d':
+                    cutoffDate = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
+                    break;
+                case '30d':
+                    cutoffDate = new Date(now.getTime() - (30 * 24 * 60 * 60 * 1000));
+                    break;
+                case '90d':
+                    cutoffDate = new Date(now.getTime() - (90 * 24 * 60 * 60 * 1000));
+                    break;
+                default:
+                    return history;
+            }
+
+            return history.filter(function(entry) {
+                var entryDate = new Date(entry.recorded_at || entry.created_at);
+                return entryDate >= cutoffDate;
+            });
+        },
+
+        /**
+         * Render dual trend metrics in KPI modal.
+         *
+         * @param {jQuery} modalContent
+         * @param {Object} vsBaseline
+         * @param {Object} vsPrevious
+         */
+        renderKpiModalTrends: function(modalContent, vsBaseline, vsPrevious) {
+            // Format baseline trend (vs overall baseline)
+            var baselineHtml = '--';
+            if (vsBaseline && vsBaseline.has_baseline) {
+                var baselinePct = this.formatPercentage(Math.abs(vsBaseline.change_percent || 0));
+                var baselineIcon = this.getTrendIcon(vsBaseline.direction);
+                var baselineClass = 'trend-' + (vsBaseline.direction || 'neutral');
+                var baselineSign = vsBaseline.direction === 'increase' ? '+' :
+                    (vsBaseline.direction === 'decrease' ? '-' : '');
+                baselineHtml = '<span class="' + baselineClass + '">' +
+                    baselineIcon + ' ' + baselineSign + baselinePct + ' overall</span>';
+            }
+            modalContent.find('.kpi-modal-trend-baseline').html(baselineHtml);
+
+            // Format previous trend (vs previous snapshot)
+            var previousHtml = '--';
+            if (vsPrevious && vsPrevious.has_previous) {
+                var previousPct = this.formatPercentage(Math.abs(vsPrevious.change_percent || 0));
+                var previousIcon = this.getTrendIcon(vsPrevious.direction);
+                var previousClass = 'trend-' + (vsPrevious.direction || 'neutral');
+                var previousSign = vsPrevious.direction === 'increase' ? '+' :
+                    (vsPrevious.direction === 'decrease' ? '-' : '');
+                previousHtml = '<span class="' + previousClass + '">' +
+                    previousIcon + ' ' + previousSign + previousPct + ' since last</span>';
+            }
+            modalContent.find('.kpi-modal-trend-previous').html(previousHtml);
+        },
+
+        /**
+         * Calculate statistics from KPI history.
+         *
+         * @param {Array} history
+         * @return {Object}
+         */
+        calculateKpiStats: function(history) {
+            if (!history || history.length === 0) {
+                return {min: '--', max: '--', avg: '--'};
+            }
+
+            var values = history.map(function(entry) {
+                return parseFloat(entry.row_count) || 0;
+            });
+
+            var min = Math.min.apply(null, values);
+            var max = Math.max.apply(null, values);
+            var sum = values.reduce(function(a, b) { return a + b; }, 0);
+            var avg = Math.round(sum / values.length);
+
+            return {min: min, max: max, avg: avg};
+        },
+
+        /**
+         * Render interactive chart in KPI modal.
+         *
+         * @param {jQuery} modalContent
+         * @param {Array} history
+         */
+        renderKpiModalChart: function(modalContent, history) {
+            var self = this;
+            var canvas = modalContent.find('.kpi-modal-chart')[0];
+
+            if (!canvas) {
+                return;
+            }
+
+            // Destroy existing chart
+            if (this.kpiModalChart) {
+                this.kpiModalChart.destroy();
+            }
+
+            // Prepare chart data - filter out consecutive duplicates where value hasn't changed
+            var labels = [];
+            var data = [];
+            var lastValue = null;
+
+            history.forEach(function(entry) {
+                var value = parseFloat(entry.row_count) || 0;
+
+                // Only add data point if the value has changed from the previous entry
+                if (lastValue === null || value !== lastValue) {
+                    var date = new Date(entry.recorded_at || entry.created_at);
+                    labels.push(self.formatChartDate(date));
+                    data.push(value);
+                    lastValue = value;
+                }
+            });
+
+            // Create chart
+            var ctx = canvas.getContext('2d');
+            this.kpiModalChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Value',
+                        data: data,
+                        borderColor: '#0066cc',
+                        backgroundColor: 'rgba(0, 102, 204, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        pointBackgroundColor: '#0066cc',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            enabled: true,
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: '#fff',
+                            bodyColor: '#fff',
+                            padding: 12,
+                            displayColors: false,
+                            callbacks: {
+                                title: function(tooltipItems) {
+                                    return tooltipItems[0].label;
+                                },
+                                label: function(context) {
+                                    return 'Value: ' + self.formatNumber(context.parsed.y);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            display: true,
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 0,
+                                autoSkip: true,
+                                maxTicksLimit: 10
+                            }
+                        },
+                        y: {
+                            display: true,
+                            beginAtZero: false,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return self.formatNumber(value);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        },
+
+        /**
+         * Format date for chart X-axis labels.
+         *
+         * @param {Date} date
+         * @return {string}
+         */
+        formatChartDate: function(date) {
+            var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            return months[date.getMonth()] + ' ' + date.getDate();
+        },
+
+        /**
+         * Show error state in KPI modal.
+         *
+         * @param {jQuery} modalContent
+         */
+        showKpiModalError: function(modalContent) {
+            modalContent.find('.kpi-modal-loading').addClass('d-none');
+            modalContent.find('.kpi-modal-content-area').addClass('d-none');
+            modalContent.find('.kpi-modal-error').removeClass('d-none');
         },
 
         /**

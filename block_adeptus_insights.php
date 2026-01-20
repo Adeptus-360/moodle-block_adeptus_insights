@@ -354,14 +354,16 @@ class block_adeptus_insights extends block_base {
         // Get alert status for this block.
         $alertstatus = $this->get_alert_status();
 
-        // Check if snapshots feature is enabled (enterprise feature).
+        // Check if enterprise features are enabled.
         $snapshotsenabled = false;
+        $alertsfeatureenabled = false;
         try {
             require_once($CFG->dirroot . '/report/adeptus_insights/classes/installation_manager.php');
             $installationmanager = new \report_adeptus_insights\installation_manager();
             $snapshotsenabled = $installationmanager->is_feature_enabled('snapshots');
+            $alertsfeatureenabled = $installationmanager->is_feature_enabled('alerts');
         } catch (\Exception $e) {
-            debugging('Failed to check snapshots permission: ' . $e->getMessage(), DEBUG_DEVELOPER);
+            debugging('Failed to check enterprise feature permissions: ' . $e->getMessage(), DEBUG_DEVELOPER);
         }
 
         // Get backend URL from parent plugin config.
@@ -393,6 +395,7 @@ class block_adeptus_insights extends block_base {
             'alertStatus' => $alertstatus,
             'alertsConfig' => $alertsconfig,
             'snapshotsEnabled' => $snapshotsenabled,
+            'alertsFeatureEnabled' => $alertsfeatureenabled,
             'baselinePeriod' => $this->config->baseline_period ?? 'all_time',
         ];
     }
