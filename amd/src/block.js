@@ -4400,6 +4400,37 @@ define([
         },
 
         /**
+         * Capture chart image from modal for PDF export.
+         * Returns base64 encoded PNG image data.
+         *
+         * @param {string} canvasSelector - Selector for the chart canvas
+         * @returns {Promise<string|null>} Base64 image data or null if capture fails
+         */
+        captureChartImage: function(canvasSelector) {
+            return new Promise(function(resolve) {
+                // Wait for any chart animations to complete
+                setTimeout(function() {
+                    var canvas = document.querySelector(canvasSelector);
+                    if (!canvas) {
+                        resolve(null);
+                        return;
+                    }
+
+                    try {
+                        var dataUrl = canvas.toDataURL('image/png', 0.8);
+                        if (dataUrl && dataUrl.length > 100 && dataUrl.length < 2000000) {
+                            resolve(dataUrl);
+                        } else {
+                            resolve(null);
+                        }
+                    } catch (e) {
+                        resolve(null);
+                    }
+                }, 300);
+            });
+        },
+
+        /**
          * Perform the actual export via the main plugin's export endpoint.
          *
          * @param {string} format - Export format
@@ -4419,44 +4450,75 @@ define([
                 parameters: {}
             };
 
-            // Create form and submit to export endpoint
-            var form = document.createElement('form');
-            form.method = 'POST';
-            form.action = M.cfg.wwwroot + '/report/adeptus_insights/ajax/export_report.php';
-            form.target = '_blank';
+            // Build form data
+            var formData = new FormData();
+            formData.append('reportid', report ? report.slug : 'block_export');
+            formData.append('format', format);
+            formData.append('sesskey', M.cfg.sesskey);
+            formData.append('view', self.currentView || 'table');
+            formData.append('report_data', JSON.stringify(reportData));
 
-            // Add form fields
-            var fields = {
-                'reportid': report ? report.slug : 'block_export',
-                'format': format,
-                'sesskey': M.cfg.sesskey,
-                'view': self.currentView || 'table',
-                'report_data': JSON.stringify(reportData)
-            };
-
-            for (var key in fields) {
-                if (fields.hasOwnProperty(key)) {
-                    var input = document.createElement('input');
-                    input.type = 'hidden';
-                    input.name = key;
-                    input.value = fields[key];
-                    form.appendChild(input);
-                }
+            // For PDF, capture chart image if in chart view
+            var chartPromise = Promise.resolve(null);
+            if (format === 'pdf' && self.currentView === 'chart') {
+                // Try to capture from modal chart, embedded chart, or tab chart
+                var chartSelector = '.modal-chart, .embedded-chart, .tab-chart';
+                chartPromise = self.captureChartImage(chartSelector);
             }
 
-            document.body.appendChild(form);
-            form.submit();
-            document.body.removeChild(form);
-
-            // Track export (soft-fail, don't disrupt user experience)
-            $.ajax({
-                url: M.cfg.wwwroot + '/report/adeptus_insights/ajax/track_export.php',
-                method: 'POST',
-                data: {
-                    format: format,
-                    report_name: report ? report.name : 'Block Export',
-                    sesskey: M.cfg.sesskey
+            chartPromise.then(function(chartImage) {
+                if (chartImage) {
+                    formData.append('chart_image', chartImage);
                 }
+
+                // Use fetch to submit and handle file download
+                fetch(M.cfg.wwwroot + '/report/adeptus_insights/ajax/export_report.php', {
+                    method: 'POST',
+                    body: formData
+                }).then(function(response) {
+                    var contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        return response.json().then(function(errorData) {
+                            throw new Error(errorData.message || 'Export failed');
+                        });
+                    }
+                    if (!response.ok) {
+                        throw new Error('Export failed with status: ' + response.status);
+                    }
+                    return response.blob();
+                }).then(function(blob) {
+                    // Trigger file download
+                    var reportName = report ? report.name : 'report';
+                    var sanitizedName = reportName.replace(/[^a-zA-Z0-9\s-]/g, '').replace(/\s+/g, '_').toLowerCase();
+                    var dateSuffix = new Date().toISOString().split('T')[0];
+                    var extensions = { 'pdf': 'pdf', 'csv': 'csv', 'json': 'json' };
+                    var filename = sanitizedName + '_' + dateSuffix + '.' + (extensions[format] || format);
+
+                    var url = URL.createObjectURL(blob);
+                    var link = document.createElement('a');
+                    link.href = url;
+                    link.download = filename;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(url);
+                }).catch(function(error) {
+                    Notification.addNotification({
+                        message: 'Export failed: ' + error.message,
+                        type: 'error'
+                    });
+                });
+
+                // Track export (soft-fail, don't disrupt user experience)
+                $.ajax({
+                    url: M.cfg.wwwroot + '/report/adeptus_insights/ajax/track_export.php',
+                    method: 'POST',
+                    data: {
+                        format: format,
+                        report_name: report ? report.name : 'Block Export',
+                        sesskey: M.cfg.sesskey
+                    }
+                });
             });
         },
 
