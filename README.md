@@ -9,7 +9,7 @@ The Adeptus Insights Block allows you to embed reports, KPI cards, and quick acc
 ### Key Features
 
 - **Multiple Display Modes**: Embedded reports, KPI cards, report links, or tabbed reports
-- **KPI Cards**: Compact metric displays with trend indicators and sparkline charts
+- **KPI Cards**: Compact metric displays with trend indicators, sparkline charts, and interactive detail modals
 - **Automatic Refresh**: Configurable auto-refresh intervals (5 min to 1 hour)
 - **Alert System**: Set warning and critical thresholds with email and Moodle notifications
 - **Context Filtering**: Auto-detect course/category context or set manually
@@ -19,7 +19,7 @@ The Adeptus Insights Block allows you to embed reports, KPI cards, and quick acc
 ### Display Modes
 
 1. **Embedded Report**: Full chart and data table in the block
-2. **KPI Cards**: Multiple metrics as compact cards with trends
+2. **KPI Cards**: Multiple metrics as compact cards with trends (click for detailed history chart)
 3. **Report Links**: Clickable list of report names
 4. **Tabbed Reports**: Multiple reports in a tabbed interface
 
@@ -90,7 +90,9 @@ Alert status levels:
 
 ## Privacy
 
-This block stores KPI history data and alert configurations linked to block instances and users. All data is managed locally on your Moodle server. See the parent Adeptus Insights report plugin for complete privacy information.
+This plugin does not store any personal user data. The database tables store block instance configuration (snapshot schedules) and system logs (alert history) that are associated with block instances rather than individual users.
+
+For KPI trend tracking, aggregate metric values (such as row counts, e.g., "122 users") are sent to the Adeptus 360 backend API. No personally identifiable information or individual user records are transmitted - only aggregate statistics for trend calculation and alert evaluation.
 
 ## Support
 
