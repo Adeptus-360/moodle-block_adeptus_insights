@@ -218,6 +218,17 @@ class block_adeptus_insights_edit_form extends block_edit_form {
         $mform->addElement('header', 'config_header_alerts', get_string('config_header_alerts', 'block_adeptus_insights'));
         $mform->addHelpButton('config_header_alerts', 'config_header_alerts', 'block_adeptus_insights');
 
+        // Notice shown when non-KPI display mode is selected.
+        $mform->addElement(
+            'static',
+            'alerts_kpi_only_notice',
+            '',
+            '<div id="alerts-kpi-only-notice" class="alert alert-info">' .
+            '<i class="fa fa-info-circle mr-2"></i>' .
+            get_string('alerts_kpi_only_notice', 'block_adeptus_insights') .
+            '</div>'
+        );
+
         // Snapshot frequency - controls how often KPI metrics are captured for trend analysis.
         // Available for all tiers (snapshots enable trend indicators and sparklines).
         $snapshotintervals = [

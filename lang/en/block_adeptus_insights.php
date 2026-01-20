@@ -487,3 +487,6 @@ $string['maximum'] = 'Maximum';
 $string['average'] = 'Average';
 $string['datapoints'] = 'data points';
 $string['errorloadingkpi'] = 'Error loading KPI data.';
+
+// Alert Configuration notices.
+$string['alerts_kpi_only_notice'] = 'These settings are only applicable when using KPI Cards display mode. Please select "KPI cards" from the Display Mode option above to configure alerts and snapshot settings.';
