@@ -390,6 +390,7 @@ class snapshot_scheduler {
             'row_count' => $rowcount,
             'execution_time_ms' => $executiontimems,
             'source' => 'cron',
+            'evaluate_alerts' => true,
         ];
 
         $response = $this->make_api_request($url, 'POST', $data);
@@ -400,11 +401,19 @@ class snapshot_scheduler {
 
         // Handle any triggered alerts from the backend response.
         if (!empty($response['alerts']) && !empty($response['alerts']['triggered']) && $blockinstanceid > 0) {
+            // Extract trend data for meaningful alert messages.
+            $trend = $response['trend'] ?? null;
+
+            // Get report name from schedule or use slug as fallback.
+            $reportname = $this->get_report_name_for_slug($reportslug, $blockinstanceid);
+
             $this->process_triggered_alerts(
                 $response['alerts']['triggered'],
                 $blockinstanceid,
                 $reportslug,
-                $rowcount
+                $rowcount,
+                $trend,
+                $reportname
             );
         }
 
@@ -421,8 +430,11 @@ class snapshot_scheduler {
      * @param int $blockinstanceid Block instance ID
      * @param string $reportslug Report slug
      * @param int $currentvalue Current metric value
+     * @param array|null $trend Trend data from backend response
+     * @param string $reportname Human-readable report name
      */
-    private function process_triggered_alerts($triggeredalerts, $blockinstanceid, $reportslug, $currentvalue) {
+    private function process_triggered_alerts($triggeredalerts, $blockinstanceid, $reportslug, $currentvalue,
+            $trend = null, $reportname = '') {
         global $CFG, $DB;
 
         require_once($CFG->dirroot . '/blocks/adeptus_insights/classes/notification_manager.php');
@@ -462,12 +474,36 @@ class snapshot_scheduler {
             }
 
             // Prepare alert data for notification manager.
+            $alertname = $alertdata['alert_name'] ?? $alertdata['name'] ?? 'Alert';
+            $value = $alertdata['current_value'] ?? $alertdata['actual_value'] ?? $alertdata['value'] ?? $currentvalue;
+            $displayreportname = $reportname ?: ($alertdata['report_name'] ?? $reportslug);
+
+            // Build a meaningful message with context and trend info.
+            // Format: "Your {report_name} has reached {value}, exceeding your {severity} threshold.
+            //          {alert_name} increased/decreased by X (Y%) since last measurement."
+            $message = "Your {$displayreportname} has reached {$value}, exceeding your {$severity} threshold.";
+
+            // Add trend information if available.
+            if ($trend && !empty($trend['has_previous'])) {
+                $direction = $trend['direction'] ?? 'change';
+                $changeabs = abs($trend['change_absolute'] ?? 0);
+                $changepct = number_format(abs($trend['change_percent'] ?? 0), 1);
+
+                if ($direction === 'increase') {
+                    $message .= " {$alertname} increased by {$changeabs} ({$changepct}%) since last measurement.";
+                } else if ($direction === 'decrease') {
+                    $message .= " {$alertname} decreased by {$changeabs} ({$changepct}%) since last measurement.";
+                } else {
+                    $message .= " {$alertname} has remained stable since last measurement.";
+                }
+            }
+
             $alert = [
-                'alert_name' => $alertdata['alert_name'] ?? $alertdata['name'] ?? 'Alert',
-                'message' => $alertdata['message'] ?? '',
+                'alert_name' => $alertname,
+                'message' => $message,
                 'severity' => $severity,
-                'report_name' => $alertdata['report_name'] ?? '',
-                'current_value' => $alertdata['current_value'] ?? $alertdata['value'] ?? $currentvalue,
+                'report_name' => $displayreportname,
+                'current_value' => $value,
                 'threshold' => $alertdata['threshold'] ?? $alertdata['threshold_value'] ?? '',
                 'notify_users' => $localconfig['notify_users'] ?? $alertdata['notify_users'] ?? [],
                 'notify_email' => $localconfig['notify_email'] ?? false,
@@ -549,6 +585,56 @@ class snapshot_scheduler {
         }
 
         return null;
+    }
+
+    /**
+     * Get human-readable report name for a slug.
+     *
+     * Looks up the report name from block config's selected reports.
+     *
+     * @param string $reportslug Report slug
+     * @param int $blockinstanceid Block instance ID
+     * @return string Report name or slug as fallback
+     */
+    private function get_report_name_for_slug($reportslug, $blockinstanceid) {
+        global $DB;
+
+        try {
+            $block = $DB->get_record('block_instances', ['id' => $blockinstanceid]);
+            if (!$block || empty($block->configdata)) {
+                return $reportslug;
+            }
+
+            $config = unserialize(base64_decode($block->configdata));
+
+            // Check kpi_selected_reports for the report name.
+            if (!empty($config->kpi_selected_reports)) {
+                $reports = json_decode($config->kpi_selected_reports, true);
+                if (is_array($reports)) {
+                    foreach ($reports as $report) {
+                        if (($report['slug'] ?? '') === $reportslug) {
+                            return $report['name'] ?? $report['title'] ?? $reportslug;
+                        }
+                    }
+                }
+            }
+
+            // Check alerts_json for report name.
+            if (!empty($config->alerts_json)) {
+                $alerts = json_decode($config->alerts_json, true);
+                if (is_array($alerts)) {
+                    foreach ($alerts as $alert) {
+                        if (($alert['report_slug'] ?? '') === $reportslug) {
+                            return $alert['report_name'] ?? $reportslug;
+                        }
+                    }
+                }
+            }
+
+            return $reportslug;
+        } catch (\Exception $e) {
+            return $reportslug;
+        }
     }
 
     /**
