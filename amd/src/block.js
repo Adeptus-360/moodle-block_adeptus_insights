@@ -1550,43 +1550,46 @@ define([
         },
 
         /**
-         * Export embedded report data.
+         * Export embedded report data using the main plugin's export system.
          *
-         * @param {string} format
+         * @param {string} format - Export format (pdf, csv, json)
          */
         exportEmbeddedReport: function(format) {
+            var self = this;
             var data = this.embeddedData || [];
             var report = this.embeddedReport || {};
 
             if (data.length === 0) {
+                Notification.addNotification({
+                    message: 'No data to export',
+                    type: 'warning'
+                });
                 return;
             }
 
-            if (format === 'csv') {
-                var headers = Object.keys(data[0]);
-                var csvContent = headers.join(',') + '\n';
+            // Check export eligibility via main plugin's AJAX endpoint
+            $.ajax({
+                url: M.cfg.wwwroot + '/report/adeptus_insights/ajax/check_export_eligibility.php',
+                method: 'POST',
+                data: {
+                    format: format,
+                    sesskey: M.cfg.sesskey
+                },
+                dataType: 'json'
+            }).done(function(response) {
+                if (!response.success || !response.eligible) {
+                    self.showExportUpgradePrompt(format, response.message || 'Export not available');
+                    return;
+                }
 
-                data.forEach(function(row) {
-                    var rowValues = headers.map(function(h) {
-                        var val = row[h];
-                        if (val === null || val === undefined) return '';
-                        var strVal = String(val);
-                        // Escape quotes and wrap in quotes if contains comma
-                        if (strVal.includes(',') || strVal.includes('"') || strVal.includes('\n')) {
-                            strVal = '"' + strVal.replace(/"/g, '""') + '"';
-                        }
-                        return strVal;
-                    });
-                    csvContent += rowValues.join(',') + '\n';
+                // Eligible - proceed with export
+                self.performExport(format, report, data);
+            }).fail(function() {
+                Notification.addNotification({
+                    message: 'Unable to verify export eligibility. Please try again.',
+                    type: 'error'
                 });
-
-                var blob = new Blob([csvContent], {type: 'text/csv;charset=utf-8;'});
-                var link = document.createElement('a');
-                var reportName = report.name || report.slug || 'report';
-                link.href = URL.createObjectURL(blob);
-                link.download = reportName.replace(/[^a-z0-9]/gi, '_') + '_' + new Date().toISOString().split('T')[0] + '.csv';
-                link.click();
-            }
+            });
         },
 
         /**
@@ -3118,47 +3121,45 @@ define([
         },
 
         /**
-         * Export report data from a tab.
+         * Export report data from a tab using the main plugin's export system.
          *
          * @param {Object} state - Tab pane state
-         * @param {string} format - Export format (csv)
+         * @param {string} format - Export format (pdf, csv, json)
          */
         exportTabReport: function(state, format) {
+            var self = this;
+
             if (!state || !state.data || state.data.length === 0) {
+                Notification.addNotification({
+                    message: 'No data to export',
+                    type: 'warning'
+                });
                 return;
             }
 
-            if (format === 'csv') {
-                var headers = state.headers;
-                var csvRows = [];
+            // Check export eligibility via main plugin's AJAX endpoint
+            $.ajax({
+                url: M.cfg.wwwroot + '/report/adeptus_insights/ajax/check_export_eligibility.php',
+                method: 'POST',
+                data: {
+                    format: format,
+                    sesskey: M.cfg.sesskey
+                },
+                dataType: 'json'
+            }).done(function(response) {
+                if (!response.success || !response.eligible) {
+                    self.showExportUpgradePrompt(format, response.message || 'Export not available');
+                    return;
+                }
 
-                // Header row
-                csvRows.push(headers.map(function(h) {
-                    return '"' + h.replace(/"/g, '""') + '"';
-                }).join(','));
-
-                // Data rows
-                state.data.forEach(function(row) {
-                    var rowData = headers.map(function(h) {
-                        var val = row[h];
-                        if (val === null || val === undefined) val = '';
-                        return '"' + String(val).replace(/"/g, '""') + '"';
-                    });
-                    csvRows.push(rowData.join(','));
+                // Eligible - proceed with export
+                self.performExport(format, state.report, state.data);
+            }).fail(function() {
+                Notification.addNotification({
+                    message: 'Unable to verify export eligibility. Please try again.',
+                    type: 'error'
                 });
-
-                var csvContent = csvRows.join('\n');
-                var blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-                var url = URL.createObjectURL(blob);
-                var link = document.createElement('a');
-                var reportName = state.report.name || state.report.slug || 'report';
-                link.href = url;
-                link.download = reportName.replace(/[^a-z0-9]/gi, '_') + '.csv';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                URL.revokeObjectURL(url);
-            }
+            });
         },
 
         /**
@@ -3814,10 +3815,11 @@ define([
                 }
             });
 
-            // Export CSV
-            modalRoot.on('click', '.modal-export[data-format="csv"]', function(e) {
+            // Export buttons (PDF, CSV, JSON)
+            modalRoot.on('click', '.modal-export', function(e) {
                 e.preventDefault();
-                self.exportModalData('csv');
+                var format = $(this).data('format');
+                self.exportModalData(format);
             });
 
             // Table pagination - Previous
@@ -4332,11 +4334,13 @@ define([
         },
 
         /**
-         * Export modal data as CSV.
+         * Export modal data using the main plugin's export system.
+         * Checks eligibility and respects subscription-level permissions.
          *
-         * @param {string} format
+         * @param {string} format - Export format (pdf, csv, json)
          */
         exportModalData: function(format) {
+            var self = this;
             var data = this.modalData;
             var report = this.modalReport;
 
@@ -4348,31 +4352,112 @@ define([
                 return;
             }
 
-            if (format === 'csv') {
-                var headers = Object.keys(data[0]);
-                var csvContent = headers.join(',') + '\n';
+            // Check export eligibility via main plugin's AJAX endpoint
+            $.ajax({
+                url: M.cfg.wwwroot + '/report/adeptus_insights/ajax/check_export_eligibility.php',
+                method: 'POST',
+                data: {
+                    format: format,
+                    sesskey: M.cfg.sesskey
+                },
+                dataType: 'json'
+            }).done(function(response) {
+                if (!response.success || !response.eligible) {
+                    // Show upgrade prompt for premium features
+                    self.showExportUpgradePrompt(format, response.message || 'Export not available');
+                    return;
+                }
 
-                data.forEach(function(row) {
-                    var values = headers.map(function(h) {
-                        var val = row[h];
-                        if (val === null || val === undefined) val = '';
-                        // Escape quotes and wrap in quotes if contains comma
-                        val = String(val).replace(/"/g, '""');
-                        if (val.indexOf(',') !== -1 || val.indexOf('"') !== -1 || val.indexOf('\n') !== -1) {
-                            val = '"' + val + '"';
-                        }
-                        return val;
-                    });
-                    csvContent += values.join(',') + '\n';
+                // Eligible - proceed with export via main plugin
+                self.performExport(format, report, data);
+            }).fail(function() {
+                Notification.addNotification({
+                    message: 'Unable to verify export eligibility. Please try again.',
+                    type: 'error'
                 });
+            });
+        },
 
-                // Download
-                var blob = new Blob([csvContent], {type: 'text/csv;charset=utf-8;'});
-                var link = document.createElement('a');
-                link.href = URL.createObjectURL(blob);
-                link.download = (report ? report.name.replace(/[^a-z0-9]/gi, '_') : 'report') + '.csv';
-                link.click();
+        /**
+         * Show upgrade prompt when export format is not available on current plan.
+         *
+         * @param {string} format - The requested format
+         * @param {string} message - Message from eligibility check
+         */
+        showExportUpgradePrompt: function(format, message) {
+            var formatNames = {
+                'pdf': 'PDF',
+                'csv': 'CSV',
+                'json': 'JSON'
+            };
+            var formatName = formatNames[format] || format.toUpperCase();
+
+            Notification.alert(
+                formatName + ' Export',
+                message || formatName + ' export is not available on your current plan.',
+                'OK'
+            );
+        },
+
+        /**
+         * Perform the actual export via the main plugin's export endpoint.
+         *
+         * @param {string} format - Export format
+         * @param {Object} report - Report metadata
+         * @param {Array} data - Report data
+         */
+        performExport: function(format, report, data) {
+            var self = this;
+
+            // Prepare report data for export endpoint
+            var headers = data.length > 0 ? Object.keys(data[0]) : [];
+            var reportData = {
+                results: data,
+                headers: headers,
+                report_name: report ? report.name : 'Report',
+                report_category: report ? (report.category || '') : '',
+                parameters: {}
+            };
+
+            // Create form and submit to export endpoint
+            var form = document.createElement('form');
+            form.method = 'POST';
+            form.action = M.cfg.wwwroot + '/report/adeptus_insights/ajax/export_report.php';
+            form.target = '_blank';
+
+            // Add form fields
+            var fields = {
+                'reportid': report ? report.slug : 'block_export',
+                'format': format,
+                'sesskey': M.cfg.sesskey,
+                'view': self.currentView || 'table',
+                'report_data': JSON.stringify(reportData)
+            };
+
+            for (var key in fields) {
+                if (fields.hasOwnProperty(key)) {
+                    var input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = key;
+                    input.value = fields[key];
+                    form.appendChild(input);
+                }
             }
+
+            document.body.appendChild(form);
+            form.submit();
+            document.body.removeChild(form);
+
+            // Track export (soft-fail, don't disrupt user experience)
+            $.ajax({
+                url: M.cfg.wwwroot + '/report/adeptus_insights/ajax/track_export.php',
+                method: 'POST',
+                data: {
+                    format: format,
+                    report_name: report ? report.name : 'Block Export',
+                    sesskey: M.cfg.sesskey
+                }
+            });
         },
 
         /**

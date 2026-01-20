@@ -147,10 +147,16 @@
                 </button>
             </div>
 
-            {{! Export button }}
-            <div class="export-buttons">
-                <button class="btn btn-outline-primary btn-sm embedded-export" data-format="csv">
+            {{! Export buttons - visibility controlled by JavaScript based on subscription }}
+            <div class="export-buttons d-flex gap-1">
+                <button class="btn btn-outline-danger btn-sm embedded-export" data-format="pdf" title="Export as PDF">
+                    <i class="fa fa-file-pdf-o"></i> PDF
+                </button>
+                <button class="btn btn-outline-primary btn-sm embedded-export" data-format="csv" title="Export as CSV">
                     <i class="fa fa-file-excel-o"></i> CSV
+                </button>
+                <button class="btn btn-outline-secondary btn-sm embedded-export" data-format="json" title="Export as JSON">
+                    <i class="fa fa-file-code-o"></i> JSON
                 </button>
             </div>
         </div>
