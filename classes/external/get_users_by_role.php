@@ -39,7 +39,6 @@ use context_system;
  * External function to get users by role for alert configuration.
  */
 class get_users_by_role extends external_api {
-
     /**
      * Returns description of method parameters.
      *

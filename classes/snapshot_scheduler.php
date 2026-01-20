@@ -194,7 +194,6 @@ class snapshot_scheduler {
 
             mtrace("  Schedule {$schedule->id}: Failed to post snapshot to backend");
             return false;
-
         } catch (\Exception $e) {
             mtrace("  Schedule {$schedule->id}: Error - " . $e->getMessage());
             return false;
@@ -448,8 +447,14 @@ class snapshot_scheduler {
      * @param array|null $trend Trend data from backend response
      * @param string $reportname Human-readable report name
      */
-    private function process_triggered_alerts($triggeredalerts, $blockinstanceid, $reportslug, $currentvalue,
-            $trend = null, $reportname = '') {
+    private function process_triggered_alerts(
+        $triggeredalerts,
+        $blockinstanceid,
+        $reportslug,
+        $currentvalue,
+        $trend = null,
+        $reportname = ''
+    ) {
         global $CFG, $DB;
 
         require_once($CFG->dirroot . '/blocks/adeptus_insights/classes/notification_manager.php');
@@ -511,7 +516,7 @@ class snapshot_scheduler {
 
             // Build a meaningful message with context and trend info.
             // Format: "Your {report_name} has reached {value}, exceeding your {severity} threshold ({threshold}).
-            //          {alert_name} increased/decreased by X (Y%) since last measurement."
+            // {alert_name} increased/decreased by X (Y%) since last measurement."
             $message = "Your {$displayreportname} has reached {$value}, exceeding your {$severity} threshold ({$thresholdvalue}).";
 
             // Add trend information if available.

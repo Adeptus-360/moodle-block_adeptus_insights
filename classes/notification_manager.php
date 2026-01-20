@@ -35,7 +35,6 @@ defined('MOODLE_INTERNAL') || die();
  * which supports popup notifications, email, and mobile push notifications.
  */
 class notification_manager {
-
     /**
      * Send an alert notification to specified users.
      *
@@ -123,7 +122,6 @@ class notification_manager {
                 } else {
                     $results['errors'][] = "Failed to send notification to user $userid";
                 }
-
             } catch (\Exception $e) {
                 $results['errors'][] = "Error sending to user $userid: " . $e->getMessage();
             }
@@ -259,7 +257,8 @@ class notification_manager {
         // Get the logo.
         $logo = self::get_logo_base64();
 
-        $html = '<div style="font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, Oxygen, Ubuntu, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff;">';
+        $html = '<div style="font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, ' .
+            'Oxygen, Ubuntu, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff;">';
 
         // Header banner with logo.
         $html .= '<div style="background-color: #f8f9fa; padding: 30px; border-radius: 8px 8px 0 0; text-align: center; border-bottom: 1px solid #e9ecef;">';
@@ -274,31 +273,45 @@ class notification_manager {
         $html .= '<div style="padding: 30px; border: 1px solid #e9ecef; border-top: none;">';
 
         // Alert box with severity indicator.
-        $html .= '<div style="background-color: ' . $color['bg'] . '; border: 1px solid ' . $color['border'] . '; border-radius: 8px; padding: 20px; margin-bottom: 25px;">';
+        $html .= '<div style="background-color: ' . $color['bg'] . '; border: 1px solid ' .
+            $color['border'] . '; border-radius: 8px; padding: 20px; margin-bottom: 25px;">';
         $html .= '<h2 style="color: ' . $color['text'] . '; margin: 0 0 10px 0; font-size: 18px;">';
         $html .= '<span style="margin-right: 8px;">' . $color['icon'] . '</span>';
         $html .= htmlspecialchars($alertname);
         $html .= '</h2>';
-        $html .= '<p style="color: ' . $color['text'] . '; margin: 0; font-size: 14px; line-height: 1.5;">' . htmlspecialchars($message) . '</p>';
+        $html .= '<p style="color: ' . $color['text'] .
+            '; margin: 0; font-size: 14px; line-height: 1.5;">' . htmlspecialchars($message) . '</p>';
         $html .= '</div>';
 
         // Details section.
         if (!empty($context['report_name']) || !empty($context['current_value']) || !empty($context['threshold'])) {
-            $html .= '<div style="background-color: #f8f9fa; border-radius: 8px; padding: 20px; margin-bottom: 25px;">';
-            $html .= '<h3 style="margin: 0 0 15px 0; font-size: 14px; color: #495057; text-transform: uppercase; letter-spacing: 0.5px;">' . get_string('alert_details', 'block_adeptus_insights') . '</h3>';
-            $html .= '<table style="width: 100%; font-size: 14px; color: #495057; border-collapse: collapse;">';
+            $html .= '<div style="background-color: #f8f9fa; border-radius: 8px; ' .
+                'padding: 20px; margin-bottom: 25px;">';
+            $html .= '<h3 style="margin: 0 0 15px 0; font-size: 14px; color: #495057; ' .
+                'text-transform: uppercase; letter-spacing: 0.5px;">' .
+                get_string('alert_details', 'block_adeptus_insights') . '</h3>';
+            $html .= '<table style="width: 100%; font-size: 14px; color: #495057; ' .
+                'border-collapse: collapse;">';
 
             if (!empty($context['report_name'])) {
-                $html .= '<tr><td style="padding: 8px 0; border-bottom: 1px solid #e9ecef; width: 40%;"><strong>' . get_string('alert_report', 'block_adeptus_insights') . '</strong></td>';
-                $html .= '<td style="padding: 8px 0; border-bottom: 1px solid #e9ecef;">' . htmlspecialchars($context['report_name']) . '</td></tr>';
+                $html .= '<tr><td style="padding: 8px 0; border-bottom: 1px solid #e9ecef; ' .
+                    'width: 40%;"><strong>' .
+                    get_string('alert_report', 'block_adeptus_insights') . '</strong></td>';
+                $html .= '<td style="padding: 8px 0; border-bottom: 1px solid #e9ecef;">' .
+                    htmlspecialchars($context['report_name']) . '</td></tr>';
             }
             if (!empty($context['current_value'])) {
-                $html .= '<tr><td style="padding: 8px 0; border-bottom: 1px solid #e9ecef;"><strong>' . get_string('alert_current_value', 'block_adeptus_insights') . '</strong></td>';
-                $html .= '<td style="padding: 8px 0; border-bottom: 1px solid #e9ecef;">' . htmlspecialchars($context['current_value']) . '</td></tr>';
+                $html .= '<tr><td style="padding: 8px 0; border-bottom: 1px solid #e9ecef;">' .
+                    '<strong>' . get_string('alert_current_value', 'block_adeptus_insights') .
+                    '</strong></td>';
+                $html .= '<td style="padding: 8px 0; border-bottom: 1px solid #e9ecef;">' .
+                    htmlspecialchars($context['current_value']) . '</td></tr>';
             }
             if (!empty($context['threshold'])) {
-                $html .= '<tr><td style="padding: 8px 0;"><strong>' . get_string('alert_threshold', 'block_adeptus_insights') . '</strong></td>';
-                $html .= '<td style="padding: 8px 0;">' . htmlspecialchars($context['threshold']) . '</td></tr>';
+                $html .= '<tr><td style="padding: 8px 0;"><strong>' .
+                    get_string('alert_threshold', 'block_adeptus_insights') . '</strong></td>';
+                $html .= '<td style="padding: 8px 0;">' .
+                    htmlspecialchars($context['threshold']) . '</td></tr>';
             }
 
             $html .= '</table>';
@@ -308,7 +321,10 @@ class notification_manager {
         // View Metric button if URL provided.
         if (!empty($context['url'])) {
             $html .= '<div style="text-align: center; margin-bottom: 25px;">';
-            $html .= '<a href="' . htmlspecialchars($context['url']) . '" style="display: inline-block; background-color: #0f6cbf; color: #ffffff; padding: 12px 30px; border-radius: 6px; text-decoration: none; font-size: 14px; font-weight: 500;">';
+            $html .= '<a href="' . htmlspecialchars($context['url']) .
+                '" style="display: inline-block; background-color: #0f6cbf; color: #ffffff; ' .
+                'padding: 12px 30px; border-radius: 6px; text-decoration: none; ' .
+                'font-size: 14px; font-weight: 500;">';
             $html .= get_string('view_metric', 'block_adeptus_insights');
             $html .= '</a>';
             $html .= '</div>';
@@ -467,7 +483,7 @@ class notification_manager {
         // Parse email addresses (comma or newline separated).
         $emails = preg_split('/[\s,;]+/', $emaillist, -1, PREG_SPLIT_NO_EMPTY);
         $emails = array_map('trim', $emails);
-        $emails = array_filter($emails, function($email) {
+        $emails = array_filter($emails, function ($email) {
             return validate_email($email);
         });
 
@@ -516,7 +532,6 @@ class notification_manager {
                 } else {
                     $results['errors'][] = "Failed to send email to: $email";
                 }
-
             } catch (\Exception $e) {
                 $results['errors'][] = "Error sending email to $email: " . $e->getMessage();
             }

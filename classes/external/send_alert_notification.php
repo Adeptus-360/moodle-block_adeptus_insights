@@ -36,7 +36,6 @@ use context_system;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class send_alert_notification extends external_api {
-
     /**
      * Define parameters for execute function.
      *

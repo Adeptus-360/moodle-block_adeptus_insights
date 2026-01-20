@@ -40,7 +40,6 @@ use external_value;
  * External function for registering snapshot schedules.
  */
 class register_snapshot_schedule extends external_api {
-
     /**
      * Define parameters for the function.
      *
@@ -137,7 +136,6 @@ class register_snapshot_schedule extends external_api {
                 'success' => false,
                 'message' => 'Failed to register snapshot schedule',
             ];
-
         } catch (\Exception $e) {
             return [
                 'success' => false,
