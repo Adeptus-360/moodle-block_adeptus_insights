@@ -4030,15 +4030,6 @@ define([
             // Render table
             this.renderModalTable(modalBody, this.modalData);
 
-            // Set up view full report link (admin only)
-            if (this.isAdmin) {
-                var reportUrl = M.cfg.wwwroot + '/report/adeptus_insights/generated_reports.php?slug=' + encodeURIComponent(report.slug);
-                modalBody.find('.view-full-report').attr('href', reportUrl);
-                modalBody.find('.modal-footer-link').removeClass('d-none');
-            } else {
-                modalBody.find('.modal-footer-link').addClass('d-none');
-            }
-
             // Reset to table view
             this.currentView = 'table';
             modalBody.find('.view-toggle-btn').removeClass('active');
