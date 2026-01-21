@@ -1,0 +1,224 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template block_adeptus_insights/report_tabs
+
+    Tabbed reports display mode - consistent design with embedded/modal views.
+
+    Context variables required for this template:
+    * blockid - Block instance ID
+    * chart_height - Height of chart in pixels
+    * show_refresh_button - Whether to show refresh button
+    * show_timestamp - Whether to show timestamp
+
+    Example context (json):
+    {
+        "blockid": 123,
+        "chart_height": 200
+    }
+}}
+<div class="block-adeptus-insights block-adeptus-tabs"
+     data-blockid="{{blockid}}"
+     data-contextid="{{contextid}}"
+     data-mode="tabs"
+     data-context-type="{{context_type}}"
+     data-context-id="{{context_id}}"
+     data-selected-reports="{{selected_reports_json}}">
+
+    {{! Toolbar - minimal for tabs mode (reports are pre-selected in settings) }}
+    {{#show_refresh_button}}
+    <div class="block-adeptus-toolbar">
+        <div class="block-adeptus-toolbar-actions ml-auto">
+            <button type="button" class="btn btn-sm btn-link block-adeptus-refresh"
+                    title="{{#str}}refresh, block_adeptus_insights{{/str}}"
+                    aria-label="{{#str}}aria_refreshblock, block_adeptus_insights{{/str}}">
+                <i class="fa fa-refresh"></i>
+            </button>
+        </div>
+    </div>
+    {{/show_refresh_button}}
+
+    {{! Loading state }}
+    <div class="block-adeptus-loading {{^loading}}d-none{{/loading}}">
+        <div class="block-adeptus-skeleton-tabs">
+            <div class="skeleton-tab-bar">
+                <div class="skeleton-tab"></div>
+                <div class="skeleton-tab"></div>
+                <div class="skeleton-tab"></div>
+            </div>
+            <div class="skeleton-tab-content" style="height: 200px;">
+                <div class="skeleton-chart-placeholder">
+                    <i class="fa fa-bar-chart fa-3x text-muted"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{! Tabs container }}
+    <div class="block-adeptus-tabs-container {{#loading}}d-none{{/loading}}">
+        {{! Tab navigation }}
+        <ul class="nav nav-tabs block-adeptus-tab-nav" role="tablist">
+            {{! Tabs will be inserted here by JavaScript }}
+        </ul>
+
+        {{! Tab content }}
+        <div class="tab-content block-adeptus-tab-content">
+            {{! Tab panes will be inserted here by JavaScript }}
+        </div>
+    </div>
+
+    {{! Empty state }}
+    <div class="block-adeptus-empty d-none text-center py-4">
+        <i class="fa fa-folder-open-o fa-2x text-muted"></i>
+        <p class="text-muted mt-2">{{#str}}noreports, block_adeptus_insights{{/str}}</p>
+    </div>
+
+    {{! Error state }}
+    <div class="block-adeptus-error d-none text-center py-4">
+        <i class="fa fa-exclamation-triangle fa-2x text-warning"></i>
+        <p class="text-muted mt-2">{{#str}}errorloadingreports, block_adeptus_insights{{/str}}</p>
+        <button type="button" class="btn btn-sm btn-outline-secondary block-adeptus-retry">
+            <i class="fa fa-refresh"></i> {{#str}}refresh, block_adeptus_insights{{/str}}
+        </button>
+    </div>
+
+    {{! Timestamp }}
+    {{#show_timestamp}}
+    <div class="block-adeptus-timestamp text-muted small mt-2 d-none">
+        <i class="fa fa-clock-o"></i> <span class="timestamp-text"></span>
+    </div>
+    {{/show_timestamp}}
+</div>
+
+{{! Tab item template (used by JavaScript) }}
+<template id="block-adeptus-tab-template-{{blockid}}">
+    <li class="nav-item" role="presentation">
+        <a class="nav-link" data-toggle="tab" href="#" role="tab" aria-selected="false">
+            <span class="tab-name"></span>
+        </a>
+    </li>
+</template>
+
+{{! Tab pane template with consistent design - mirrors embedded/modal design }}
+<template id="block-adeptus-tab-pane-template-{{blockid}}">
+    <div class="tab-pane fade" role="tabpanel">
+        {{! Loading state for tab }}
+        <div class="tab-pane-loading text-center py-3">
+            <i class="fa fa-spinner fa-spin"></i> {{#str}}loading, block_adeptus_insights{{/str}}
+        </div>
+
+        {{! Tab pane content wrapper }}
+        <div class="tab-pane-content d-none">
+            {{! Meta bar with badges and date }}
+            <div class="tab-meta-bar d-flex justify-content-between align-items-center mb-2">
+                <div class="report-badges">
+                    <span class="report-category badge"></span>
+                    <span class="report-rowcount badge bg-secondary"><i class="fa fa-table"></i> <span class="row-count-num">0</span> rows</span>
+                </div>
+                <span class="report-date text-muted small"></span>
+            </div>
+
+            {{! Action bar with view toggle - consistent with embedded/modal }}
+            <div class="tab-action-bar d-flex justify-content-between align-items-center mb-2">
+                {{! View toggle buttons }}
+                <div class="view-toggle btn-group" role="group">
+                    <button type="button" class="btn btn-sm btn-outline-secondary tab-view-toggle-btn active" data-view="table">
+                        <i class="fa fa-table"></i> Table
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary tab-view-toggle-btn" data-view="chart">
+                        <i class="fa fa-bar-chart"></i> Chart
+                    </button>
+                </div>
+
+                {{! Export buttons - visibility controlled by JavaScript based on subscription }}
+                <div class="export-buttons d-flex gap-1">
+                    <button class="btn btn-outline-danger btn-sm tab-export" data-format="pdf" title="Export as PDF">
+                        <i class="fa fa-file-pdf-o"></i> PDF
+                    </button>
+                    <button class="btn btn-outline-primary btn-sm tab-export" data-format="csv" title="Export as CSV">
+                        <i class="fa fa-file-excel-o"></i> CSV
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm tab-export" data-format="json" title="Export as JSON">
+                        <i class="fa fa-file-code-o"></i> JSON
+                    </button>
+                </div>
+            </div>
+
+            {{! Table View }}
+            <div class="tab-table-view tab-view">
+                <div class="tab-table-container">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover table-sm tab-table">
+                            <thead class="table-light"></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                    <div class="tab-table-footer mt-2 d-flex justify-content-between align-items-center">
+                        <span class="row-count text-muted small"></span>
+                        <div class="tab-table-pagination">
+                            <button type="button" class="btn btn-sm btn-outline-secondary tab-pagination-prev" disabled>
+                                <i class="fa fa-chevron-left"></i>
+                            </button>
+                            <span class="tab-pagination-info mx-2 small text-muted"></span>
+                            <button type="button" class="btn btn-sm btn-outline-secondary tab-pagination-next">
+                                <i class="fa fa-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{! Chart View }}
+            <div class="tab-chart-view tab-view d-none">
+                {{! Chart controls }}
+                <div class="chart-controls-wrapper mb-2">
+                    <div class="chart-controls d-flex flex-wrap align-items-end gap-2">
+                        {{! Chart type selector }}
+                        <div class="control-group">
+                            <label class="form-label small mb-1">Type</label>
+                            <select class="form-select form-select-sm tab-chart-type">
+                                <option value="bar">Bar</option>
+                                <option value="line">Line</option>
+                                <option value="pie">Pie</option>
+                                <option value="doughnut">Doughnut</option>
+                            </select>
+                        </div>
+
+                        {{! X-Axis selector }}
+                        <div class="control-group">
+                            <label class="form-label small mb-1">X-Axis</label>
+                            <select class="form-select form-select-sm tab-chart-x-axis">
+                            </select>
+                        </div>
+
+                        {{! Y-Axis selector }}
+                        <div class="control-group">
+                            <label class="form-label small mb-1">Y-Axis</label>
+                            <select class="form-select form-select-sm tab-chart-y-axis">
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                {{! Chart container }}
+                <div class="tab-chart-container" style="position: relative; height: {{chart_height}}px;">
+                    <canvas class="tab-chart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>

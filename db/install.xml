@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<XMLDB PATH="blocks/adeptus_insights/db" VERSION="20260119" COMMENT="XMLDB file for Adeptus Insights block plugin">
+  <TABLES>
+    <TABLE NAME="block_adeptus_snap_sched" COMMENT="Scheduled snapshot execution for KPI history tracking">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="blockinstanceid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Reference to block_instances.id"/>
+        <FIELD NAME="report_slug" TYPE="char" LENGTH="255" NOTNULL="true" COMMENT="Report identifier slug"/>
+        <FIELD NAME="report_source" TYPE="char" LENGTH="50" NOTNULL="true" DEFAULT="wizard" COMMENT="Source type: wizard or ai"/>
+        <FIELD NAME="interval_seconds" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="86400" COMMENT="Snapshot frequency in seconds"/>
+        <FIELD NAME="last_snapshot_time" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="Unix timestamp of last successful snapshot"/>
+        <FIELD NAME="next_snapshot_due" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="Unix timestamp when next snapshot is due"/>
+        <FIELD NAME="last_row_count" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="Row count from last snapshot"/>
+        <FIELD NAME="is_active" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" COMMENT="Whether scheduling is active"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="blockinstanceid" TYPE="foreign" FIELDS="blockinstanceid" REFTABLE="block_instances" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="report_slug" UNIQUE="false" FIELDS="report_slug"/>
+        <INDEX NAME="next_due_active" UNIQUE="false" FIELDS="next_snapshot_due, is_active" COMMENT="For efficient cron query"/>
+        <INDEX NAME="block_report" UNIQUE="true" FIELDS="blockinstanceid, report_slug" COMMENT="One schedule per block-report combination"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="block_adeptus_alert_log" COMMENT="Log of triggered alert notifications (fire-once archive)">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="blockinstanceid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Reference to block_instances.id"/>
+        <FIELD NAME="alert_id" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Backend alert ID"/>
+        <FIELD NAME="severity" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="warning" COMMENT="Alert severity: warning, critical, or recovery"/>
+        <FIELD NAME="report_slug" TYPE="char" LENGTH="255" NOTNULL="true" COMMENT="Report identifier slug"/>
+        <FIELD NAME="alert_name" TYPE="char" LENGTH="255" NOTNULL="false" COMMENT="Alert name for reference"/>
+        <FIELD NAME="triggered_value" TYPE="char" LENGTH="100" NOTNULL="false" COMMENT="Value that triggered the alert"/>
+        <FIELD NAME="threshold_value" TYPE="char" LENGTH="100" NOTNULL="false" COMMENT="Threshold that was exceeded"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="When notification was sent"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="blockinstanceid" TYPE="foreign" FIELDS="blockinstanceid" REFTABLE="block_instances" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="block_alert_severity" UNIQUE="true" FIELDS="blockinstanceid, alert_id, severity" COMMENT="Unique constraint for fire-once per severity"/>
+        <INDEX NAME="block_alert" UNIQUE="false" FIELDS="blockinstanceid, alert_id"/>
+      </INDEXES>
+    </TABLE>
+  </TABLES>
+</XMLDB>
