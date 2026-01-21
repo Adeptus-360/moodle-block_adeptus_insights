@@ -1,10 +1,10 @@
 # Adeptus Insights Block
 
-Dashboard block companion for the Adeptus Insights report plugin.
+Block plugin companion for the [Adeptus Insights](https://github.com/Adeptus-360/moodle-report_adeptus_insights) report plugin.
 
 ## Description
 
-The Adeptus Insights Block allows you to embed reports, KPI cards, and quick access links from the Adeptus Insights report plugin directly onto Moodle dashboards and course pages. Display key metrics at a glance with customizable display modes, automatic refresh, and threshold alerts.
+The Adeptus Insights Block allows you to embed reports, KPI cards, and quick access links from the Adeptus Insights report plugin onto any Moodle page that supports blocks. Display key metrics at a glance with customizable display modes, automatic refresh, and threshold alerts.
 
 ### Key Features
 
@@ -27,7 +27,7 @@ The Adeptus Insights Block allows you to embed reports, KPI cards, and quick acc
 
 - **Moodle**: Version 4.1 or higher (2022112800)
 - **PHP**: Version 7.4 or higher (8.1+ recommended)
-- **Adeptus Insights Report Plugin**: Required dependency
+- **Adeptus Insights Report Plugin**: [Required dependency](https://github.com/Adeptus-360/moodle-report_adeptus_insights) - this block plugin cannot function without the main report plugin installed
 
 ## Installation
 
