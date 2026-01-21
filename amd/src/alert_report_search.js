@@ -17,7 +17,7 @@
  * Ajax autocomplete for alert report selection.
  *
  * @module     block_adeptus_insights/alert_report_search
- * @copyright  2025 Adeptus Analytics
+ * @copyright  2026 Adeptus 360 <info@adeptus360.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
