@@ -547,7 +547,7 @@ class snapshot_scheduler {
             ];
 
             // Send notification.
-            $sendresult = notification_manager::send_configured_alert($alert, $blockinstanceid)
+            $sendresult = notification_manager::send_configured_alert($alert, $blockinstanceid);
 
             if ($sendresult['sent_count'] > 0) {
                 $sentcount += $sendresult['sent_count'];

@@ -662,6 +662,24 @@ class notification_manager {
             ]);
         }
 
+        // Check if this alert+severity combination is already logged (avoid duplicate key error).
+        $existing = $DB->get_record('block_adeptus_alert_log', [
+            'blockinstanceid' => $blockinstanceid,
+            'alert_id' => $alertid,
+            'severity' => $severity,
+        ]);
+
+        if ($existing) {
+            // Update the existing record with new values.
+            $existing->report_slug = $reportslug;
+            $existing->alert_name = $alertname;
+            $existing->triggered_value = $triggeredvalue;
+            $existing->threshold_value = $thresholdvalue;
+            $existing->timecreated = $now;
+            $DB->update_record('block_adeptus_alert_log', $existing);
+            return $existing->id;
+        }
+
         // Log this alert trigger.
         $record = new \stdClass();
         $record->blockinstanceid = $blockinstanceid;
