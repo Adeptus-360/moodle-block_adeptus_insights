@@ -4403,14 +4403,43 @@ define([
          * Capture chart image from modal for PDF export.
          * Returns base64 encoded PNG image data.
          *
-         * @param {string} canvasSelector - Selector for the chart canvas
          * @returns {Promise<string|null>} Base64 image data or null if capture fails
          */
-        captureChartImage: function(canvasSelector) {
+        captureChartImage: function() {
+            var self = this;
             return new Promise(function(resolve) {
                 // Wait for any chart animations to complete
                 setTimeout(function() {
-                    var canvas = document.querySelector(canvasSelector);
+                    var canvas = null;
+
+                    // Try to find chart canvas in order of priority
+                    // 1. Modal chart (report links modal)
+                    var modalChart = document.querySelector('.modal.show .modal-chart');
+                    if (modalChart) {
+                        canvas = modalChart;
+                    }
+
+                    // 2. Embedded chart
+                    if (!canvas) {
+                        var embeddedChart = self.container ? self.container.find('.embedded-chart')[0] : null;
+                        if (embeddedChart) {
+                            canvas = embeddedChart;
+                        }
+                    }
+
+                    // 3. Tab chart (active tab)
+                    if (!canvas) {
+                        var tabChart = self.container ? self.container.find('.tab-pane.active .tab-chart')[0] : null;
+                        if (tabChart) {
+                            canvas = tabChart;
+                        }
+                    }
+
+                    // 4. Fallback - any visible chart
+                    if (!canvas) {
+                        canvas = document.querySelector('.modal-chart, .embedded-chart, .tab-chart');
+                    }
+
                     if (!canvas) {
                         resolve(null);
                         return;
@@ -4452,8 +4481,7 @@ define([
             // For PDF in chart view, capture chart image first
             var chartPromise = Promise.resolve(null);
             if (format === 'pdf' && self.currentView === 'chart') {
-                var chartSelector = '.modal-chart, .embedded-chart, .tab-chart';
-                chartPromise = self.captureChartImage(chartSelector);
+                chartPromise = self.captureChartImage();
             }
 
             chartPromise.then(function(chartImage) {
@@ -4469,13 +4497,9 @@ define([
                     'format': format,
                     'sesskey': M.cfg.sesskey,
                     'view': self.currentView || 'table',
-                    'report_data': JSON.stringify(reportData)
+                    'report_data': JSON.stringify(reportData),
+                    'chart_image': (chartImage && chartImage.length > 100) ? chartImage : ''
                 };
-
-                // Add chart image if captured
-                if (chartImage && chartImage.length > 100) {
-                    fields['chart_image'] = chartImage;
-                }
 
                 for (var key in fields) {
                     if (fields.hasOwnProperty(key)) {
