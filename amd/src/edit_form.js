@@ -17,7 +17,7 @@
  * JavaScript for the block edit form - report selection UI with searchable dropdown.
  *
  * @module     block_adeptus_insights/edit_form
- * @copyright  2025 Adeptus Analytics
+ * @copyright  2026 Adeptus 360 <info@adeptus360.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
