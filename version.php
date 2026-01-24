@@ -25,7 +25,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'block_adeptus_insights';
-$plugin->version = 2026011904;
+$plugin->version = 2026012400;
 $plugin->requires = 2022112800; // Moodle 4.1+
 $plugin->maturity = MATURITY_STABLE;
 $plugin->release = '1.0.0';

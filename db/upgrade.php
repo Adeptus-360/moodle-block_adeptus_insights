@@ -141,5 +141,23 @@ function xmldb_block_adeptus_insights_upgrade($oldversion) {
         upgrade_block_savepoint(true, 2026011904, 'adeptus_insights');
     }
 
+    // Rename tables to use correct frankenstyle prefix (version 2026012400).
+    if ($oldversion < 2026012400) {
+        // Rename block_adeptus_snap_sched to block_adeptus_insights_snap_sched.
+        $table = new xmldb_table('block_adeptus_snap_sched');
+        if ($dbman->table_exists($table)) {
+            $dbman->rename_table($table, 'block_adeptus_insights_snap_sched');
+        }
+
+        // Rename block_adeptus_alert_log to block_adeptus_insights_alert_log.
+        $table = new xmldb_table('block_adeptus_alert_log');
+        if ($dbman->table_exists($table)) {
+            $dbman->rename_table($table, 'block_adeptus_insights_alert_log');
+        }
+
+        // Block_adeptus_insights savepoint reached.
+        upgrade_block_savepoint(true, 2026012400, 'adeptus_insights');
+    }
+
     return true;
 }

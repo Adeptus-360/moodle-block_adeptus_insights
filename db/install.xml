@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <XMLDB PATH="blocks/adeptus_insights/db" VERSION="20260119" COMMENT="XMLDB file for Adeptus Insights block plugin">
   <TABLES>
-    <TABLE NAME="block_adeptus_snap_sched" COMMENT="Scheduled snapshot execution for KPI history tracking">
+    <TABLE NAME="block_adeptus_insights_snap_sched" COMMENT="Scheduled snapshot execution for KPI history tracking">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="blockinstanceid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Reference to block_instances.id"/>
@@ -25,7 +25,7 @@
         <INDEX NAME="block_report" UNIQUE="true" FIELDS="blockinstanceid, report_slug" COMMENT="One schedule per block-report combination"/>
       </INDEXES>
     </TABLE>
-    <TABLE NAME="block_adeptus_alert_log" COMMENT="Log of triggered alert notifications (fire-once archive)">
+    <TABLE NAME="block_adeptus_insights_alert_log" COMMENT="Log of triggered alert notifications (fire-once archive)">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="blockinstanceid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Reference to block_instances.id"/>

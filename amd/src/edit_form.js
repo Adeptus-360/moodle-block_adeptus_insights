@@ -1606,7 +1606,7 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
             // Prepare backend API payload.
             // Note: cooldown_minutes is set to 0 to disable backend cooldown.
             // Moodle handles fire-once logic per severity (warning/critical/recovery)
-            // via the block_adeptus_alert_log table.
+            // via the block_adeptus_insights_alert_log table.
             var notifyEmail = $('#alert-edit-notify-email').is(':checked');
             var backendPayload = {
                 name: $('#alert-edit-name').val() || reportName,
