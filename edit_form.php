@@ -119,7 +119,7 @@ class block_adeptus_insights_edit_form extends block_edit_form {
             '',
             '<div id="kpi-report-selector-container" class="kpi-report-selector-ui mb-3">' .
             '<div class="kpi-selector-loading text-center py-3">' .
-            '<i class="fa fa-spinner fa-spin"></i> Loading report selector...</div></div>'
+            '<i class="fa fa-spinner fa-spin"></i> ' . get_string('loadingreportselector', 'block_adeptus_insights') . '</div></div>'
         );
         $mform->hideIf('kpi_report_selector_container', 'config_display_mode', 'neq', 'kpi');
 
@@ -152,7 +152,7 @@ class block_adeptus_insights_edit_form extends block_edit_form {
             '',
             '<div id="tabs-report-selector-container" class="tabs-report-selector-ui mb-3">' .
             '<div class="tabs-selector-loading text-center py-3">' .
-            '<i class="fa fa-spinner fa-spin"></i> Loading report selector...</div></div>'
+            '<i class="fa fa-spinner fa-spin"></i> ' . get_string('loadingreportselector', 'block_adeptus_insights') . '</div></div>'
         );
         $mform->hideIf('tabs_report_selector_container', 'config_display_mode', 'neq', 'tabs');
 
@@ -457,7 +457,7 @@ class block_adeptus_insights_edit_form extends block_edit_form {
                         </div>
 
                         <hr class="my-3">
-                        <h6 class="text-muted mb-3"><i class="fa fa-envelope mr-1"></i> Email Notifications</h6>
+                        <h6 class="text-muted mb-3"><i class="fa fa-envelope mr-1"></i> ' . get_string('email_notifications_header', 'block_adeptus_insights') . '</h6>
 
                         <div class="form-group">
                             <div class="custom-control custom-checkbox">
@@ -477,7 +477,7 @@ class block_adeptus_insights_edit_form extends block_edit_form {
                         </div>
 
                         <hr class="my-3">
-                        <h6 class="text-muted mb-3"><i class="fa fa-comment mr-1"></i> Moodle Message Notifications</h6>
+                        <h6 class="text-muted mb-3"><i class="fa fa-comment mr-1"></i> ' . get_string('moodle_notifications_header', 'block_adeptus_insights') . '</h6>
 
                         <div class="form-group">
                             <label for="alert-edit-role-filter">' . get_string('config_alert_role_filter', 'block_adeptus_insights') . '</label>

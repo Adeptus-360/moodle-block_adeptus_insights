@@ -491,6 +491,53 @@ $string['errorloadingkpi'] = 'Error loading KPI data.';
 // Alert Configuration notices.
 $string['alerts_kpi_only_notice'] = 'These settings are only applicable when using KPI Cards display mode. Please select "KPI cards" from the Display Mode option above to configure alerts and snapshot settings.';
 
+// UI Elements - Dropdowns and Filters.
+$string['searchcategories'] = 'Search categories...';
+$string['aria_searchcategories'] = 'Search categories';
+$string['nocategoriesfound'] = 'No categories found';
+$string['searchreports'] = 'Search reports...';
+$string['aria_searchreports'] = 'Search reports';
+$string['noreportsfound'] = 'No reports found';
+$string['loadingreport'] = 'Loading report...';
+$string['loadingreportselector'] = 'Loading report selector...';
+
+// UI Elements - Table and Chart.
+$string['table'] = 'Table';
+$string['chart'] = 'Chart';
+$string['rows'] = 'rows';
+$string['charttype'] = 'Type';
+$string['charttype_bar'] = 'Bar';
+$string['charttype_line'] = 'Line';
+$string['charttype_pie'] = 'Pie';
+$string['charttype_doughnut'] = 'Doughnut';
+$string['charttype_bar_full'] = 'Bar Chart';
+$string['charttype_line_full'] = 'Line Chart';
+$string['charttype_pie_full'] = 'Pie Chart';
+$string['charttype_doughnut_full'] = 'Doughnut Chart';
+$string['xaxis'] = 'X-Axis';
+$string['yaxis'] = 'Y-Axis';
+$string['xaxis_labels'] = 'X-Axis (Labels)';
+$string['yaxis_values'] = 'Y-Axis (Values)';
+
+// UI Elements - Export.
+$string['exportformat_pdf'] = 'PDF';
+$string['exportformat_csv'] = 'CSV';
+$string['exportformat_json'] = 'JSON';
+$string['exportas_pdf'] = 'Export as PDF';
+$string['exportas_csv'] = 'Export as CSV';
+$string['exportas_json'] = 'Export as JSON';
+
+// Edit Form - Section Headers.
+$string['email_notifications_header'] = 'Email Notifications';
+$string['moodle_notifications_header'] = 'Moodle Message Notifications';
+
+// External API Messages.
+$string['error_block_not_found'] = 'Block instance not found';
+$string['error_invalid_report_source'] = 'Invalid report source';
+$string['error_snapshots_disabled'] = 'Snapshots feature is not enabled for this installation';
+$string['snapshot_registered_success'] = 'Snapshot schedule registered successfully';
+$string['snapshot_registered_failed'] = 'Failed to register snapshot schedule';
+
 // Privacy API strings.
 $string['privacy:metadata:block_adeptus_insights_snap_sched'] = 'Stores snapshot scheduling configuration for KPI metrics. This is administrative data associated with block instances, not individual users.';
 $string['privacy:metadata:block_adeptus_insights_snap_sched:blockinstanceid'] = 'The ID of the block instance.';
