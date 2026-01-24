@@ -28,7 +28,7 @@
 }}
 <div class="block-adeptus-modal-content" data-blockid="{{blockid}}">
     {{! Loading state }}
-    <div class="modal-loading">
+    <div class="block-adeptus-modal-loading">
         <div class="text-center py-5">
             <i class="fa fa-spinner fa-spin fa-3x text-primary"></i>
             <p class="text-muted mt-3">{{#str}}loading, block_adeptus_insights{{/str}}</p>
@@ -36,53 +36,53 @@
     </div>
 
     {{! Content }}
-    <div class="modal-content-area d-none">
+    <div class="block-adeptus-modal-content-area d-none">
         {{! Report meta }}
-        <div class="report-meta-bar d-flex justify-content-between align-items-center mb-3">
-            <div class="report-badges">
-                <span class="report-category badge"></span>
-                <span class="report-rowcount badge bg-secondary"><i class="fa fa-table"></i> <span class="row-count-num">0</span> {{#str}}rows, block_adeptus_insights{{/str}}</span>
+        <div class="block-adeptus-report-meta-bar d-flex justify-content-between align-items-center mb-3">
+            <div class="block-adeptus-report-badges">
+                <span class="block-adeptus-report-category badge"></span>
+                <span class="block-adeptus-report-rowcount badge bg-secondary"><i class="fa fa-table"></i> <span class="block-adeptus-row-count-num">0</span> {{#str}}rows, block_adeptus_insights{{/str}}</span>
             </div>
-            <span class="report-date text-muted small"></span>
+            <span class="block-adeptus-report-date text-muted small"></span>
         </div>
 
         {{! Action bar with view toggle }}
-        <div class="action-bar d-flex justify-content-between align-items-center mb-3">
+        <div class="block-adeptus-action-bar d-flex justify-content-between align-items-center mb-3">
             {{! View toggle buttons }}
-            <div class="view-toggle btn-group" role="group">
-                <button type="button" class="btn btn-sm btn-outline-secondary view-toggle-btn active" data-view="table">
+            <div class="block-adeptus-view-toggle btn-group" role="group">
+                <button type="button" class="btn btn-sm btn-outline-secondary block-adeptus-view-toggle-btn active" data-view="table">
                     <i class="fa fa-table"></i> {{#str}}table, block_adeptus_insights{{/str}}
                 </button>
-                <button type="button" class="btn btn-sm btn-outline-secondary view-toggle-btn" data-view="chart">
+                <button type="button" class="btn btn-sm btn-outline-secondary block-adeptus-view-toggle-btn" data-view="chart">
                     <i class="fa fa-bar-chart"></i> {{#str}}chart, block_adeptus_insights{{/str}}
                 </button>
             </div>
 
             {{! Export buttons - visibility controlled by JavaScript based on subscription }}
-            <div class="export-buttons d-flex gap-2">
-                <button class="btn btn-outline-danger btn-sm modal-export" data-format="pdf" title="{{#str}}exportas_pdf, block_adeptus_insights{{/str}}">
+            <div class="block-adeptus-export-buttons d-flex gap-2">
+                <button class="btn btn-outline-danger btn-sm block-adeptus-modal-export" data-format="pdf" title="{{#str}}exportas_pdf, block_adeptus_insights{{/str}}">
                     <i class="fa fa-file-pdf-o"></i> {{#str}}exportformat_pdf, block_adeptus_insights{{/str}}
                 </button>
-                <button class="btn btn-outline-primary btn-sm modal-export" data-format="csv" title="{{#str}}exportas_csv, block_adeptus_insights{{/str}}">
+                <button class="btn btn-outline-primary btn-sm block-adeptus-modal-export" data-format="csv" title="{{#str}}exportas_csv, block_adeptus_insights{{/str}}">
                     <i class="fa fa-file-excel-o"></i> {{#str}}exportformat_csv, block_adeptus_insights{{/str}}
                 </button>
-                <button class="btn btn-outline-secondary btn-sm modal-export" data-format="json" title="{{#str}}exportas_json, block_adeptus_insights{{/str}}">
+                <button class="btn btn-outline-secondary btn-sm block-adeptus-modal-export" data-format="json" title="{{#str}}exportas_json, block_adeptus_insights{{/str}}">
                     <i class="fa fa-file-code-o"></i> {{#str}}exportformat_json, block_adeptus_insights{{/str}}
                 </button>
             </div>
         </div>
 
         {{! Table View }}
-        <div id="modal-table-view" class="modal-view">
-            <div class="modal-table-container">
+        <div id="modal-table-view" class="block-adeptus-modal-view">
+            <div class="block-adeptus-modal-table-container">
                 <div class="table-responsive">
-                    <table class="table table-striped table-hover table-sm modal-table">
+                    <table class="table table-striped table-hover table-sm block-adeptus-modal-table">
                         <thead class="table-light"></thead>
                         <tbody></tbody>
                     </table>
                 </div>
-                <div class="modal-table-footer mt-2 d-flex justify-content-between align-items-center">
-                    <span class="row-count text-muted small"></span>
+                <div class="block-adeptus-modal-table-footer mt-2 d-flex justify-content-between align-items-center">
+                    <span class="block-adeptus-row-count text-muted small"></span>
                     <div class="table-pagination">
                         <button type="button" class="btn btn-sm btn-outline-secondary table-pagination-prev" disabled>
                             <i class="fa fa-chevron-left"></i>
@@ -97,12 +97,12 @@
         </div>
 
         {{! Chart View }}
-        <div id="modal-chart-view" class="modal-view d-none">
+        <div id="modal-chart-view" class="block-adeptus-modal-view d-none">
             {{! Chart controls }}
-            <div class="chart-controls-wrapper mb-3">
-                <div class="chart-controls d-flex flex-wrap align-items-end gap-3">
+            <div class="block-adeptus-block-adeptus-chart-controls-wrapper mb-3">
+                <div class="block-adeptus-chart-controls d-flex flex-wrap align-items-end gap-3">
                     {{! Chart type selector }}
-                    <div class="control-group">
+                    <div class="block-adeptus-control-group">
                         <label for="modal-chart-type" class="form-label small mb-1">{{#str}}charttype, block_adeptus_insights{{/str}}</label>
                         <select id="modal-chart-type" class="form-select form-select-sm">
                             <option value="bar">{{#str}}charttype_bar_full, block_adeptus_insights{{/str}}</option>
@@ -113,14 +113,14 @@
                     </div>
 
                     {{! X-Axis selector }}
-                    <div class="control-group">
+                    <div class="block-adeptus-control-group">
                         <label for="modal-chart-x-axis" class="form-label small mb-1">{{#str}}xaxis_labels, block_adeptus_insights{{/str}}</label>
                         <select id="modal-chart-x-axis" class="form-select form-select-sm">
                         </select>
                     </div>
 
                     {{! Y-Axis selector }}
-                    <div class="control-group">
+                    <div class="block-adeptus-control-group">
                         <label for="modal-chart-y-axis" class="form-label small mb-1">{{#str}}yaxis_values, block_adeptus_insights{{/str}}</label>
                         <select id="modal-chart-y-axis" class="form-select form-select-sm">
                         </select>
@@ -129,19 +129,19 @@
             </div>
 
             {{! Chart container }}
-            <div class="chart-container" style="position: relative; height: 350px;">
-                <canvas class="modal-chart"></canvas>
+            <div class="block-adeptus-chart-container" style="position: relative; height: 350px;">
+                <canvas class="block-adeptus-modal-chart"></canvas>
             </div>
         </div>
 
     </div>
 
     {{! Error state }}
-    <div class="modal-error d-none">
+    <div class="block-adeptus-modal-error d-none">
         <div class="text-center py-5">
             <i class="fa fa-exclamation-triangle fa-3x text-warning"></i>
             <p class="text-muted mt-3">{{#str}}errorloadingreport, block_adeptus_insights{{/str}}</p>
-            <button type="button" class="btn btn-outline-secondary modal-retry">
+            <button type="button" class="btn btn-outline-secondary block-adeptus-modal-retry">
                 <i class="fa fa-refresh"></i> {{#str}}refresh, block_adeptus_insights{{/str}}
             </button>
         </div>
