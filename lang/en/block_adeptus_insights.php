@@ -538,6 +538,61 @@ $string['error_snapshots_disabled'] = 'Snapshots feature is not enabled for this
 $string['snapshot_registered_success'] = 'Snapshot schedule registered successfully';
 $string['snapshot_registered_failed'] = 'Failed to register snapshot schedule';
 
+// JavaScript Strings - Error Messages.
+$string['js_error_auth_failed'] = 'Authentication failed';
+$string['js_error_could_not_auth'] = 'Could not authenticate';
+$string['js_error_no_auth_token'] = 'No authentication token';
+$string['js_error_report_not_found'] = 'Report not found';
+$string['js_error_connection'] = 'Connection error';
+$string['js_error_failed_load_report'] = 'Failed to load report';
+$string['js_error_failed_execute_report'] = 'Failed to execute report';
+$string['js_error_failed_to_load'] = 'Failed to load';
+$string['js_error_query_failed'] = 'Query execution failed';
+$string['error_exception'] = 'Error: {$a}';
+
+// JavaScript Strings - Export Messages.
+$string['js_export_no_data'] = 'No data to export';
+$string['js_export_not_available'] = 'Export not available';
+$string['js_export_verify_error'] = 'Unable to verify export eligibility. Please try again.';
+$string['js_export_coming_soon'] = 'Export to {$a} coming soon';
+$string['js_export_title'] = '{$a} Export';
+$string['js_export_not_on_plan'] = '{$a} export is not available on your current plan.';
+$string['js_ok'] = 'OK';
+
+// JavaScript Strings - UI Labels.
+$string['js_no_reports'] = '-- No Reports --';
+$string['js_showing_x_of_y'] = 'Showing {$a->start}-{$a->end} of {$a->total}';
+$string['js_page_x_of_y'] = 'Page {$a->current} of {$a->total}';
+$string['js_updated'] = 'Updated: {$a}';
+$string['js_last_updated'] = 'Last updated: {$a}';
+$string['js_last_run'] = 'Last run: {$a}';
+$string['js_no_change'] = 'No change';
+$string['js_unknown'] = 'Unknown';
+$string['js_just_now'] = 'Just now';
+$string['js_vs_previous_up'] = '+{$a} vs previous';
+$string['js_vs_previous_down'] = '-{$a} vs previous';
+$string['js_vs_previous'] = '{$a} vs previous';
+$string['js_value'] = 'Value: {$a}';
+$string['js_selected'] = 'Selected: {$a}';
+$string['js_min_ago'] = '{$a} min ago';
+$string['js_hour_ago'] = '{$a} hour ago';
+$string['js_hours_ago'] = '{$a} hours ago';
+$string['js_day_ago'] = '{$a} day ago';
+$string['js_days_ago'] = '{$a} days ago';
+
+// JavaScript Strings - Alert Messages.
+$string['js_alert_created'] = 'Alert created successfully.';
+$string['js_alert_updated'] = 'Alert updated successfully.';
+$string['js_alert_deleted'] = 'Alert deleted successfully.';
+$string['js_alert_failed_create'] = 'Failed to create alert.';
+$string['js_alert_failed_update'] = 'Failed to update alert.';
+$string['js_alert_failed_delete'] = 'Failed to delete alert from server.';
+$string['js_alert_no_reports'] = 'No reports configured in this block. Add reports in the KPI or Tabs settings first.';
+$string['js_alert_select_report'] = 'Please select a report to monitor.';
+$string['js_alert_enter_threshold'] = 'Please enter a threshold value.';
+$string['js_no_thresholds_set'] = 'No thresholds set';
+$string['js_failed_load_reports'] = 'Failed to load reports';
+
 // Privacy API strings.
 $string['privacy:metadata:block_adeptus_insights_snap_sched'] = 'Stores snapshot scheduling configuration for KPI metrics. This is administrative data associated with block instances, not individual users.';
 $string['privacy:metadata:block_adeptus_insights_snap_sched:blockinstanceid'] = 'The ID of the block instance.';

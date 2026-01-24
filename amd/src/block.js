@@ -106,6 +106,9 @@ define([
         // Snapshot schedule registration tracking
         this.registeredSnapshots = {};
 
+        // Language strings (loaded asynchronously)
+        this.strings = {};
+
         this.init();
     };
 
@@ -114,20 +117,138 @@ define([
          * Initialize the block.
          */
         init: function() {
+            var self = this;
+
             // Find the block container.
             this.container = $('[data-blockid="' + this.blockId + '"]');
             if (!this.container.length) {
                 return;
             }
 
-            // Bind event handlers.
-            this.bindEvents();
+            // Load language strings first, then continue initialization.
+            this.loadStrings().then(function() {
+                // Bind event handlers.
+                self.bindEvents();
 
-            // Load initial data.
-            this.loadReports();
+                // Load initial data.
+                self.loadReports();
 
-            // Setup auto-refresh if configured.
-            this.setupAutoRefresh();
+                // Setup auto-refresh if configured.
+                self.setupAutoRefresh();
+            });
+        },
+
+        /**
+         * Load language strings for use in JavaScript.
+         *
+         * @return {Promise} Promise that resolves when strings are loaded
+         */
+        loadStrings: function() {
+            var self = this;
+            var stringKeys = [
+                {key: 'js_error_auth_failed', component: 'block_adeptus_insights'},
+                {key: 'js_error_could_not_auth', component: 'block_adeptus_insights'},
+                {key: 'js_error_no_auth_token', component: 'block_adeptus_insights'},
+                {key: 'js_error_report_not_found', component: 'block_adeptus_insights'},
+                {key: 'js_error_connection', component: 'block_adeptus_insights'},
+                {key: 'js_error_failed_load_report', component: 'block_adeptus_insights'},
+                {key: 'js_error_failed_execute_report', component: 'block_adeptus_insights'},
+                {key: 'js_error_failed_to_load', component: 'block_adeptus_insights'},
+                {key: 'js_error_query_failed', component: 'block_adeptus_insights'},
+                {key: 'js_export_no_data', component: 'block_adeptus_insights'},
+                {key: 'js_export_not_available', component: 'block_adeptus_insights'},
+                {key: 'js_export_verify_error', component: 'block_adeptus_insights'},
+                {key: 'js_no_reports', component: 'block_adeptus_insights'},
+                {key: 'js_no_change', component: 'block_adeptus_insights'},
+                {key: 'js_unknown', component: 'block_adeptus_insights'},
+                {key: 'js_just_now', component: 'block_adeptus_insights'},
+                {key: 'loading', component: 'block_adeptus_insights'},
+                {key: 'showingxofy', component: 'block_adeptus_insights'},
+                {key: 'page', component: 'block_adeptus_insights'},
+                {key: 'of', component: 'block_adeptus_insights'},
+                {key: 'lastupdated', component: 'block_adeptus_insights'},
+                {key: 'js_vs_previous', component: 'block_adeptus_insights'},
+                {key: 'js_min_ago', component: 'block_adeptus_insights'},
+                {key: 'js_hour_ago', component: 'block_adeptus_insights'},
+                {key: 'js_hours_ago', component: 'block_adeptus_insights'},
+                {key: 'js_day_ago', component: 'block_adeptus_insights'},
+                {key: 'js_days_ago', component: 'block_adeptus_insights'},
+                {key: 'js_last_run', component: 'block_adeptus_insights'},
+                {key: 'js_export_title', component: 'block_adeptus_insights'},
+                {key: 'js_export_not_on_plan', component: 'block_adeptus_insights'},
+                {key: 'js_ok', component: 'block_adeptus_insights'}
+            ];
+
+            return Str.get_strings(stringKeys).then(function(strings) {
+                self.strings = {
+                    errorAuthFailed: strings[0],
+                    errorCouldNotAuth: strings[1],
+                    errorNoAuthToken: strings[2],
+                    errorReportNotFound: strings[3],
+                    errorConnection: strings[4],
+                    errorFailedLoadReport: strings[5],
+                    errorFailedExecuteReport: strings[6],
+                    errorFailedToLoad: strings[7],
+                    errorQueryFailed: strings[8],
+                    exportNoData: strings[9],
+                    exportNotAvailable: strings[10],
+                    exportVerifyError: strings[11],
+                    noReports: strings[12],
+                    noChange: strings[13],
+                    unknown: strings[14],
+                    justNow: strings[15],
+                    loading: strings[16],
+                    showingXOfY: strings[17],
+                    page: strings[18],
+                    of: strings[19],
+                    lastUpdated: strings[20],
+                    vsPrevious: strings[21],
+                    minAgo: strings[22],
+                    hourAgo: strings[23],
+                    hoursAgo: strings[24],
+                    dayAgo: strings[25],
+                    daysAgo: strings[26],
+                    lastRun: strings[27],
+                    exportTitle: strings[28],
+                    exportNotOnPlan: strings[29],
+                    ok: strings[30]
+                };
+            }).catch(function() {
+                // Fallback to English if string loading fails.
+                self.strings = {
+                    errorAuthFailed: 'Authentication failed',
+                    errorCouldNotAuth: 'Could not authenticate',
+                    errorNoAuthToken: 'No authentication token',
+                    errorReportNotFound: 'Report not found',
+                    errorConnection: 'Connection error',
+                    errorFailedLoadReport: 'Failed to load report',
+                    errorFailedExecuteReport: 'Failed to execute report',
+                    errorFailedToLoad: 'Failed to load',
+                    errorQueryFailed: 'Query execution failed',
+                    exportNoData: 'No data to export',
+                    exportNotAvailable: 'Export not available',
+                    exportVerifyError: 'Unable to verify export eligibility. Please try again.',
+                    noReports: '-- No Reports --',
+                    noChange: 'No change',
+                    unknown: 'Unknown',
+                    justNow: 'Just now',
+                    loading: 'Loading...',
+                    showingXOfY: 'Showing {$a->start}-{$a->end} of {$a->total}',
+                    page: 'Page',
+                    of: 'of',
+                    lastUpdated: 'Last updated',
+                    vsPrevious: '{$a} vs previous',
+                    minAgo: '{$a} min ago',
+                    hourAgo: '{$a} hour ago',
+                    hoursAgo: '{$a} hours ago',
+                    dayAgo: '{$a} day ago',
+                    daysAgo: '{$a} days ago',
+                    lastRun: 'Last run: {$a}',
+                    exportTitle: '{$a} Export',
+                    exportNotOnPlan: '{$a} export is not available on your current plan.',
+                    ok: 'OK'
+                };
+            });
         },
 
         /**
@@ -665,10 +786,10 @@ define([
                     window.adeptusAuthData = response.data;
                     callback();
                 } else {
-                    self.showError('Authentication failed');
+                    self.showError(self.strings.errorAuthFailed);
                 }
             }).fail(function() {
-                self.showError('Could not authenticate');
+                self.showError(self.strings.errorCouldNotAuth);
             });
         },
 
@@ -680,7 +801,7 @@ define([
             var token = this.apiKey || (window.adeptusAuthData ? window.adeptusAuthData.api_key : null);
 
             if (!token) {
-                this.showError('No authentication token');
+                this.showError(this.strings.errorNoAuthToken);
                 return;
             }
 
@@ -1027,7 +1148,7 @@ define([
                 this.loadEmbeddedReport(parts[0], parts[1] || 'wizard');
             } else {
                 // No reports available
-                dropdown.find('.searchable-dropdown-text').text('-- No Reports --');
+                dropdown.find('.searchable-dropdown-text').text(this.strings.noReports);
                 this.showEmpty();
             }
         },
@@ -1132,9 +1253,9 @@ define([
                 // Use actual page data length for accurate count
                 var actualEnd = startIndex + pageReports.length;
                 paginationContainer.find('.pagination-showing')
-                    .text('Showing ' + (startIndex + 1) + '-' + actualEnd + ' of ' + reports.length);
+                    .text(this.formatShowingText(startIndex + 1, actualEnd, reports.length));
                 paginationContainer.find('.pagination-pages')
-                    .text('Page ' + this.listCurrentPage + ' of ' + this.listTotalPages);
+                    .text(this.formatPageText(this.listCurrentPage, this.listTotalPages));
 
                 // Update button states
                 paginationContainer.find('.pagination-prev').prop('disabled', this.listCurrentPage <= 1);
@@ -1195,7 +1316,7 @@ define([
 
             if (!report) {
                 this.hideEmbeddedLoadingOverlay();
-                this.showError('Report not found');
+                this.showError(this.strings.errorReportNotFound);
                 return;
             }
 
@@ -1223,11 +1344,11 @@ define([
                         self.embeddedData = response.results || [];
                         self.renderEmbeddedContent(report, response.results || []);
                     } else {
-                        self.showError(response.message || 'Failed to load report');
+                        self.showError(response.message || self.strings.errorFailedLoadReport);
                     }
                 }).fail(function() {
                     self.hideEmbeddedLoadingOverlay();
-                    self.showError('Connection error');
+                    self.showError(self.strings.errorConnection);
                 });
             } else {
                 // AI reports - fetch from backend API
@@ -1235,7 +1356,7 @@ define([
 
                 if (!token) {
                     this.hideEmbeddedLoadingOverlay();
-                    this.showError('No authentication token');
+                    this.showError(this.strings.errorNoAuthToken);
                     return;
                 }
 
@@ -1273,7 +1394,7 @@ define([
                                 })
                                 .catch(function(error) {
                                     self.hideEmbeddedLoadingOverlay();
-                                    self.showError('Failed to execute report');
+                                    self.showError(self.strings.errorFailedExecuteReport);
                                 });
                             return;
                         }
@@ -1290,11 +1411,11 @@ define([
                         self.renderEmbeddedContent(reportData, data);
                     } else {
                         self.hideEmbeddedLoadingOverlay();
-                        self.showError('Failed to load report');
+                        self.showError(self.strings.errorFailedLoadReport);
                     }
                 }).fail(function() {
                     self.hideEmbeddedLoadingOverlay();
-                    self.showError('Connection error');
+                    self.showError(self.strings.errorConnection);
                 });
             }
         },
@@ -1324,7 +1445,7 @@ define([
                 .css('background-color', category.color)
                 .css('color', '#fff');
             this.container.find('.row-count-num').text(data.length);
-            this.container.find('.report-date').text('Updated: ' + new Date().toLocaleTimeString());
+            this.container.find('.report-date').text(this.strings.lastUpdated + ': ' + new Date().toLocaleTimeString());
 
             // Populate chart axis selectors
             this.populateEmbeddedChartControls(data);
@@ -1454,8 +1575,8 @@ define([
             });
 
             // Update pagination info
-            this.container.find('.row-count').text('Showing ' + (startIndex + 1) + '-' + endIndex + ' of ' + data.length);
-            this.container.find('.embedded-pagination-info').text('Page ' + this.embeddedTablePage + ' of ' + totalPages);
+            this.container.find('.row-count').text(this.formatShowingText(startIndex + 1, endIndex, data.length));
+            this.container.find('.embedded-pagination-info').text(this.formatPageText(this.embeddedTablePage, totalPages));
 
             // Update button states
             this.container.find('.embedded-pagination-prev').prop('disabled', this.embeddedTablePage <= 1);
@@ -1487,7 +1608,7 @@ define([
             var chartData = data.slice(0, 30);
             var labels = chartData.map(function(row) {
                 var label = row[xAxis];
-                if (label === null || label === undefined) return 'Unknown';
+                if (label === null || label === undefined) return this.strings.unknown;
                 var labelStr = String(label);
                 return labelStr.length > 20 ? labelStr.substring(0, 20) + '...' : labelStr;
             });
@@ -1561,7 +1682,7 @@ define([
 
             if (data.length === 0) {
                 Notification.addNotification({
-                    message: 'No data to export',
+                    message: self.strings.exportNoData,
                     type: 'warning'
                 });
                 return;
@@ -1578,7 +1699,7 @@ define([
                 dataType: 'json'
             }).done(function(response) {
                 if (!response.success || !response.eligible) {
-                    self.showExportUpgradePrompt(format, response.message || 'Export not available');
+                    self.showExportUpgradePrompt(format, response.message || self.strings.exportNotAvailable);
                     return;
                 }
 
@@ -1586,7 +1707,7 @@ define([
                 self.performExport(format, report, data);
             }).fail(function() {
                 Notification.addNotification({
-                    message: 'Unable to verify export eligibility. Please try again.',
+                    message: self.strings.exportVerifyError,
                     type: 'error'
                 });
             });
@@ -2122,15 +2243,15 @@ define([
             if (direction === 'increase') {
                 trendContainer.addClass('trend-up');
                 trendContainer.find('.trend-icon').html('<i class="fa fa-arrow-up"></i>');
-                trendContainer.find('.trend-value').text('+' + changeText + ' vs previous');
+                trendContainer.find('.trend-value').text(this.strings.vsPrevious.replace('{$a}', '+' + changeText));
             } else if (direction === 'decrease') {
                 trendContainer.addClass('trend-down');
                 trendContainer.find('.trend-icon').html('<i class="fa fa-arrow-down"></i>');
-                trendContainer.find('.trend-value').text('-' + changeText + ' vs previous');
+                trendContainer.find('.trend-value').text(this.strings.vsPrevious.replace('{$a}', '-' + changeText));
             } else {
                 trendContainer.addClass('trend-neutral');
                 trendContainer.find('.trend-icon').html('<i class="fa fa-minus"></i>');
-                trendContainer.find('.trend-value').text('No change');
+                trendContainer.find('.trend-value').text(this.strings.noChange);
             }
         },
 
@@ -2262,18 +2383,50 @@ define([
             var diffDays = Math.floor(diffHours / 24);
 
             if (diffMins < 1) {
-                return 'just now';
+                return this.strings.justNow;
             } else if (diffMins < 60) {
-                return diffMins + ' min ago';
+                return this.strings.minAgo.replace('{$a}', diffMins);
             } else if (diffHours < 24) {
-                return diffHours + ' hour' + (diffHours > 1 ? 's' : '') + ' ago';
+                var hourStr = diffHours > 1 ? this.strings.hoursAgo : this.strings.hourAgo;
+                return hourStr.replace('{$a}', diffHours);
             } else if (diffDays < 7) {
-                return diffDays + ' day' + (diffDays > 1 ? 's' : '') + ' ago';
+                var dayStr = diffDays > 1 ? this.strings.daysAgo : this.strings.dayAgo;
+                return dayStr.replace('{$a}', diffDays);
             }
             // For older dates, show full date
             var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
                           'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
             return months[date.getMonth()] + ' ' + date.getDate() + ', ' + date.getFullYear();
+        },
+
+        /**
+         * Format "Showing X-Y of Z" pagination text.
+         *
+         * @param {number} start Start index
+         * @param {number} end End index
+         * @param {number} total Total items
+         * @return {string} Formatted text
+         */
+        formatShowingText: function(start, end, total) {
+            // Use showingxofy string if available, otherwise construct manually
+            if (this.strings.showingXOfY && this.strings.showingXOfY.indexOf('{$a') !== -1) {
+                return this.strings.showingXOfY
+                    .replace('{$a->start}', start)
+                    .replace('{$a->end}', end)
+                    .replace('{$a->total}', total);
+            }
+            return 'Showing ' + start + '-' + end + ' of ' + total;
+        },
+
+        /**
+         * Format "Page X of Y" pagination text.
+         *
+         * @param {number} current Current page
+         * @param {number} total Total pages
+         * @return {string} Formatted text
+         */
+        formatPageText: function(current, total) {
+            return this.strings.page + ' ' + current + ' ' + this.strings.of + ' ' + total;
         },
 
         /**
@@ -2519,15 +2672,15 @@ define([
             if (direction === 'up') {
                 trendContainer.addClass('trend-up');
                 trendContainer.find('.trend-icon').html('<i class="fa fa-arrow-up"></i>');
-                trendContainer.find('.trend-value').text(changeText + ' vs previous');
+                trendContainer.find('.trend-value').text(this.strings.vsPrevious.replace('{$a}', changeText));
             } else if (direction === 'down') {
                 trendContainer.addClass('trend-down');
                 trendContainer.find('.trend-icon').html('<i class="fa fa-arrow-down"></i>');
-                trendContainer.find('.trend-value').text(changeText + ' vs previous');
+                trendContainer.find('.trend-value').text(this.strings.vsPrevious.replace('{$a}', changeText));
             } else {
                 trendContainer.addClass('trend-neutral');
                 trendContainer.find('.trend-icon').html('<i class="fa fa-minus"></i>');
-                trendContainer.find('.trend-value').text('No change');
+                trendContainer.find('.trend-value').text(this.strings.noChange);
             }
         },
 
@@ -2544,7 +2697,7 @@ define([
             trendContainer.removeClass('d-none');
             trendContainer.addClass('trend-neutral');
             trendContainer.find('.trend-icon').html('<i class="fa fa-spinner fa-spin"></i>');
-            trendContainer.find('.trend-value').text('Loading...');
+            trendContainer.find('.trend-value').text(this.strings.loading);
         },
 
         /**
@@ -3025,9 +3178,9 @@ define([
             });
 
             // Update pagination info
-            var showingText = 'Showing ' + (startIndex + 1) + '-' + endIndex + ' of ' + totalRows;
+            var showingText = this.formatShowingText(startIndex + 1, endIndex, totalRows);
             pane.find('.row-count').text(showingText);
-            pane.find('.tab-pagination-info').text('Page ' + state.tablePage + ' of ' + totalPages);
+            pane.find('.tab-pagination-info').text(this.formatPageText(state.tablePage, totalPages));
 
             // Update pagination buttons
             pane.find('.tab-pagination-prev').prop('disabled', state.tablePage <= 1);
@@ -3069,7 +3222,7 @@ define([
             var chartData = data.slice(0, 20);
             var labels = chartData.map(function(row) {
                 var label = row[xAxis];
-                if (label === null || label === undefined) return 'Unknown';
+                if (label === null || label === undefined) return this.strings.unknown;
                 var labelStr = String(label);
                 return labelStr.length > 20 ? labelStr.substring(0, 20) + '...' : labelStr;
             });
@@ -3131,7 +3284,7 @@ define([
 
             if (!state || !state.data || state.data.length === 0) {
                 Notification.addNotification({
-                    message: 'No data to export',
+                    message: self.strings.exportNoData,
                     type: 'warning'
                 });
                 return;
@@ -3148,7 +3301,7 @@ define([
                 dataType: 'json'
             }).done(function(response) {
                 if (!response.success || !response.eligible) {
-                    self.showExportUpgradePrompt(format, response.message || 'Export not available');
+                    self.showExportUpgradePrompt(format, response.message || self.strings.exportNotAvailable);
                     return;
                 }
 
@@ -3156,7 +3309,7 @@ define([
                 self.performExport(format, state.report, state.data);
             }).fail(function() {
                 Notification.addNotification({
-                    message: 'Unable to verify export eligibility. Please try again.',
+                    message: self.strings.exportVerifyError,
                     type: 'error'
                 });
             });
@@ -3544,7 +3697,7 @@ define([
                 var lastUpdated = lastEntry.recorded_at || lastEntry.created_at;
                 if (lastUpdated) {
                     modalContent.find('.kpi-modal-last-updated').text(
-                        'Last updated: ' + this.formatTimestamp(lastUpdated)
+                        this.strings.lastUpdated + ': ' + this.formatTimestamp(lastUpdated)
                     );
                 }
             }
@@ -3924,7 +4077,7 @@ define([
                         self.renderModalContent(modalBody, report, response.results || [], response.chart_data, response.chart_type);
                     } else {
                         modalBody.find('.modal-error').removeClass('d-none');
-                        modalBody.find('.modal-error p').text(response.message || 'Failed to load report');
+                        modalBody.find('.modal-error p').text(response.message || self.strings.errorFailedLoadReport);
                     }
                 }).fail(function() {
                     modalBody.find('.modal-loading').addClass('d-none');
@@ -4024,7 +4177,8 @@ define([
                 .css('background-color', category.color);
             modalBody.find('.row-count-num').text(this.modalData.length);
             modalBody.find('.report-date')
-                .text(report.last_executed_at ? 'Last run: ' + new Date(report.last_executed_at).toLocaleDateString() : '');
+                .text(report.last_executed_at ?
+                    this.strings.lastRun.replace('{$a}', new Date(report.last_executed_at).toLocaleDateString()) : '');
 
             // Populate axis selectors
             this.populateAxisSelectors(modalBody);
@@ -4203,7 +4357,7 @@ define([
             var chartData = data.slice(0, 50);
             var labels = chartData.map(function(row) {
                 var label = row[labelKey];
-                if (label === null || label === undefined) return 'Unknown';
+                if (label === null || label === undefined) return this.strings.unknown;
                 var labelStr = String(label);
                 return labelStr.length > 30 ? labelStr.substring(0, 30) + '...' : labelStr;
             });
@@ -4346,7 +4500,7 @@ define([
 
             if (!data || data.length === 0) {
                 Notification.addNotification({
-                    message: 'No data to export',
+                    message: self.strings.exportNoData,
                     type: 'warning'
                 });
                 return;
@@ -4364,7 +4518,7 @@ define([
             }).done(function(response) {
                 if (!response.success || !response.eligible) {
                     // Show upgrade prompt for premium features
-                    self.showExportUpgradePrompt(format, response.message || 'Export not available');
+                    self.showExportUpgradePrompt(format, response.message || self.strings.exportNotAvailable);
                     return;
                 }
 
@@ -4372,7 +4526,7 @@ define([
                 self.performExport(format, report, data);
             }).fail(function() {
                 Notification.addNotification({
-                    message: 'Unable to verify export eligibility. Please try again.',
+                    message: self.strings.exportVerifyError,
                     type: 'error'
                 });
             });
@@ -4393,9 +4547,9 @@ define([
             var formatName = formatNames[format] || format.toUpperCase();
 
             Notification.alert(
-                formatName + ' Export',
-                message || formatName + ' export is not available on your current plan.',
-                'OK'
+                this.strings.exportTitle.replace('{$a}', formatName),
+                message || this.strings.exportNotOnPlan.replace('{$a}', formatName),
+                this.strings.ok
             );
         },
 
@@ -4982,7 +5136,7 @@ define([
             var seconds = Math.floor((new Date() - date) / 1000);
 
             if (seconds < 60) {
-                return 'Just now';
+                return this.strings.justNow;
             }
 
             var minutes = Math.floor(seconds / 60);

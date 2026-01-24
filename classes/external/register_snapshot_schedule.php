@@ -139,7 +139,7 @@ class register_snapshot_schedule extends external_api {
         } catch (\Exception $e) {
             return [
                 'success' => false,
-                'message' => 'Error: ' . $e->getMessage(),
+                'message' => get_string('error_exception', 'block_adeptus_insights', $e->getMessage()),
             ];
         }
     }
