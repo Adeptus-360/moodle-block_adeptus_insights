@@ -127,7 +127,7 @@
             <div class="tab-meta-bar d-flex justify-content-between align-items-center mb-2">
                 <div class="report-badges">
                     <span class="report-category badge"></span>
-                    <span class="report-rowcount badge bg-secondary"><i class="fa fa-table"></i> <span class="row-count-num">0</span> rows</span>
+                    <span class="report-rowcount badge bg-secondary"><i class="fa fa-table"></i> <span class="row-count-num">0</span> {{#str}}rows, block_adeptus_insights{{/str}}</span>
                 </div>
                 <span class="report-date text-muted small"></span>
             </div>
@@ -137,23 +137,23 @@
                 {{! View toggle buttons }}
                 <div class="view-toggle btn-group" role="group">
                     <button type="button" class="btn btn-sm btn-outline-secondary tab-view-toggle-btn active" data-view="table">
-                        <i class="fa fa-table"></i> Table
+                        <i class="fa fa-table"></i> {{#str}}table, block_adeptus_insights{{/str}}
                     </button>
                     <button type="button" class="btn btn-sm btn-outline-secondary tab-view-toggle-btn" data-view="chart">
-                        <i class="fa fa-bar-chart"></i> Chart
+                        <i class="fa fa-bar-chart"></i> {{#str}}chart, block_adeptus_insights{{/str}}
                     </button>
                 </div>
 
                 {{! Export buttons - visibility controlled by JavaScript based on subscription }}
                 <div class="export-buttons d-flex gap-1">
-                    <button class="btn btn-outline-danger btn-sm tab-export" data-format="pdf" title="Export as PDF">
-                        <i class="fa fa-file-pdf-o"></i> PDF
+                    <button class="btn btn-outline-danger btn-sm tab-export" data-format="pdf" title="{{#str}}exportas_pdf, block_adeptus_insights{{/str}}">
+                        <i class="fa fa-file-pdf-o"></i> {{#str}}exportformat_pdf, block_adeptus_insights{{/str}}
                     </button>
-                    <button class="btn btn-outline-primary btn-sm tab-export" data-format="csv" title="Export as CSV">
-                        <i class="fa fa-file-excel-o"></i> CSV
+                    <button class="btn btn-outline-primary btn-sm tab-export" data-format="csv" title="{{#str}}exportas_csv, block_adeptus_insights{{/str}}">
+                        <i class="fa fa-file-excel-o"></i> {{#str}}exportformat_csv, block_adeptus_insights{{/str}}
                     </button>
-                    <button class="btn btn-outline-secondary btn-sm tab-export" data-format="json" title="Export as JSON">
-                        <i class="fa fa-file-code-o"></i> JSON
+                    <button class="btn btn-outline-secondary btn-sm tab-export" data-format="json" title="{{#str}}exportas_json, block_adeptus_insights{{/str}}">
+                        <i class="fa fa-file-code-o"></i> {{#str}}exportformat_json, block_adeptus_insights{{/str}}
                     </button>
                 </div>
             </div>
@@ -189,25 +189,25 @@
                     <div class="chart-controls d-flex flex-wrap align-items-end gap-2">
                         {{! Chart type selector }}
                         <div class="control-group">
-                            <label class="form-label small mb-1">Type</label>
+                            <label class="form-label small mb-1">{{#str}}charttype, block_adeptus_insights{{/str}}</label>
                             <select class="form-select form-select-sm tab-chart-type">
-                                <option value="bar">Bar</option>
-                                <option value="line">Line</option>
-                                <option value="pie">Pie</option>
-                                <option value="doughnut">Doughnut</option>
+                                <option value="bar">{{#str}}charttype_bar, block_adeptus_insights{{/str}}</option>
+                                <option value="line">{{#str}}charttype_line, block_adeptus_insights{{/str}}</option>
+                                <option value="pie">{{#str}}charttype_pie, block_adeptus_insights{{/str}}</option>
+                                <option value="doughnut">{{#str}}charttype_doughnut, block_adeptus_insights{{/str}}</option>
                             </select>
                         </div>
 
                         {{! X-Axis selector }}
                         <div class="control-group">
-                            <label class="form-label small mb-1">X-Axis</label>
+                            <label class="form-label small mb-1">{{#str}}xaxis, block_adeptus_insights{{/str}}</label>
                             <select class="form-select form-select-sm tab-chart-x-axis">
                             </select>
                         </div>
 
                         {{! Y-Axis selector }}
                         <div class="control-group">
-                            <label class="form-label small mb-1">Y-Axis</label>
+                            <label class="form-label small mb-1">{{#str}}yaxis, block_adeptus_insights{{/str}}</label>
                             <select class="form-select form-select-sm tab-chart-y-axis">
                             </select>
                         </div>

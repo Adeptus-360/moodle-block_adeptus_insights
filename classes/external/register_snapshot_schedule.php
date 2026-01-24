@@ -82,7 +82,7 @@ class register_snapshot_schedule extends external_api {
         if (!$blockinstance) {
             return [
                 'success' => false,
-                'message' => 'Block instance not found',
+                'message' => get_string('error_block_not_found', 'block_adeptus_insights'),
             ];
         }
 
@@ -97,7 +97,7 @@ class register_snapshot_schedule extends external_api {
         if (!in_array($params['reportsource'], ['wizard', 'ai'])) {
             return [
                 'success' => false,
-                'message' => 'Invalid report source',
+                'message' => get_string('error_invalid_report_source', 'block_adeptus_insights'),
             ];
         }
 
@@ -112,7 +112,7 @@ class register_snapshot_schedule extends external_api {
         if (!$scheduler->is_snapshots_enabled()) {
             return [
                 'success' => false,
-                'message' => 'Snapshots feature is not enabled for this installation',
+                'message' => get_string('error_snapshots_disabled', 'block_adeptus_insights'),
             ];
         }
 
@@ -128,13 +128,13 @@ class register_snapshot_schedule extends external_api {
             if ($success) {
                 return [
                     'success' => true,
-                    'message' => 'Snapshot schedule registered successfully',
+                    'message' => get_string('snapshot_registered_success', 'block_adeptus_insights'),
                 ];
             }
 
             return [
                 'success' => false,
-                'message' => 'Failed to register snapshot schedule',
+                'message' => get_string('snapshot_registered_failed', 'block_adeptus_insights'),
             ];
         } catch (\Exception $e) {
             return [

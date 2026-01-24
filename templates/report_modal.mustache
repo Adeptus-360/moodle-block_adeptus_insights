@@ -41,7 +41,7 @@
         <div class="report-meta-bar d-flex justify-content-between align-items-center mb-3">
             <div class="report-badges">
                 <span class="report-category badge"></span>
-                <span class="report-rowcount badge bg-secondary"><i class="fa fa-table"></i> <span class="row-count-num">0</span> rows</span>
+                <span class="report-rowcount badge bg-secondary"><i class="fa fa-table"></i> <span class="row-count-num">0</span> {{#str}}rows, block_adeptus_insights{{/str}}</span>
             </div>
             <span class="report-date text-muted small"></span>
         </div>
@@ -51,23 +51,23 @@
             {{! View toggle buttons }}
             <div class="view-toggle btn-group" role="group">
                 <button type="button" class="btn btn-sm btn-outline-secondary view-toggle-btn active" data-view="table">
-                    <i class="fa fa-table"></i> Table
+                    <i class="fa fa-table"></i> {{#str}}table, block_adeptus_insights{{/str}}
                 </button>
                 <button type="button" class="btn btn-sm btn-outline-secondary view-toggle-btn" data-view="chart">
-                    <i class="fa fa-bar-chart"></i> Chart
+                    <i class="fa fa-bar-chart"></i> {{#str}}chart, block_adeptus_insights{{/str}}
                 </button>
             </div>
 
             {{! Export buttons - visibility controlled by JavaScript based on subscription }}
             <div class="export-buttons d-flex gap-2">
-                <button class="btn btn-outline-danger btn-sm modal-export" data-format="pdf" title="Export as PDF">
-                    <i class="fa fa-file-pdf-o"></i> PDF
+                <button class="btn btn-outline-danger btn-sm modal-export" data-format="pdf" title="{{#str}}exportas_pdf, block_adeptus_insights{{/str}}">
+                    <i class="fa fa-file-pdf-o"></i> {{#str}}exportformat_pdf, block_adeptus_insights{{/str}}
                 </button>
-                <button class="btn btn-outline-primary btn-sm modal-export" data-format="csv" title="Export as CSV">
-                    <i class="fa fa-file-excel-o"></i> CSV
+                <button class="btn btn-outline-primary btn-sm modal-export" data-format="csv" title="{{#str}}exportas_csv, block_adeptus_insights{{/str}}">
+                    <i class="fa fa-file-excel-o"></i> {{#str}}exportformat_csv, block_adeptus_insights{{/str}}
                 </button>
-                <button class="btn btn-outline-secondary btn-sm modal-export" data-format="json" title="Export as JSON">
-                    <i class="fa fa-file-code-o"></i> JSON
+                <button class="btn btn-outline-secondary btn-sm modal-export" data-format="json" title="{{#str}}exportas_json, block_adeptus_insights{{/str}}">
+                    <i class="fa fa-file-code-o"></i> {{#str}}exportformat_json, block_adeptus_insights{{/str}}
                 </button>
             </div>
         </div>
@@ -103,25 +103,25 @@
                 <div class="chart-controls d-flex flex-wrap align-items-end gap-3">
                     {{! Chart type selector }}
                     <div class="control-group">
-                        <label for="modal-chart-type" class="form-label small mb-1">Chart Type</label>
+                        <label for="modal-chart-type" class="form-label small mb-1">{{#str}}charttype, block_adeptus_insights{{/str}}</label>
                         <select id="modal-chart-type" class="form-select form-select-sm">
-                            <option value="bar">Bar Chart</option>
-                            <option value="line">Line Chart</option>
-                            <option value="pie">Pie Chart</option>
-                            <option value="doughnut">Doughnut Chart</option>
+                            <option value="bar">{{#str}}charttype_bar_full, block_adeptus_insights{{/str}}</option>
+                            <option value="line">{{#str}}charttype_line_full, block_adeptus_insights{{/str}}</option>
+                            <option value="pie">{{#str}}charttype_pie_full, block_adeptus_insights{{/str}}</option>
+                            <option value="doughnut">{{#str}}charttype_doughnut_full, block_adeptus_insights{{/str}}</option>
                         </select>
                     </div>
 
                     {{! X-Axis selector }}
                     <div class="control-group">
-                        <label for="modal-chart-x-axis" class="form-label small mb-1">X-Axis (Labels)</label>
+                        <label for="modal-chart-x-axis" class="form-label small mb-1">{{#str}}xaxis_labels, block_adeptus_insights{{/str}}</label>
                         <select id="modal-chart-x-axis" class="form-select form-select-sm">
                         </select>
                     </div>
 
                     {{! Y-Axis selector }}
                     <div class="control-group">
-                        <label for="modal-chart-y-axis" class="form-label small mb-1">Y-Axis (Values)</label>
+                        <label for="modal-chart-y-axis" class="form-label small mb-1">{{#str}}yaxis_values, block_adeptus_insights{{/str}}</label>
                         <select id="modal-chart-y-axis" class="form-select form-select-sm">
                         </select>
                     </div>
