@@ -37,7 +37,7 @@ defined('MOODLE_INTERNAL') || die();
  */
 class snapshot_scheduler {
     /** @var string Table name for snapshot schedules */
-    const TABLE = 'block_adeptus_snap_sched';
+    const TABLE = 'block_adeptus_insights_snap_sched';
 
     /** @var string Backend API URL */
     private $backendurl;

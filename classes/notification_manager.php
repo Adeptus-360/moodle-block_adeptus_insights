@@ -602,7 +602,7 @@ class notification_manager {
         global $DB;
 
         // Check if this alert has been triggered for this severity.
-        return $DB->record_exists('block_adeptus_alert_log', [
+        return $DB->record_exists('block_adeptus_insights_alert_log', [
             'blockinstanceid' => $blockinstanceid,
             'alert_id' => $alertid,
             'severity' => $severity,
@@ -643,19 +643,19 @@ class notification_manager {
         // Handle alert cycle resets based on severity.
         if ($severity === 'recovery') {
             // Recovery fired - clear warning and critical so they can fire again.
-            $DB->delete_records('block_adeptus_alert_log', [
+            $DB->delete_records('block_adeptus_insights_alert_log', [
                 'blockinstanceid' => $blockinstanceid,
                 'alert_id' => $alertid,
                 'severity' => 'warning',
             ]);
-            $DB->delete_records('block_adeptus_alert_log', [
+            $DB->delete_records('block_adeptus_insights_alert_log', [
                 'blockinstanceid' => $blockinstanceid,
                 'alert_id' => $alertid,
                 'severity' => 'critical',
             ]);
         } else {
             // Warning or critical fired - clear recovery so it can fire again later.
-            $DB->delete_records('block_adeptus_alert_log', [
+            $DB->delete_records('block_adeptus_insights_alert_log', [
                 'blockinstanceid' => $blockinstanceid,
                 'alert_id' => $alertid,
                 'severity' => 'recovery',
@@ -663,7 +663,7 @@ class notification_manager {
         }
 
         // Check if this alert+severity combination is already logged (avoid duplicate key error).
-        $existing = $DB->get_record('block_adeptus_alert_log', [
+        $existing = $DB->get_record('block_adeptus_insights_alert_log', [
             'blockinstanceid' => $blockinstanceid,
             'alert_id' => $alertid,
             'severity' => $severity,
@@ -676,7 +676,7 @@ class notification_manager {
             $existing->triggered_value = $triggeredvalue;
             $existing->threshold_value = $thresholdvalue;
             $existing->timecreated = $now;
-            $DB->update_record('block_adeptus_alert_log', $existing);
+            $DB->update_record('block_adeptus_insights_alert_log', $existing);
             return $existing->id;
         }
 
@@ -691,7 +691,7 @@ class notification_manager {
         $record->threshold_value = $thresholdvalue;
         $record->timecreated = $now;
 
-        return $DB->insert_record('block_adeptus_alert_log', $record);
+        return $DB->insert_record('block_adeptus_insights_alert_log', $record);
     }
 
     /**
@@ -711,7 +711,7 @@ class notification_manager {
         $cutoff = time() - ($retentiondays * 86400);
 
         return $DB->delete_records_select(
-            'block_adeptus_alert_log',
+            'block_adeptus_insights_alert_log',
             'timecreated < :cutoff',
             ['cutoff' => $cutoff]
         );
@@ -728,7 +728,7 @@ class notification_manager {
     public static function clear_block_alert_logs(int $blockinstanceid): bool {
         global $DB;
 
-        return $DB->delete_records('block_adeptus_alert_log', ['blockinstanceid' => $blockinstanceid]);
+        return $DB->delete_records('block_adeptus_insights_alert_log', ['blockinstanceid' => $blockinstanceid]);
     }
 
     /**
@@ -743,7 +743,7 @@ class notification_manager {
     public static function clear_alert_log(int $blockinstanceid, int $alertid): bool {
         global $DB;
 
-        return $DB->delete_records('block_adeptus_alert_log', [
+        return $DB->delete_records('block_adeptus_insights_alert_log', [
             'blockinstanceid' => $blockinstanceid,
             'alert_id' => $alertid,
         ]);

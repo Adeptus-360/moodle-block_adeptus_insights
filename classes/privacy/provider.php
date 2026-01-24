@@ -52,23 +52,23 @@ class provider implements \core_privacy\local\metadata\provider, \core_privacy\l
         // This plugin does not store any personal user data.
         // The tables store block instance configuration and system logs only.
         $collection->add_database_table(
-            'block_adeptus_snap_sched',
+            'block_adeptus_insights_snap_sched',
             [
-                'blockinstanceid' => 'privacy:metadata:block_adeptus_snap_sched:blockinstanceid',
-                'report_slug' => 'privacy:metadata:block_adeptus_snap_sched:report_slug',
-                'interval_seconds' => 'privacy:metadata:block_adeptus_snap_sched:interval_seconds',
+                'blockinstanceid' => 'privacy:metadata:block_adeptus_insights_snap_sched:blockinstanceid',
+                'report_slug' => 'privacy:metadata:block_adeptus_insights_snap_sched:report_slug',
+                'interval_seconds' => 'privacy:metadata:block_adeptus_insights_snap_sched:interval_seconds',
             ],
-            'privacy:metadata:block_adeptus_snap_sched'
+            'privacy:metadata:block_adeptus_insights_snap_sched'
         );
 
         $collection->add_database_table(
-            'block_adeptus_alert_log',
+            'block_adeptus_insights_alert_log',
             [
-                'blockinstanceid' => 'privacy:metadata:block_adeptus_alert_log:blockinstanceid',
-                'alert_id' => 'privacy:metadata:block_adeptus_alert_log:alert_id',
-                'severity' => 'privacy:metadata:block_adeptus_alert_log:severity',
+                'blockinstanceid' => 'privacy:metadata:block_adeptus_insights_alert_log:blockinstanceid',
+                'alert_id' => 'privacy:metadata:block_adeptus_insights_alert_log:alert_id',
+                'severity' => 'privacy:metadata:block_adeptus_insights_alert_log:severity',
             ],
-            'privacy:metadata:block_adeptus_alert_log'
+            'privacy:metadata:block_adeptus_insights_alert_log'
         );
 
         // External system for backend API.
