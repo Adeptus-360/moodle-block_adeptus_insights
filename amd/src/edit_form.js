@@ -140,7 +140,8 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                 {key: 'noreportsselected', component: 'block_adeptus_insights'},
                 {key: 'selectareport', component: 'block_adeptus_insights'},
                 {key: 'loading', component: 'block_adeptus_insights'},
-                {key: 'config_alert_report_placeholder', component: 'block_adeptus_insights'}
+                {key: 'config_alert_report_placeholder', component: 'block_adeptus_insights'},
+                {key: 'js_failed_load_reports', component: 'block_adeptus_insights'}
             ]).then(function(strings) {
                 self.strings = {
                     addreport: strings[0],
@@ -148,7 +149,8 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                     noreportsselected: strings[2],
                     selectareport: strings[3],
                     loading: strings[4],
-                    searchplaceholder: strings[5] || 'Search reports by name, category, or type...'
+                    searchplaceholder: strings[5] || 'Search reports by name, category, or type...',
+                    failedLoadReports: strings[6]
                 };
             });
         },
@@ -303,7 +305,7 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
             }).fail(function() {
                 self.container.find('.report-search-loading').hide();
                 Notification.addNotification({
-                    message: 'Failed to load reports',
+                    message: self.strings.failedLoadReports,
                     type: 'error'
                 });
             });
@@ -1102,7 +1104,24 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                 {key: 'alert_delete_confirm', component: 'block_adeptus_insights'},
                 {key: 'add_new_alert', component: 'block_adeptus_insights'},
                 {key: 'alert_disabled', component: 'block_adeptus_insights'},
-                {key: 'config_add_alert', component: 'block_adeptus_insights'}
+                {key: 'config_add_alert', component: 'block_adeptus_insights'},
+                {key: 'js_selected', component: 'block_adeptus_insights'},
+                {key: 'js_alert_no_reports', component: 'block_adeptus_insights'},
+                {key: 'js_no_thresholds_set', component: 'block_adeptus_insights'},
+                {key: 'alert_threshold_warning_only', component: 'block_adeptus_insights'},
+                {key: 'alert_threshold_critical_only', component: 'block_adeptus_insights'},
+                {key: 'alert_status_badge_warning', component: 'block_adeptus_insights'},
+                {key: 'alert_status_badge_critical', component: 'block_adeptus_insights'},
+                {key: 'alert_status_badge_ok', component: 'block_adeptus_insights'},
+                {key: 'js_failed_load_reports', component: 'block_adeptus_insights'},
+                {key: 'js_alert_failed_create', component: 'block_adeptus_insights'},
+                {key: 'js_alert_failed_update', component: 'block_adeptus_insights'},
+                {key: 'js_alert_failed_delete', component: 'block_adeptus_insights'},
+                {key: 'js_alert_created', component: 'block_adeptus_insights'},
+                {key: 'js_alert_updated', component: 'block_adeptus_insights'},
+                {key: 'js_alert_deleted', component: 'block_adeptus_insights'},
+                {key: 'js_alert_select_report', component: 'block_adeptus_insights'},
+                {key: 'js_alert_enter_threshold', component: 'block_adeptus_insights'}
             ]).then(function(strings) {
                 self.strings = {
                     editAlert: strings[0],
@@ -1110,7 +1129,24 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                     deleteConfirm: strings[2],
                     addNewAlert: strings[3],
                     disabled: strings[4],
-                    addAlert: strings[5]
+                    addAlert: strings[5],
+                    selected: strings[6],
+                    noReports: strings[7],
+                    noThresholdsSet: strings[8],
+                    thresholdWarning: strings[9],
+                    thresholdCritical: strings[10],
+                    statusWarning: strings[11],
+                    statusCritical: strings[12],
+                    statusOk: strings[13],
+                    failedLoadReports: strings[14],
+                    failedCreateAlert: strings[15],
+                    failedUpdateAlert: strings[16],
+                    failedDeleteAlert: strings[17],
+                    alertCreated: strings[18],
+                    alertUpdated: strings[19],
+                    alertDeleted: strings[20],
+                    selectReport: strings[21],
+                    enterThreshold: strings[22]
                 };
             });
         },
@@ -1219,7 +1255,7 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                 this.container.find('.alerts-edit-panel').prepend(
                     '<div class="alert alert-info alert-report-empty-message">' +
                     '<i class="fa fa-info-circle"></i> ' +
-                    'No reports configured in this block. Add reports in the KPI or Tabs settings first.' +
+                    this.strings.noReports +
                     '</div>'
                 );
             }
@@ -1406,12 +1442,12 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                     // Build threshold display.
                     var thresholds = [];
                     if (alert.warning_value !== null && alert.warning_value !== '') {
-                        thresholds.push('Warning: ' + alert.warning_value);
+                        thresholds.push(self.strings.thresholdWarning.replace('{$a}', alert.warning_value));
                     }
                     if (alert.critical_value !== null && alert.critical_value !== '') {
-                        thresholds.push('Critical: ' + alert.critical_value);
+                        thresholds.push(self.strings.thresholdCritical.replace('{$a}', alert.critical_value));
                     }
-                    var thresholdText = thresholds.join(', ') || 'No thresholds set';
+                    var thresholdText = thresholds.join(', ') || self.strings.noThresholdsSet;
 
                     // Get interval label.
                     var intervalLabel = self.intervals[alert.check_interval] || alert.check_interval + 's';
@@ -1419,11 +1455,11 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                     // Status badge.
                     var statusBadge = '';
                     if (alert.current_status === 'warning') {
-                        statusBadge = '<span class="badge badge-warning ml-2">Warning</span>';
+                        statusBadge = '<span class="badge badge-warning ml-2">' + self.strings.statusWarning + '</span>';
                     } else if (alert.current_status === 'critical') {
-                        statusBadge = '<span class="badge badge-danger ml-2">Critical</span>';
+                        statusBadge = '<span class="badge badge-danger ml-2">' + self.strings.statusCritical + '</span>';
                     } else if (alert.current_status) {
-                        statusBadge = '<span class="badge badge-success ml-2">OK</span>';
+                        statusBadge = '<span class="badge badge-success ml-2">' + self.strings.statusOk + '</span>';
                     }
 
                     var html = '<div class="alert-item card mb-2" data-index="' + index + '">' +
@@ -1507,7 +1543,7 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                 var alert = this.alerts[index];
                 $('#alert-edit-report').val(alert.report_slug);
                 $('#alert-edit-report-search').val(alert.report_name || alert.report_slug);
-                $('#alert-edit-report-display').text('Selected: ' + (alert.report_name || alert.report_slug));
+                $('#alert-edit-report-display').text(this.strings.selected.replace('{$a}', alert.report_name || alert.report_slug));
                 $('#alert-edit-name').val(alert.alert_name || '');
                 $('#alert-edit-operator').val(alert.operator || 'gt');
                 $('#alert-edit-warning').val(alert.warning_value || '');
@@ -1574,7 +1610,7 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
             // Validation.
             if (!reportSlug) {
                 Notification.addNotification({
-                    message: 'Please select a report to monitor.',
+                    message: this.strings.selectReport,
                     type: 'error'
                 });
                 return;
@@ -1582,7 +1618,7 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
 
             if (!thresholdValue) {
                 Notification.addNotification({
-                    message: 'Please enter a threshold value.',
+                    message: this.strings.enterThreshold,
                     type: 'error'
                 });
                 return;
@@ -1691,17 +1727,17 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                     self.closeEditPanel();
 
                     Notification.addNotification({
-                        message: 'Alert created successfully.',
+                        message: self.strings.alertCreated,
                         type: 'success'
                     });
                 } else {
                     Notification.addNotification({
-                        message: response.message || 'Failed to create alert.',
+                        message: response.message || self.strings.failedCreateAlert,
                         type: 'error'
                     });
                 }
             }).fail(function(xhr) {
-                var message = 'Failed to create alert.';
+                var message = self.strings.failedCreateAlert;
                 if (xhr.responseJSON) {
                     if (xhr.responseJSON.message) {
                         message = xhr.responseJSON.message;
@@ -1763,17 +1799,17 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                     self.closeEditPanel();
 
                     Notification.addNotification({
-                        message: 'Alert updated successfully.',
+                        message: self.strings.alertUpdated,
                         type: 'success'
                     });
                 } else {
                     Notification.addNotification({
-                        message: response.message || 'Failed to update alert.',
+                        message: response.message || self.strings.failedUpdateAlert,
                         type: 'error'
                     });
                 }
             }).fail(function(xhr) {
-                var message = 'Failed to update alert.';
+                var message = self.strings.failedUpdateAlert;
                 if (xhr.responseJSON && xhr.responseJSON.message) {
                     message = xhr.responseJSON.message;
                 }
@@ -1816,11 +1852,11 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                     self.renderAlertsList();
 
                     Notification.addNotification({
-                        message: 'Alert deleted successfully.',
+                        message: self.strings.alertDeleted,
                         type: 'success'
                     });
                 }).fail(function(xhr) {
-                    var message = 'Failed to delete alert from server.';
+                    var message = self.strings.failedDeleteAlert;
                     if (xhr.responseJSON && xhr.responseJSON.message) {
                         message = xhr.responseJSON.message;
                     }
@@ -2062,7 +2098,7 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
         selectReport: function(slug, name) {
             $('#alert-edit-report').val(slug);
             $('#alert-edit-report-search').val(name);
-            $('#alert-edit-report-display').text('Selected: ' + name);
+            $('#alert-edit-report-display').text(this.strings.selected.replace('{$a}', name));
             this.closeReportDropdown();
         },
 
