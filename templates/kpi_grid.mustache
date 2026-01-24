@@ -43,24 +43,24 @@
 
     {{! Loading state }}
     <div class="block-adeptus-loading {{^loading}}d-none{{/loading}}">
-        <div class="block-adeptus-kpi-grid kpi-cols-{{kpi_columns}}">
-            <div class="block-adeptus-kpi-card skeleton">
-                <div class="skeleton-value"></div>
-                <div class="skeleton-label"></div>
+        <div class="block-adeptus-kpi-grid block-adeptus-kpi-cols-{{kpi_columns}}">
+            <div class="block-adeptus-kpi-card block-adeptus-skeleton">
+                <div class="block-adeptus-skeleton-value"></div>
+                <div class="block-adeptus-skeleton-label"></div>
             </div>
-            <div class="block-adeptus-kpi-card skeleton">
-                <div class="skeleton-value"></div>
-                <div class="skeleton-label"></div>
+            <div class="block-adeptus-kpi-card block-adeptus-skeleton">
+                <div class="block-adeptus-skeleton-value"></div>
+                <div class="block-adeptus-skeleton-label"></div>
             </div>
             {{#kpi_columns}}
             {{#isGreaterThan2}}
-            <div class="block-adeptus-kpi-card skeleton">
-                <div class="skeleton-value"></div>
-                <div class="skeleton-label"></div>
+            <div class="block-adeptus-kpi-card block-adeptus-skeleton">
+                <div class="block-adeptus-skeleton-value"></div>
+                <div class="block-adeptus-skeleton-label"></div>
             </div>
-            <div class="block-adeptus-kpi-card skeleton">
-                <div class="skeleton-value"></div>
-                <div class="skeleton-label"></div>
+            <div class="block-adeptus-kpi-card block-adeptus-skeleton">
+                <div class="block-adeptus-skeleton-value"></div>
+                <div class="block-adeptus-skeleton-label"></div>
             </div>
             {{/isGreaterThan2}}
             {{/kpi_columns}}
@@ -68,7 +68,7 @@
     </div>
 
     {{! KPI grid container }}
-    <div class="block-adeptus-kpi-grid kpi-cols-{{kpi_columns}} {{#loading}}d-none{{/loading}}">
+    <div class="block-adeptus-kpi-grid block-adeptus-kpi-cols-{{kpi_columns}} {{#loading}}d-none{{/loading}}">
         {{! KPI cards will be inserted here by JavaScript }}
     </div>
 
@@ -107,17 +107,17 @@
 {{! KPI card template (used by JavaScript) }}
 <template id="block-adeptus-kpi-card-template-{{blockid}}">
     <div class="block-adeptus-kpi-card" data-slug="" data-source="">
-        <div class="kpi-card-icon">
+        <div class="block-adeptus-kpi-card-icon">
             <i class="fa fa-bar-chart"></i>
         </div>
-        <div class="kpi-card-value"></div>
-        <div class="kpi-card-label"></div>
-        <div class="kpi-card-trend">
+        <div class="block-adeptus-kpi-card-value"></div>
+        <div class="block-adeptus-kpi-card-label"></div>
+        <div class="block-adeptus-kpi-card-trend">
             <span class="trend-icon"></span>
             <span class="trend-value"></span>
         </div>
-        <div class="kpi-card-sparkline">
-            <canvas class="sparkline-chart" width="100" height="30"></canvas>
+        <div class="block-adeptus-kpi-card-sparkline">
+            <canvas class="block-adeptus-sparkline-chart" width="100" height="30"></canvas>
         </div>
     </div>
 </template>

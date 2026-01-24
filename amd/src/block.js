@@ -327,7 +327,7 @@ define([
             });
 
             // Category filter change.
-            this.container.on('change', '.category-filter-select', function() {
+            this.container.on('change', '.block-adeptus-category-filter-select', function() {
                 self.selectedCategory = $(this).val();
                 self.listCurrentPage = 1; // Reset to first page
                 // For embedded mode, update the report selector based on new category
@@ -339,7 +339,7 @@ define([
             });
 
             // Report selector change (for embedded mode) - hidden select fallback.
-            this.container.on('change', '.report-selector-select', function() {
+            this.container.on('change', '.block-adeptus-report-selector-select', function() {
                 var selectedValue = $(this).val();
                 if (selectedValue) {
                     var parts = selectedValue.split('::');
@@ -355,7 +355,7 @@ define([
             });
 
             // Searchable dropdown - Toggle open/close.
-            this.container.on('click', '.searchable-dropdown-toggle', function(e) {
+            this.container.on('click', '.block-adeptus-searchable-dropdown-toggle', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
                 var dropdown = $(this).closest('.searchable-dropdown');
@@ -370,7 +370,7 @@ define([
             });
 
             // Searchable dropdown - Item selection.
-            this.container.on('click', '.searchable-dropdown-item', function(e) {
+            this.container.on('click', '.block-adeptus-searchable-dropdown-item', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
                 var dropdown = $(this).closest('.searchable-dropdown');
@@ -382,15 +382,15 @@ define([
             // Searchable dropdown - Keyboard navigation.
             this.container.on('keydown', '.searchable-dropdown-input', function(e) {
                 var dropdown = $(this).closest('.searchable-dropdown');
-                var items = dropdown.find('.searchable-dropdown-item:visible');
-                var focused = dropdown.find('.searchable-dropdown-item.focused');
+                var items = dropdown.find('.block-adeptus-searchable-dropdown-item:visible');
+                var focused = dropdown.find('.block-adeptus-searchable-dropdown-item.focused');
 
                 if (e.key === 'ArrowDown') {
                     e.preventDefault();
                     if (focused.length === 0) {
                         items.first().addClass('focused');
                     } else {
-                        var next = focused.nextAll('.searchable-dropdown-item:visible').first();
+                        var next = focused.nextAll('.block-adeptus-searchable-dropdown-item:visible').first();
                         if (next.length) {
                             focused.removeClass('focused');
                             next.addClass('focused');
@@ -400,7 +400,7 @@ define([
                 } else if (e.key === 'ArrowUp') {
                     e.preventDefault();
                     if (focused.length) {
-                        var prev = focused.prevAll('.searchable-dropdown-item:visible').first();
+                        var prev = focused.prevAll('.block-adeptus-searchable-dropdown-item:visible').first();
                         if (prev.length) {
                             focused.removeClass('focused');
                             prev.addClass('focused');
@@ -429,14 +429,14 @@ define([
             });
 
             // Embedded mode - View toggle (Table/Chart).
-            this.container.on('click', '.embedded-view-toggle-btn', function(e) {
+            this.container.on('click', '.block-adeptus-embedded-view-toggle-btn', function(e) {
                 e.preventDefault();
                 var view = $(this).data('view');
                 self.switchEmbeddedView(view);
             });
 
             // Embedded mode - Table pagination.
-            this.container.on('click', '.embedded-pagination-prev', function(e) {
+            this.container.on('click', '.block-adeptus-embedded-pagination-prev', function(e) {
                 e.preventDefault();
                 if (self.embeddedTablePage > 1) {
                     self.embeddedTablePage--;
@@ -445,7 +445,7 @@ define([
                 }
             });
 
-            this.container.on('click', '.embedded-pagination-next', function(e) {
+            this.container.on('click', '.block-adeptus-embedded-pagination-next', function(e) {
                 e.preventDefault();
                 var totalPages = Math.ceil((self.embeddedData || []).length / self.embeddedTableRowsPerPage);
                 if (self.embeddedTablePage < totalPages) {
@@ -456,42 +456,42 @@ define([
             });
 
             // Embedded mode - Chart type change.
-            this.container.on('change', '.embedded-chart-type', function() {
+            this.container.on('change', '.block-adeptus-embedded-chart-type', function() {
                 self.embeddedChartType = $(this).val();
                 self.renderEmbeddedChart();
             });
 
             // Embedded mode - X-Axis change.
-            this.container.on('change', '.embedded-chart-x-axis', function() {
+            this.container.on('change', '.block-adeptus-embedded-chart-x-axis', function() {
                 self.embeddedXAxis = $(this).val();
                 self.renderEmbeddedChart();
             });
 
             // Embedded mode - Y-Axis change.
-            this.container.on('change', '.embedded-chart-y-axis', function() {
+            this.container.on('change', '.block-adeptus-embedded-chart-y-axis', function() {
                 self.embeddedYAxis = $(this).val();
                 self.renderEmbeddedChart();
             });
 
             // Embedded mode - Export.
-            this.container.on('click', '.embedded-export', function(e) {
+            this.container.on('click', '.block-adeptus-embedded-export', function(e) {
                 e.preventDefault();
                 var format = $(this).data('format');
                 self.exportEmbeddedReport(format);
             });
 
             // Tabs mode - View toggle (Table/Chart).
-            this.container.on('click', '.tab-view-toggle-btn', function(e) {
+            this.container.on('click', '.block-adeptus-tab-view-toggle-btn', function(e) {
                 e.preventDefault();
-                var pane = $(this).closest('.tab-pane');
+                var pane = $(this).closest('.block-adeptus-tab-pane');
                 var view = $(this).data('view');
                 self.switchTabView(pane, view);
             });
 
             // Tabs mode - Table pagination.
-            this.container.on('click', '.tab-pagination-prev', function(e) {
+            this.container.on('click', '.block-adeptus-tab-pagination-prev', function(e) {
                 e.preventDefault();
-                var pane = $(this).closest('.tab-pane');
+                var pane = $(this).closest('.block-adeptus-tab-pane');
                 var tabId = pane.attr('id');
                 var state = self.tabPaneStates[tabId];
                 if (state && state.tablePage > 1) {
@@ -500,9 +500,9 @@ define([
                 }
             });
 
-            this.container.on('click', '.tab-pagination-next', function(e) {
+            this.container.on('click', '.block-adeptus-tab-pagination-next', function(e) {
                 e.preventDefault();
-                var pane = $(this).closest('.tab-pane');
+                var pane = $(this).closest('.block-adeptus-tab-pane');
                 var tabId = pane.attr('id');
                 var state = self.tabPaneStates[tabId];
                 if (state) {
@@ -515,8 +515,8 @@ define([
             });
 
             // Tabs mode - Chart type change.
-            this.container.on('change', '.tab-chart-type', function() {
-                var pane = $(this).closest('.tab-pane');
+            this.container.on('change', '.block-adeptus-tab-chart-type', function() {
+                var pane = $(this).closest('.block-adeptus-tab-pane');
                 var tabId = pane.attr('id');
                 var state = self.tabPaneStates[tabId];
                 if (state) {
@@ -526,8 +526,8 @@ define([
             });
 
             // Tabs mode - X-Axis change.
-            this.container.on('change', '.tab-chart-x-axis', function() {
-                var pane = $(this).closest('.tab-pane');
+            this.container.on('change', '.block-adeptus-tab-chart-x-axis', function() {
+                var pane = $(this).closest('.block-adeptus-tab-pane');
                 var tabId = pane.attr('id');
                 var state = self.tabPaneStates[tabId];
                 if (state) {
@@ -537,8 +537,8 @@ define([
             });
 
             // Tabs mode - Y-Axis change.
-            this.container.on('change', '.tab-chart-y-axis', function() {
-                var pane = $(this).closest('.tab-pane');
+            this.container.on('change', '.block-adeptus-tab-chart-y-axis', function() {
+                var pane = $(this).closest('.block-adeptus-tab-pane');
                 var tabId = pane.attr('id');
                 var state = self.tabPaneStates[tabId];
                 if (state) {
@@ -548,9 +548,9 @@ define([
             });
 
             // Tabs mode - Export.
-            this.container.on('click', '.tab-export', function(e) {
+            this.container.on('click', '.block-adeptus-tab-export', function(e) {
                 e.preventDefault();
-                var pane = $(this).closest('.tab-pane');
+                var pane = $(this).closest('.block-adeptus-tab-pane');
                 var tabId = pane.attr('id');
                 var state = self.tabPaneStates[tabId];
                 var format = $(this).data('format');
@@ -1013,9 +1013,9 @@ define([
             });
 
             // Populate hidden select
-            var select = this.container.find('.category-filter-select');
-            var dropdown = this.container.find('.category-dropdown');
-            var dropdownList = dropdown.find('.searchable-dropdown-list');
+            var select = this.container.find('.block-adeptus-category-filter-select');
+            var dropdown = this.container.find('.block-adeptus-category-dropdown');
+            var dropdownList = dropdown.find('.block-adeptus-searchable-dropdown-list');
 
             if (select.length) {
                 // Keep the first "All Categories" option, remove the rest
@@ -1034,7 +1034,7 @@ define([
 
                 // Add "All Categories" option first
                 var allSelected = !this.selectedCategory ? 'selected' : '';
-                var allItemHtml = '<li class="searchable-dropdown-item ' + allSelected + '" data-value="" ' +
+                var allItemHtml = '<li class="block-adeptus-searchable-dropdown-item ' + allSelected + '" data-value="" ' +
                     'data-search="all categories" role="option">' +
                     '<span class="dropdown-item-name">All Categories</span>' +
                     '</li>';
@@ -1043,7 +1043,7 @@ define([
                 // Add category options
                 this.availableCategories.forEach(function(cat) {
                     var isSelected = self.selectedCategory === cat.slug ? 'selected' : '';
-                    var itemHtml = '<li class="searchable-dropdown-item ' + isSelected + '" data-value="' + cat.slug + '" ' +
+                    var itemHtml = '<li class="block-adeptus-searchable-dropdown-item ' + isSelected + '" data-value="' + cat.slug + '" ' +
                         'data-search="' + cat.name.toLowerCase() + '" role="option">' +
                         '<span class="dropdown-item-name">' + self.escapeHtml(cat.name) + '</span>' +
                         '<span class="dropdown-item-category" style="background-color: ' + cat.color + '">' +
@@ -1077,9 +1077,9 @@ define([
          */
         populateReportSelector: function() {
             var self = this;
-            var select = this.container.find('.report-selector-select');
+            var select = this.container.find('.block-adeptus-report-selector-select');
             var dropdown = this.container.find('.block-adeptus-report-selector .searchable-dropdown');
-            var dropdownList = dropdown.find('.searchable-dropdown-list');
+            var dropdownList = dropdown.find('.block-adeptus-searchable-dropdown-list');
 
             if (!select.length) {
                 return;
@@ -1104,7 +1104,7 @@ define([
                 select.append('<option value="' + value + '"' + selected + '>' + reportName + categoryLabel + '</option>');
 
                 // Searchable dropdown item
-                var itemHtml = '<li class="searchable-dropdown-item" data-value="' + value + '" data-search="' +
+                var itemHtml = '<li class="block-adeptus-searchable-dropdown-item" data-value="' + value + '" data-search="' +
                     reportName.toLowerCase() + ' ' + categoryInfo.name.toLowerCase() + '" role="option">' +
                     '<span class="dropdown-item-name">' + self.escapeHtml(reportName) + '</span>' +
                     '<span class="dropdown-item-category" style="background-color: ' + categoryInfo.color + '">' +
@@ -1131,8 +1131,8 @@ define([
                 this.selectedReportSource = firstReport.source;
                 // Update searchable dropdown display
                 dropdown.find('.searchable-dropdown-text').text(firstName);
-                dropdown.find('.searchable-dropdown-item').removeClass('selected');
-                dropdown.find('.searchable-dropdown-item[data-value="' + firstValue + '"]').addClass('selected');
+                dropdown.find('.block-adeptus-searchable-dropdown-item').removeClass('selected');
+                dropdown.find('.block-adeptus-searchable-dropdown-item[data-value="' + firstValue + '"]').addClass('selected');
                 // Load the first report
                 this.loadEmbeddedReport(firstReport.slug, firstReport.source);
             } else if (select.val()) {
@@ -1142,8 +1142,8 @@ define([
                 if (selectedReport) {
                     var selectedName = selectedReport.name || selectedReport.title || selectedReport.display_name || selectedReport.slug || 'Untitled';
                     dropdown.find('.searchable-dropdown-text').text(selectedName);
-                    dropdown.find('.searchable-dropdown-item').removeClass('selected');
-                    dropdown.find('.searchable-dropdown-item[data-value="' + select.val() + '"]').addClass('selected');
+                    dropdown.find('.block-adeptus-searchable-dropdown-item').removeClass('selected');
+                    dropdown.find('.block-adeptus-searchable-dropdown-item[data-value="' + select.val() + '"]').addClass('selected');
                 }
                 this.loadEmbeddedReport(parts[0], parts[1] || 'wizard');
             } else {
@@ -1233,12 +1233,12 @@ define([
 
                 // Try multiple possible name fields (API may use different field names)
                 var reportName = report.name || report.title || report.display_name || report.report_name || report.slug || 'Untitled Report';
-                $item.find('.report-item-name').text(reportName);
+                $item.find('.block-adeptus-report-item-name').text(reportName);
 
                 // Set category badge with color
                 var categoryName = report.category_info ? report.category_info.name : report.category || 'General';
                 var categoryColor = report.category_info ? report.category_info.color : '#6c757d';
-                $item.find('.report-item-category')
+                $item.find('.block-adeptus-report-item-category')
                     .text(categoryName)
                     .css('background-color', categoryColor)
                     .css('color', '#fff');
@@ -1440,11 +1440,11 @@ define([
 
             // Update meta bar
             var category = report.category_info || {name: 'General', color: '#6c757d'};
-            this.container.find('.report-category')
+            this.container.find('.block-adeptus-report-category')
                 .text(category.name)
                 .css('background-color', category.color)
                 .css('color', '#fff');
-            this.container.find('.row-count-num').text(data.length);
+            this.container.find('.block-adeptus-row-count-num').text(data.length);
             this.container.find('.report-date').text(this.strings.lastUpdated + ': ' + new Date().toLocaleTimeString());
 
             // Populate chart axis selectors
@@ -1453,10 +1453,10 @@ define([
             // Reset to table view
             this.embeddedCurrentView = 'table';
             this.embeddedTablePage = 1;
-            this.container.find('.embedded-view-toggle-btn').removeClass('active');
-            this.container.find('.embedded-view-toggle-btn[data-view="table"]').addClass('active');
-            this.container.find('.embedded-table-view').removeClass('d-none');
-            this.container.find('.embedded-chart-view').addClass('d-none');
+            this.container.find('.block-adeptus-embedded-view-toggle-btn').removeClass('active');
+            this.container.find('.block-adeptus-embedded-view-toggle-btn[data-view="table"]').addClass('active');
+            this.container.find('.block-adeptus-embedded-table-view').removeClass('d-none');
+            this.container.find('.block-adeptus-embedded-chart-view').addClass('d-none');
 
             // Render table with pagination
             this.renderEmbeddedTablePage();
@@ -1475,16 +1475,16 @@ define([
             this.embeddedCurrentView = view;
 
             // Update toggle buttons
-            this.container.find('.embedded-view-toggle-btn').removeClass('active');
-            this.container.find('.embedded-view-toggle-btn[data-view="' + view + '"]').addClass('active');
+            this.container.find('.block-adeptus-embedded-view-toggle-btn').removeClass('active');
+            this.container.find('.block-adeptus-embedded-view-toggle-btn[data-view="' + view + '"]').addClass('active');
 
             // Show/hide views
             if (view === 'table') {
-                this.container.find('.embedded-table-view').removeClass('d-none');
-                this.container.find('.embedded-chart-view').addClass('d-none');
+                this.container.find('.block-adeptus-embedded-table-view').removeClass('d-none');
+                this.container.find('.block-adeptus-embedded-chart-view').addClass('d-none');
             } else {
-                this.container.find('.embedded-table-view').addClass('d-none');
-                this.container.find('.embedded-chart-view').removeClass('d-none');
+                this.container.find('.block-adeptus-embedded-table-view').addClass('d-none');
+                this.container.find('.block-adeptus-embedded-chart-view').removeClass('d-none');
                 // Render chart when switching to chart view
                 this.renderEmbeddedChart();
             }
@@ -1501,8 +1501,8 @@ define([
             var headers = Object.keys(data[0]);
             var numericCols = this.detectNumericColumns(data, headers);
 
-            var xAxisSelect = this.container.find('.embedded-chart-x-axis');
-            var yAxisSelect = this.container.find('.embedded-chart-y-axis');
+            var xAxisSelect = this.container.find('.block-adeptus-embedded-chart-x-axis');
+            var yAxisSelect = this.container.find('.block-adeptus-embedded-chart-y-axis');
 
             xAxisSelect.empty();
             yAxisSelect.empty();
@@ -1533,7 +1533,7 @@ define([
          */
         renderEmbeddedTablePage: function() {
             var data = this.embeddedData || [];
-            var table = this.container.find('.embedded-table');
+            var table = this.container.find('.block-adeptus-embedded-table');
             var thead = table.find('thead');
             var tbody = table.find('tbody');
 
@@ -1575,12 +1575,12 @@ define([
             });
 
             // Update pagination info
-            this.container.find('.row-count').text(this.formatShowingText(startIndex + 1, endIndex, data.length));
-            this.container.find('.embedded-pagination-info').text(this.formatPageText(this.embeddedTablePage, totalPages));
+            this.container.find('.block-adeptus-row-count').text(this.formatShowingText(startIndex + 1, endIndex, data.length));
+            this.container.find('.block-adeptus-embedded-pagination-info').text(this.formatPageText(this.embeddedTablePage, totalPages));
 
             // Update button states
-            this.container.find('.embedded-pagination-prev').prop('disabled', this.embeddedTablePage <= 1);
-            this.container.find('.embedded-pagination-next').prop('disabled', this.embeddedTablePage >= totalPages);
+            this.container.find('.block-adeptus-embedded-pagination-prev').prop('disabled', this.embeddedTablePage <= 1);
+            this.container.find('.block-adeptus-embedded-pagination-next').prop('disabled', this.embeddedTablePage >= totalPages);
         },
 
         /**
@@ -1588,7 +1588,7 @@ define([
          */
         renderEmbeddedChart: function() {
             var data = this.embeddedData || [];
-            var canvas = this.container.find('.embedded-chart')[0];
+            var canvas = this.container.find('.block-adeptus-embedded-chart')[0];
 
             if (!canvas || data.length === 0) {
                 return;
@@ -1664,7 +1664,7 @@ define([
             try {
                 this.embeddedChartInstance = new Chart(canvas.getContext('2d'), config);
             } catch (error) {
-                this.container.find('.embedded-chart-container').html(
+                this.container.find('.block-adeptus-embedded-chart-container').html(
                     '<div class="alert alert-warning text-center"><i class="fa fa-exclamation-circle"></i> Could not render chart</div>'
                 );
             }
@@ -1740,15 +1740,15 @@ define([
                 var reportName = report.name || report.title || report.display_name || report.slug || 'Metric';
                 $card.attr('data-slug', report.slug);
                 $card.attr('data-source', report.source);
-                $card.find('.kpi-card-label').text(reportName);
-                $card.find('.kpi-card-value').html('<i class="fa fa-spinner fa-spin"></i>');
-                $card.find('.kpi-card-trend').addClass('d-none');
-                $card.find('.kpi-card-sparkline').addClass('d-none');
+                $card.find('.block-adeptus-kpi-card-label').text(reportName);
+                $card.find('.block-adeptus-kpi-card-value').html('<i class="fa fa-spinner fa-spin"></i>');
+                $card.find('.block-adeptus-kpi-card-trend').addClass('d-none');
+                $card.find('.block-adeptus-kpi-card-sparkline').addClass('d-none');
 
                 // Set icon - use custom icon if configured, otherwise default based on index
                 var defaultIcons = ['fa-users', 'fa-graduation-cap', 'fa-clock-o', 'fa-check-circle'];
                 var iconClass = report.customIcon || defaultIcons[index % defaultIcons.length];
-                $card.find('.kpi-card-icon i').removeClass('fa-bar-chart').addClass(iconClass);
+                $card.find('.block-adeptus-kpi-card-icon i').removeClass('fa-bar-chart').addClass(iconClass);
 
                 gridContainer.append($card);
 
@@ -1832,8 +1832,8 @@ define([
                             // Render the KPI value
                             self.renderKpiValue($card, reportData.results || []);
                         } else {
-                            $card.find('.kpi-card-value').text('--');
-                            $card.find('.kpi-card-trend').addClass('d-none');
+                            $card.find('.block-adeptus-kpi-card-value').text('--');
+                            $card.find('.block-adeptus-kpi-card-trend').addClass('d-none');
                         }
                     });
                 } else {
@@ -1900,8 +1900,8 @@ define([
                         };
                         self.renderKpiValue($card, response.results || []);
                     } else {
-                        $card.find('.kpi-card-value').text('--');
-                        $card.find('.kpi-card-trend').addClass('d-none');
+                        $card.find('.block-adeptus-kpi-card-value').text('--');
+                        $card.find('.block-adeptus-kpi-card-trend').addClass('d-none');
                     }
                 }).fail(function(jqXHR, textStatus) {
                     // Retry on timeout or server error
@@ -1910,16 +1910,16 @@ define([
                             self.loadKpiData(report, $card, cardIndex, retryCount + 1);
                         }, 1000 * (retryCount + 1));
                     } else {
-                        $card.find('.kpi-card-value').text('--');
-                        $card.find('.kpi-card-trend').addClass('d-none');
+                        $card.find('.block-adeptus-kpi-card-value').text('--');
+                        $card.find('.block-adeptus-kpi-card-trend').addClass('d-none');
                     }
                 });
             } else {
                 // AI reports
                 var token = this.apiKey || (window.adeptusAuthData ? window.adeptusAuthData.api_key : null);
                 if (!token) {
-                    $card.find('.kpi-card-value').text('--');
-                    $card.find('.kpi-card-trend').addClass('d-none');
+                    $card.find('.block-adeptus-kpi-card-value').text('--');
+                    $card.find('.block-adeptus-kpi-card-trend').addClass('d-none');
                     return;
                 }
 
@@ -1952,8 +1952,8 @@ define([
                                     self.renderKpiValue($card, localData);
                                 })
                                 .catch(function(error) {
-                                    $card.find('.kpi-card-value').text('--');
-                                    $card.find('.kpi-card-trend').addClass('d-none');
+                                    $card.find('.block-adeptus-kpi-card-value').text('--');
+                                    $card.find('.block-adeptus-kpi-card-trend').addClass('d-none');
                                 });
                             return;
                         }
@@ -1965,12 +1965,12 @@ define([
                             };
                             self.renderKpiValue($card, data);
                         } else {
-                            $card.find('.kpi-card-value').text('--');
-                            $card.find('.kpi-card-trend').addClass('d-none');
+                            $card.find('.block-adeptus-kpi-card-value').text('--');
+                            $card.find('.block-adeptus-kpi-card-trend').addClass('d-none');
                         }
                     } else {
-                        $card.find('.kpi-card-value').text('--');
-                        $card.find('.kpi-card-trend').addClass('d-none');
+                        $card.find('.block-adeptus-kpi-card-value').text('--');
+                        $card.find('.block-adeptus-kpi-card-trend').addClass('d-none');
                     }
                 }).fail(function(jqXHR, textStatus) {
                     // Retry on timeout or server error
@@ -1979,8 +1979,8 @@ define([
                             self.loadKpiData(report, $card, cardIndex, retryCount + 1);
                         }, 1000 * (retryCount + 1));
                     } else {
-                        $card.find('.kpi-card-value').text('--');
-                        $card.find('.kpi-card-trend').addClass('d-none');
+                        $card.find('.block-adeptus-kpi-card-value').text('--');
+                        $card.find('.block-adeptus-kpi-card-trend').addClass('d-none');
                     }
                 });
             }
@@ -1995,10 +1995,10 @@ define([
         renderKpiValue: function($card, data) {
             var slug = $card.data('slug');
             var source = $card.data('source') || 'wizard';
-            var label = $card.find('.kpi-card-label').text() || '';
+            var label = $card.find('.block-adeptus-kpi-card-label').text() || '';
 
             if (!data || data.length === 0) {
-                $card.find('.kpi-card-value').text('0');
+                $card.find('.block-adeptus-kpi-card-value').text('0');
                 // Save zero value and update trend from server
                 this.saveKpiHistoryToServer($card, slug, 0, source, label, 0);
                 return;
@@ -2034,7 +2034,7 @@ define([
             // Format the value nicely
             formattedValue = this.formatKpiValue(value);
 
-            $card.find('.kpi-card-value').text(formattedValue);
+            $card.find('.block-adeptus-kpi-card-value').text(formattedValue);
 
             // Save to server and update trend/sparkline from response
             this.saveKpiHistoryToServer($card, slug, value, source, label, data.length);
@@ -2076,8 +2076,8 @@ define([
             // Check if snapshots feature is enabled (enterprise feature)
             if (!this.config.snapshotsEnabled) {
                 // Feature not enabled - hide trend and sparkline
-                $card.find('.kpi-card-trend').addClass('d-none');
-                $card.find('.kpi-card-sparkline').addClass('d-none');
+                $card.find('.block-adeptus-kpi-card-trend').addClass('d-none');
+                $card.find('.block-adeptus-kpi-card-sparkline').addClass('d-none');
                 return;
             }
 
@@ -2105,8 +2105,8 @@ define([
             var source = $card.data('source') || 'wizard';
 
             if (!token) {
-                $card.find('.kpi-card-trend').addClass('d-none');
-                $card.find('.kpi-card-sparkline').addClass('d-none');
+                $card.find('.block-adeptus-kpi-card-trend').addClass('d-none');
+                $card.find('.block-adeptus-kpi-card-sparkline').addClass('d-none');
                 return;
             }
 
@@ -2156,19 +2156,19 @@ define([
                     if (response.history && response.history.length >= 2) {
                         self.renderKpiSparklineFromBackend($card, slug, response.history);
                     } else {
-                        $card.find('.kpi-card-sparkline').addClass('d-none');
+                        $card.find('.block-adeptus-kpi-card-sparkline').addClass('d-none');
                     }
 
                     // Handle any triggered alerts - pass context we have here.
                     if (response.alerts && response.alerts.triggered_count > 0) {
-                        var reportName = $card.find('.kpi-card-label').text() || slug;
+                        var reportName = $card.find('.block-adeptus-kpi-card-label').text() || slug;
                         self.handleTriggeredAlerts(response.alerts.triggered, slug, metricValue, response.trend, reportName);
                     }
                 }
             }).fail(function() {
                 // Silent fail - trend won't update but KPI value is still shown
-                $card.find('.kpi-card-trend').addClass('d-none');
-                $card.find('.kpi-card-sparkline').addClass('d-none');
+                $card.find('.block-adeptus-kpi-card-trend').addClass('d-none');
+                $card.find('.block-adeptus-kpi-card-sparkline').addClass('d-none');
             });
         },
 
@@ -2221,7 +2221,7 @@ define([
          * @param {Object} trend Trend data from backend
          */
         updateKpiTrendFromBackend: function($card, trend) {
-            var trendContainer = $card.find('.kpi-card-trend');
+            var trendContainer = $card.find('.block-adeptus-kpi-card-trend');
             trendContainer.removeClass('d-none trend-up trend-down trend-neutral');
 
             // Handle new dual trend structure (vs_baseline and vs_previous)
@@ -2262,7 +2262,7 @@ define([
          * @param {Object} trend Trend object with vs_baseline and vs_previous
          */
         updateKpiDualTrend: function($card, trend) {
-            var trendContainer = $card.find('.kpi-card-trend');
+            var trendContainer = $card.find('.block-adeptus-kpi-card-trend');
             trendContainer.removeClass('d-none trend-up trend-down trend-neutral');
 
             var vsBaseline = trend.vs_baseline || {};
@@ -2642,7 +2642,7 @@ define([
             // This is now handled by postSnapshotToBackend which returns history in response
             // Keeping this method for any legacy code paths
             if (!this.config.snapshotsEnabled) {
-                $card.find('.kpi-card-sparkline').addClass('d-none');
+                $card.find('.block-adeptus-kpi-card-sparkline').addClass('d-none');
                 return;
             }
             // Sparkline is now loaded from snapshot response, no separate call needed
@@ -2656,7 +2656,7 @@ define([
          * @param {number} percentage Trend percentage
          */
         updateKpiTrendFromServer: function($card, direction, percentage) {
-            var trendContainer = $card.find('.kpi-card-trend');
+            var trendContainer = $card.find('.block-adeptus-kpi-card-trend');
             trendContainer.removeClass('d-none trend-up trend-down trend-neutral');
 
             var absChange = Math.abs(percentage);
@@ -2693,7 +2693,7 @@ define([
          */
         updateKpiTrend: function($card, slug, currentValue) {
             // Show neutral trend initially, server call will update
-            var trendContainer = $card.find('.kpi-card-trend');
+            var trendContainer = $card.find('.block-adeptus-kpi-card-trend');
             trendContainer.removeClass('d-none');
             trendContainer.addClass('trend-neutral');
             trendContainer.find('.trend-icon').html('<i class="fa fa-spinner fa-spin"></i>');
@@ -2709,8 +2709,8 @@ define([
          * @param {number} currentValue Current value to append
          */
         renderKpiSparklineFromData: function($card, slug, sparklineData, currentValue) {
-            var sparklineContainer = $card.find('.kpi-card-sparkline');
-            var canvas = sparklineContainer.find('.sparkline-chart')[0];
+            var sparklineContainer = $card.find('.block-adeptus-kpi-card-sparkline');
+            var canvas = sparklineContainer.find('.block-adeptus-sparkline-chart')[0];
 
             if (!canvas) {
                 return;
@@ -2828,7 +2828,7 @@ define([
                 tab.find('a')
                     .attr('href', '#' + tabId)
                     .attr('aria-controls', tabId);
-                tab.find('.tab-name').text(reportName);
+                tab.find('.block-adeptus-tab-name').text(reportName);
 
                 if (index === 0) {
                     tab.find('a').addClass('active').attr('aria-selected', 'true');
@@ -2851,7 +2851,7 @@ define([
 
             // Load first tab content
             if (reports.length > 0) {
-                var firstPane = tabContent.find('.tab-pane').first();
+                var firstPane = tabContent.find('.block-adeptus-tab-pane').first();
                 this.loadTabContent(firstPane, reports[0].slug, reports[0].source);
             }
 
@@ -2883,8 +2883,8 @@ define([
             });
 
             if (!report) {
-                pane.find('.tab-pane-loading').addClass('d-none');
-                pane.find('.tab-pane-content')
+                pane.find('.block-adeptus-tab-pane-loading').addClass('d-none');
+                pane.find('.block-adeptus-tab-pane-content')
                     .removeClass('d-none')
                     .html('<div class="text-center text-muted py-4"><i class="fa fa-exclamation-circle"></i><p class="mt-2">Report not found</p></div>');
                 return;
@@ -2909,14 +2909,14 @@ define([
                         };
                         self.renderTabContent(pane, report, response.results || []);
                     } else {
-                        pane.find('.tab-pane-loading').addClass('d-none');
-                        pane.find('.tab-pane-content')
+                        pane.find('.block-adeptus-tab-pane-loading').addClass('d-none');
+                        pane.find('.block-adeptus-tab-pane-content')
                             .removeClass('d-none')
                             .html('<div class="text-center text-muted py-4"><i class="fa fa-exclamation-circle"></i><p class="mt-2">' + (response.message || 'Failed to load') + '</p></div>');
                     }
                 }).fail(function() {
-                    pane.find('.tab-pane-loading').addClass('d-none');
-                    pane.find('.tab-pane-content')
+                    pane.find('.block-adeptus-tab-pane-loading').addClass('d-none');
+                    pane.find('.block-adeptus-tab-pane-content')
                         .removeClass('d-none')
                         .html('<div class="text-center text-muted py-4"><i class="fa fa-exclamation-circle"></i><p class="mt-2">Connection error</p></div>');
                 });
@@ -2924,8 +2924,8 @@ define([
                 // AI reports
                 var token = this.apiKey || (window.adeptusAuthData ? window.adeptusAuthData.api_key : null);
                 if (!token) {
-                    pane.find('.tab-pane-loading').addClass('d-none');
-                    pane.find('.tab-pane-content')
+                    pane.find('.block-adeptus-tab-pane-loading').addClass('d-none');
+                    pane.find('.block-adeptus-tab-pane-content')
                         .removeClass('d-none')
                         .html('<div class="text-center text-muted py-4"><i class="fa fa-exclamation-circle"></i><p class="mt-2">Authentication required</p></div>');
                     return;
@@ -2960,8 +2960,8 @@ define([
                                     self.renderTabContent(pane, reportData, localData);
                                 })
                                 .catch(function(error) {
-                                    pane.find('.tab-pane-loading').addClass('d-none');
-                                    pane.find('.tab-pane-content')
+                                    pane.find('.block-adeptus-tab-pane-loading').addClass('d-none');
+                                    pane.find('.block-adeptus-tab-pane-content')
                                         .removeClass('d-none')
                                         .html('<div class="text-center text-muted py-4"><i class="fa fa-exclamation-circle"></i><p class="mt-2">Failed to execute report</p></div>');
                                 });
@@ -2974,14 +2974,14 @@ define([
                         };
                         self.renderTabContent(pane, reportData, data);
                     } else {
-                        pane.find('.tab-pane-loading').addClass('d-none');
-                        pane.find('.tab-pane-content')
+                        pane.find('.block-adeptus-tab-pane-loading').addClass('d-none');
+                        pane.find('.block-adeptus-tab-pane-content')
                             .removeClass('d-none')
                             .html('<div class="text-center text-muted py-4"><i class="fa fa-exclamation-circle"></i><p class="mt-2">Failed to load report</p></div>');
                     }
                 }).fail(function() {
-                    pane.find('.tab-pane-loading').addClass('d-none');
-                    pane.find('.tab-pane-content')
+                    pane.find('.block-adeptus-tab-pane-loading').addClass('d-none');
+                    pane.find('.block-adeptus-tab-pane-content')
                         .removeClass('d-none')
                         .html('<div class="text-center text-muted py-4"><i class="fa fa-exclamation-circle"></i><p class="mt-2">Connection error</p></div>');
                 });
@@ -2997,8 +2997,8 @@ define([
          */
         renderTabContent: function(pane, report, data) {
             var tabId = pane.attr('id');
-            pane.find('.tab-pane-loading').addClass('d-none');
-            var contentArea = pane.find('.tab-pane-content');
+            pane.find('.block-adeptus-tab-pane-loading').addClass('d-none');
+            var contentArea = pane.find('.block-adeptus-tab-pane-content');
 
             if (!data || data.length === 0) {
                 contentArea.removeClass('d-none')
@@ -3038,10 +3038,10 @@ define([
             this.renderTabTablePage(pane, state);
 
             // Reset view toggle to table
-            pane.find('.tab-view-toggle-btn').removeClass('active');
-            pane.find('.tab-view-toggle-btn[data-view="table"]').addClass('active');
+            pane.find('.block-adeptus-tab-view-toggle-btn').removeClass('active');
+            pane.find('.block-adeptus-tab-view-toggle-btn[data-view="table"]').addClass('active');
             pane.find('.tab-table-view').removeClass('d-none');
-            pane.find('.tab-chart-view').addClass('d-none');
+            pane.find('.block-adeptus-tab-chart-view').addClass('d-none');
         },
 
         /**
@@ -3054,7 +3054,7 @@ define([
         updateTabMetaBar: function(pane, report, data) {
             // Category badge
             var category = report.category || report.category_name || '';
-            var categoryBadge = pane.find('.report-category');
+            var categoryBadge = pane.find('.block-adeptus-report-category');
             if (category) {
                 categoryBadge.text(category).removeClass('d-none');
                 // Add category color if available
@@ -3068,7 +3068,7 @@ define([
             }
 
             // Row count
-            pane.find('.row-count-num').text(data.length);
+            pane.find('.block-adeptus-row-count-num').text(data.length);
 
             // Report date
             var dateStr = report.updated_at || report.created_at || '';
@@ -3085,8 +3085,8 @@ define([
          * @param {Object} state
          */
         populateTabChartControls: function(pane, state) {
-            var xAxisSelect = pane.find('.tab-chart-x-axis');
-            var yAxisSelect = pane.find('.tab-chart-y-axis');
+            var xAxisSelect = pane.find('.block-adeptus-tab-chart-x-axis');
+            var yAxisSelect = pane.find('.block-adeptus-tab-chart-y-axis');
 
             xAxisSelect.empty();
             yAxisSelect.empty();
@@ -3116,16 +3116,16 @@ define([
             state.currentView = view;
 
             // Update toggle buttons
-            pane.find('.tab-view-toggle-btn').removeClass('active');
-            pane.find('.tab-view-toggle-btn[data-view="' + view + '"]').addClass('active');
+            pane.find('.block-adeptus-tab-view-toggle-btn').removeClass('active');
+            pane.find('.block-adeptus-tab-view-toggle-btn[data-view="' + view + '"]').addClass('active');
 
             // Show/hide views
             if (view === 'table') {
                 pane.find('.tab-table-view').removeClass('d-none');
-                pane.find('.tab-chart-view').addClass('d-none');
+                pane.find('.block-adeptus-tab-chart-view').addClass('d-none');
             } else {
                 pane.find('.tab-table-view').addClass('d-none');
-                pane.find('.tab-chart-view').removeClass('d-none');
+                pane.find('.block-adeptus-tab-chart-view').removeClass('d-none');
                 // Render chart if not already rendered
                 this.renderTabChart(pane, state);
             }
@@ -3179,12 +3179,12 @@ define([
 
             // Update pagination info
             var showingText = this.formatShowingText(startIndex + 1, endIndex, totalRows);
-            pane.find('.row-count').text(showingText);
-            pane.find('.tab-pagination-info').text(this.formatPageText(state.tablePage, totalPages));
+            pane.find('.block-adeptus-row-count').text(showingText);
+            pane.find('.block-adeptus-tab-pagination-info').text(this.formatPageText(state.tablePage, totalPages));
 
             // Update pagination buttons
-            pane.find('.tab-pagination-prev').prop('disabled', state.tablePage <= 1);
-            pane.find('.tab-pagination-next').prop('disabled', state.tablePage >= totalPages);
+            pane.find('.block-adeptus-tab-pagination-prev').prop('disabled', state.tablePage <= 1);
+            pane.find('.block-adeptus-tab-pagination-next').prop('disabled', state.tablePage >= totalPages);
 
             // Show/hide pagination
             if (totalPages > 1) {
@@ -3202,7 +3202,7 @@ define([
          */
         renderTabChart: function(pane, state) {
             var tabId = pane.attr('id');
-            var canvas = pane.find('.tab-chart')[0];
+            var canvas = pane.find('.block-adeptus-tab-chart')[0];
 
             if (!canvas || !state.data || state.data.length === 0) {
                 return;
@@ -3267,7 +3267,7 @@ define([
                 this.tabChartInstances = this.tabChartInstances || {};
                 this.tabChartInstances[tabId] = new Chart(canvas.getContext('2d'), config);
             } catch (error) {
-                pane.find('.tab-chart-container').html(
+                pane.find('.block-adeptus-tab-chart-container').html(
                     '<div class="alert alert-warning text-center"><i class="fa fa-exclamation-circle"></i> Could not render chart</div>'
                 );
             }
@@ -3527,14 +3527,14 @@ define([
             var modalRoot = modal.getRoot();
 
             // Date range selector change
-            modalRoot.on('change', '.kpi-date-range-select', function() {
+            modalRoot.on('change', '.block-adeptus-kpi-date-range-select', function() {
                 var dateRange = $(this).val();
                 self.kpiModalDateRange = dateRange;
                 self.loadKpiModalData(slug, source, dateRange);
             });
 
             // Retry button
-            modalRoot.on('click', '.kpi-modal-retry', function(e) {
+            modalRoot.on('click', '.block-adeptus-kpi-modal-retry', function(e) {
                 e.preventDefault();
                 self.loadKpiModalData(slug, source, self.kpiModalDateRange);
             });
@@ -3552,9 +3552,9 @@ define([
             var modalContent = this.kpiModal.getRoot().find('.block-adeptus-kpi-modal-content');
 
             // Show loading
-            modalContent.find('.kpi-modal-loading').removeClass('d-none');
-            modalContent.find('.kpi-modal-content-area').addClass('d-none');
-            modalContent.find('.kpi-modal-error').addClass('d-none');
+            modalContent.find('.block-adeptus-kpi-modal-loading').removeClass('d-none');
+            modalContent.find('.block-adeptus-kpi-modal-content-area').addClass('d-none');
+            modalContent.find('.block-adeptus-kpi-modal-error').addClass('d-none');
 
             // Check cache first - use cached data if available and fresh (under 5 minutes old)
             var cached = this.kpiSnapshotCache[slug];
@@ -3649,9 +3649,9 @@ define([
          */
         renderKpiModal: function(modalContent, data, dateRange) {
             // Hide loading, show content
-            modalContent.find('.kpi-modal-loading').addClass('d-none');
-            modalContent.find('.kpi-modal-content-area').removeClass('d-none');
-            modalContent.find('.kpi-modal-error').addClass('d-none');
+            modalContent.find('.block-adeptus-kpi-modal-loading').addClass('d-none');
+            modalContent.find('.block-adeptus-kpi-modal-content-area').removeClass('d-none');
+            modalContent.find('.block-adeptus-kpi-modal-error').addClass('d-none');
 
             // Get history data and sort chronologically (oldest first)
             var history = (data.history || []).slice(); // Clone to avoid mutating original
@@ -3677,16 +3677,16 @@ define([
             currentValue = currentValue || '--';
 
             // Update metric value
-            modalContent.find('.kpi-modal-value').text(this.formatNumber(currentValue));
+            modalContent.find('.block-adeptus-kpi-modal-value').text(this.formatNumber(currentValue));
 
             // Update dual trend display
             this.renderKpiModalTrends(modalContent, vsBaseline, vsPrevious);
 
             // Calculate stats
             var stats = this.calculateKpiStats(filteredHistory);
-            modalContent.find('.kpi-stat-min').text(this.formatNumber(stats.min));
-            modalContent.find('.kpi-stat-max').text(this.formatNumber(stats.max));
-            modalContent.find('.kpi-stat-avg').text(this.formatNumber(stats.avg));
+            modalContent.find('.block-adeptus-kpi-stat-min').text(this.formatNumber(stats.min));
+            modalContent.find('.block-adeptus-kpi-stat-max').text(this.formatNumber(stats.max));
+            modalContent.find('.block-adeptus-kpi-stat-avg').text(this.formatNumber(stats.avg));
 
             // Update data points count
             modalContent.find('.datapoints-count').text(filteredHistory.length);
@@ -3696,7 +3696,7 @@ define([
                 var lastEntry = filteredHistory[filteredHistory.length - 1];
                 var lastUpdated = lastEntry.recorded_at || lastEntry.created_at;
                 if (lastUpdated) {
-                    modalContent.find('.kpi-modal-last-updated').text(
+                    modalContent.find('.block-adeptus-kpi-modal-last-updated').text(
                         this.strings.lastUpdated + ': ' + this.formatTimestamp(lastUpdated)
                     );
                 }
@@ -3760,7 +3760,7 @@ define([
                 baselineHtml = '<span class="' + baselineClass + '">' +
                     baselineIcon + ' ' + baselineSign + baselinePct + ' overall</span>';
             }
-            modalContent.find('.kpi-modal-trend-baseline').html(baselineHtml);
+            modalContent.find('.block-adeptus-kpi-modal-trend-baseline').html(baselineHtml);
 
             // Format previous trend (vs previous snapshot)
             var previousHtml = '--';
@@ -3773,7 +3773,7 @@ define([
                 previousHtml = '<span class="' + previousClass + '">' +
                     previousIcon + ' ' + previousSign + previousPct + ' since last</span>';
             }
-            modalContent.find('.kpi-modal-trend-previous').html(previousHtml);
+            modalContent.find('.block-adeptus-kpi-modal-trend-previous').html(previousHtml);
         },
 
         /**
@@ -3807,7 +3807,7 @@ define([
          */
         renderKpiModalChart: function(modalContent, history) {
             var self = this;
-            var canvas = modalContent.find('.kpi-modal-chart')[0];
+            var canvas = modalContent.find('.block-adeptus-kpi-modal-chart')[0];
 
             if (!canvas) {
                 return;
@@ -3932,9 +3932,9 @@ define([
          * @param {jQuery} modalContent
          */
         showKpiModalError: function(modalContent) {
-            modalContent.find('.kpi-modal-loading').addClass('d-none');
-            modalContent.find('.kpi-modal-content-area').addClass('d-none');
-            modalContent.find('.kpi-modal-error').removeClass('d-none');
+            modalContent.find('.block-adeptus-kpi-modal-loading').addClass('d-none');
+            modalContent.find('.block-adeptus-kpi-modal-content-area').addClass('d-none');
+            modalContent.find('.block-adeptus-kpi-modal-error').removeClass('d-none');
         },
 
         /**
@@ -3947,7 +3947,7 @@ define([
             var modalRoot = modal.getRoot();
 
             // View toggle buttons
-            modalRoot.on('click', '.view-toggle-btn', function(e) {
+            modalRoot.on('click', '.block-adeptus-view-toggle-btn', function(e) {
                 e.preventDefault();
                 var view = $(this).data('view');
                 self.switchModalView(view);
@@ -3961,7 +3961,7 @@ define([
             });
 
             // Retry button
-            modalRoot.on('click', '.modal-retry', function(e) {
+            modalRoot.on('click', '.block-adeptus-modal-retry', function(e) {
                 e.preventDefault();
                 if (self.modalReport) {
                     self.loadModalReport(self.modalReport.slug, self.modalReport.source);
@@ -3969,7 +3969,7 @@ define([
             });
 
             // Export buttons (PDF, CSV, JSON)
-            modalRoot.on('click', '.modal-export', function(e) {
+            modalRoot.on('click', '.block-adeptus-modal-export', function(e) {
                 e.preventDefault();
                 var format = $(this).data('format');
                 self.exportModalData(format);
@@ -4003,8 +4003,8 @@ define([
             var modalBody = this.modal.getBody();
 
             // Update toggle buttons
-            modalBody.find('.view-toggle-btn').removeClass('active');
-            modalBody.find('.view-toggle-btn[data-view="' + view + '"]').addClass('active');
+            modalBody.find('.block-adeptus-view-toggle-btn').removeClass('active');
+            modalBody.find('.block-adeptus-view-toggle-btn[data-view="' + view + '"]').addClass('active');
 
             // Switch views
             if (view === 'table') {
@@ -4034,7 +4034,7 @@ define([
             // Check cache first for instant loading
             if (this.reportDataCache[cacheKey]) {
                 var cached = this.reportDataCache[cacheKey];
-                modalBody.find('.modal-loading').addClass('d-none');
+                modalBody.find('.block-adeptus-modal-loading').addClass('d-none');
                 this.renderModalContent(modalBody, cached.report, cached.results, cached.chartData, cached.chartType);
                 return;
             }
@@ -4045,8 +4045,8 @@ define([
             });
 
             if (!report) {
-                modalBody.find('.modal-loading').addClass('d-none');
-                modalBody.find('.modal-error').removeClass('d-none');
+                modalBody.find('.block-adeptus-modal-loading').addClass('d-none');
+                modalBody.find('.block-adeptus-modal-error').removeClass('d-none');
                 return;
             }
 
@@ -4064,7 +4064,7 @@ define([
                     dataType: 'json',
                     timeout: 30000
                 }).done(function(response) {
-                    modalBody.find('.modal-loading').addClass('d-none');
+                    modalBody.find('.block-adeptus-modal-loading').addClass('d-none');
 
                     if (response.success) {
                         // Cache the result for future use
@@ -4076,20 +4076,20 @@ define([
                         };
                         self.renderModalContent(modalBody, report, response.results || [], response.chart_data, response.chart_type);
                     } else {
-                        modalBody.find('.modal-error').removeClass('d-none');
-                        modalBody.find('.modal-error p').text(response.message || self.strings.errorFailedLoadReport);
+                        modalBody.find('.block-adeptus-modal-error').removeClass('d-none');
+                        modalBody.find('.block-adeptus-modal-error p').text(response.message || self.strings.errorFailedLoadReport);
                     }
                 }).fail(function() {
-                    modalBody.find('.modal-loading').addClass('d-none');
-                    modalBody.find('.modal-error').removeClass('d-none');
+                    modalBody.find('.block-adeptus-modal-loading').addClass('d-none');
+                    modalBody.find('.block-adeptus-modal-error').removeClass('d-none');
                 });
             } else {
                 // AI reports - fetch from backend API
                 var token = this.apiKey || (window.adeptusAuthData ? window.adeptusAuthData.api_key : null);
 
                 if (!token) {
-                    modalBody.find('.modal-loading').addClass('d-none');
-                    modalBody.find('.modal-error').removeClass('d-none');
+                    modalBody.find('.block-adeptus-modal-loading').addClass('d-none');
+                    modalBody.find('.block-adeptus-modal-error').removeClass('d-none');
                     return;
                 }
 
@@ -4114,7 +4114,7 @@ define([
                             // Execute SQL locally against Moodle database
                             self.executeReportLocally(sqlQuery, reportData.params || {})
                                 .then(function(executionResult) {
-                                    modalBody.find('.modal-loading').addClass('d-none');
+                                    modalBody.find('.block-adeptus-modal-loading').addClass('d-none');
                                     var localData = executionResult.data || [];
                                     self.reportDataCache[cacheKey] = {
                                         report: reportData,
@@ -4125,13 +4125,13 @@ define([
                                     self.renderModalContent(modalBody, reportData, localData, null, null);
                                 })
                                 .catch(function(error) {
-                                    modalBody.find('.modal-loading').addClass('d-none');
-                                    modalBody.find('.modal-error').removeClass('d-none');
+                                    modalBody.find('.block-adeptus-modal-loading').addClass('d-none');
+                                    modalBody.find('.block-adeptus-modal-error').removeClass('d-none');
                                 });
                             return;
                         }
 
-                        modalBody.find('.modal-loading').addClass('d-none');
+                        modalBody.find('.block-adeptus-modal-loading').addClass('d-none');
                         // Cache the result for future use
                         self.reportDataCache[cacheKey] = {
                             report: reportData,
@@ -4141,12 +4141,12 @@ define([
                         };
                         self.renderModalContent(modalBody, reportData, data, null, null);
                     } else {
-                        modalBody.find('.modal-loading').addClass('d-none');
-                        modalBody.find('.modal-error').removeClass('d-none');
+                        modalBody.find('.block-adeptus-modal-loading').addClass('d-none');
+                        modalBody.find('.block-adeptus-modal-error').removeClass('d-none');
                     }
                 }).fail(function() {
-                    modalBody.find('.modal-loading').addClass('d-none');
-                    modalBody.find('.modal-error').removeClass('d-none');
+                    modalBody.find('.block-adeptus-modal-loading').addClass('d-none');
+                    modalBody.find('.block-adeptus-modal-error').removeClass('d-none');
                 });
             }
         },
@@ -4167,15 +4167,15 @@ define([
             this.modalData = data || [];
             this.modalReport = report;
 
-            var contentArea = modalBody.find('.modal-content-area');
+            var contentArea = modalBody.find('.block-adeptus-modal-content-area');
             contentArea.removeClass('d-none');
 
             // Set report metadata
             var category = report.category_info || {name: 'General', color: '#6c757d'};
-            modalBody.find('.report-category')
+            modalBody.find('.block-adeptus-report-category')
                 .text(category.name)
                 .css('background-color', category.color);
-            modalBody.find('.row-count-num').text(this.modalData.length);
+            modalBody.find('.block-adeptus-row-count-num').text(this.modalData.length);
             modalBody.find('.report-date')
                 .text(report.last_executed_at ?
                     this.strings.lastRun.replace('{$a}', new Date(report.last_executed_at).toLocaleDateString()) : '');
@@ -4188,8 +4188,8 @@ define([
 
             // Reset to table view
             this.currentView = 'table';
-            modalBody.find('.view-toggle-btn').removeClass('active');
-            modalBody.find('.view-toggle-btn[data-view="table"]').addClass('active');
+            modalBody.find('.block-adeptus-view-toggle-btn').removeClass('active');
+            modalBody.find('.block-adeptus-view-toggle-btn[data-view="table"]').addClass('active');
             modalBody.find('#modal-table-view').removeClass('d-none');
             modalBody.find('#modal-chart-view').addClass('d-none');
         },
@@ -4321,13 +4321,13 @@ define([
             var data = this.modalData;
 
             if (!data || data.length === 0) {
-                modalBody.find('.chart-container').html(
+                modalBody.find('.block-adeptus-chart-container').html(
                     '<div class="alert alert-warning text-center"><i class="fa fa-info-circle"></i> No data available for chart</div>'
                 );
                 return;
             }
 
-            var canvas = modalBody.find('.modal-chart')[0];
+            var canvas = modalBody.find('.block-adeptus-modal-chart')[0];
             if (!canvas) {
                 return;
             }
@@ -4374,7 +4374,7 @@ define([
             try {
                 this.chartInstance = new Chart(canvas.getContext('2d'), config);
             } catch (error) {
-                modalBody.find('.chart-container').html(
+                modalBody.find('.block-adeptus-chart-container').html(
                     '<div class="alert alert-danger"><i class="fa fa-exclamation-triangle"></i> Error rendering chart</div>'
                 );
             }
@@ -4568,14 +4568,14 @@ define([
 
                     // Try to find chart canvas in order of priority
                     // 1. Modal chart (report links modal)
-                    var modalChart = document.querySelector('.modal.show .modal-chart');
+                    var modalChart = document.querySelector('.modal.show .block-adeptus-modal-chart');
                     if (modalChart) {
                         canvas = modalChart;
                     }
 
                     // 2. Embedded chart
                     if (!canvas) {
-                        var embeddedChart = self.container ? self.container.find('.embedded-chart')[0] : null;
+                        var embeddedChart = self.container ? self.container.find('.block-adeptus-embedded-chart')[0] : null;
                         if (embeddedChart) {
                             canvas = embeddedChart;
                         }
@@ -4583,7 +4583,7 @@ define([
 
                     // 3. Tab chart (active tab)
                     if (!canvas) {
-                        var tabChart = self.container ? self.container.find('.tab-pane.active .tab-chart')[0] : null;
+                        var tabChart = self.container ? self.container.find('.tab-pane.active .block-adeptus-tab-chart')[0] : null;
                         if (tabChart) {
                             canvas = tabChart;
                         }
@@ -4591,7 +4591,7 @@ define([
 
                     // 4. Fallback - any visible chart
                     if (!canvas) {
-                        canvas = document.querySelector('.modal-chart, .embedded-chart, .tab-chart');
+                        canvas = document.querySelector('.block-adeptus-modal-chart, .block-adeptus-embedded-chart, .block-adeptus-tab-chart');
                     }
 
                     if (!canvas) {
@@ -4694,13 +4694,13 @@ define([
             this.tableTotalPages = Math.ceil((data ? data.length : 0) / this.tableRowsPerPage);
 
             // Build table headers once
-            var table = modalBody.find('.modal-table');
+            var table = modalBody.find('.block-adeptus-modal-table');
             var thead = table.find('thead');
 
             thead.empty();
 
             if (!data || data.length === 0) {
-                modalBody.find('.modal-table-container').addClass('d-none');
+                modalBody.find('.block-adeptus-modal-table-container').addClass('d-none');
                 return;
             }
 
@@ -4724,7 +4724,7 @@ define([
         renderModalTablePage: function() {
             var modalBody = this.modal.getBody();
             var data = this.modalData || [];
-            var table = modalBody.find('.modal-table');
+            var table = modalBody.find('.block-adeptus-modal-table');
             var tbody = table.find('tbody');
 
             tbody.empty();
@@ -4758,7 +4758,7 @@ define([
 
             // Update pagination info and controls
             var actualEnd = Math.min(endIndex, data.length);
-            modalBody.find('.row-count').text(data.length + ' total rows');
+            modalBody.find('.block-adeptus-row-count').text(data.length + ' total rows');
 
             var paginationInfo = modalBody.find('.table-pagination-info');
             paginationInfo.text((startIndex + 1) + '-' + actualEnd + ' of ' + data.length);
@@ -4955,7 +4955,7 @@ define([
          * Scroll to the top of the embedded table.
          */
         scrollToEmbeddedTableTop: function() {
-            var tableContainer = this.container.find('.embedded-table-view');
+            var tableContainer = this.container.find('.block-adeptus-embedded-table-view');
             if (tableContainer.length) {
                 tableContainer[0].scrollIntoView({behavior: 'smooth', block: 'start'});
             }
@@ -4965,7 +4965,7 @@ define([
          * Show the embedded loading overlay.
          */
         showEmbeddedLoadingOverlay: function() {
-            var overlay = this.container.find('.embedded-loading-overlay');
+            var overlay = this.container.find('.block-adeptus-embedded-loading-overlay');
             var content = this.container.find('.block-adeptus-content');
 
             // Show content area if hidden (to show overlay over it)
@@ -4979,7 +4979,7 @@ define([
          * Hide the embedded loading overlay.
          */
         hideEmbeddedLoadingOverlay: function() {
-            var overlay = this.container.find('.embedded-loading-overlay');
+            var overlay = this.container.find('.block-adeptus-embedded-loading-overlay');
             overlay.animate({opacity: 0}, 150, function() {
                 $(this).addClass('d-none');
             });
@@ -5013,12 +5013,12 @@ define([
             });
 
             dropdown.addClass('open');
-            dropdown.find('.searchable-dropdown-toggle').attr('aria-expanded', 'true');
+            dropdown.find('.block-adeptus-searchable-dropdown-toggle').attr('aria-expanded', 'true');
 
             // Clear search and show all items
             var input = dropdown.find('.searchable-dropdown-input');
             input.val('');
-            dropdown.find('.searchable-dropdown-item').show().removeClass('focused');
+            dropdown.find('.block-adeptus-searchable-dropdown-item').show().removeClass('focused');
             dropdown.find('.searchable-dropdown-empty').addClass('d-none');
 
             // Focus search input
@@ -5034,8 +5034,8 @@ define([
          */
         closeSearchableDropdown: function(dropdown) {
             dropdown.removeClass('open');
-            dropdown.find('.searchable-dropdown-toggle').attr('aria-expanded', 'false');
-            dropdown.find('.searchable-dropdown-item').removeClass('focused');
+            dropdown.find('.block-adeptus-searchable-dropdown-toggle').attr('aria-expanded', 'false');
+            dropdown.find('.block-adeptus-searchable-dropdown-item').removeClass('focused');
         },
 
         /**
@@ -5045,7 +5045,7 @@ define([
          * @param {string} query
          */
         filterSearchableDropdown: function(dropdown, query) {
-            var items = dropdown.find('.searchable-dropdown-item');
+            var items = dropdown.find('.block-adeptus-searchable-dropdown-item');
             var emptyState = dropdown.find('.searchable-dropdown-empty');
             var visibleCount = 0;
 
@@ -5082,8 +5082,8 @@ define([
             dropdown.find('.searchable-dropdown-text').text(text);
 
             // Mark item as selected
-            dropdown.find('.searchable-dropdown-item').removeClass('selected');
-            dropdown.find('.searchable-dropdown-item[data-value="' + value + '"]').addClass('selected');
+            dropdown.find('.block-adeptus-searchable-dropdown-item').removeClass('selected');
+            dropdown.find('.block-adeptus-searchable-dropdown-item[data-value="' + value + '"]').addClass('selected');
 
             // Find the hidden select sibling and trigger change
             // Works for both category-filter-select and report-selector-select
@@ -5102,7 +5102,7 @@ define([
          * @param {jQuery} item
          */
         scrollDropdownItemIntoView: function(item) {
-            var list = item.closest('.searchable-dropdown-list');
+            var list = item.closest('.block-adeptus-searchable-dropdown-list');
             var listHeight = list.height();
             var itemTop = item.position().top;
             var itemHeight = item.outerHeight();

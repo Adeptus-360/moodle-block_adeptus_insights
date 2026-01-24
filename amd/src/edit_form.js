@@ -184,7 +184,7 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
             var html = '<div class="report-selector-ui">' +
                 '<div class="report-selector-header d-flex justify-content-between align-items-center mb-2">' +
                 '<span class="font-weight-bold">' + modeLabel + '</span>' +
-                '<span class="badge badge-secondary report-count">0 selected</span>' +
+                '<span class="badge badge-secondary block-adeptus-report-count">0 selected</span>' +
                 '</div>' +
 
                 // Searchable dropdown container
@@ -653,17 +653,17 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
          * @return {string} HTML for icon picker
          */
         buildIconPicker: function(currentIcon, index) {
-            var html = '<div class="dropdown kpi-icon-picker mr-2" data-index="' + index + '">' +
+            var html = '<div class="dropdown block-adeptus-kpi-icon-picker mr-2" data-index="' + index + '">' +
                 '<button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" ' +
                 'data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" title="Select icon">' +
                 '<i class="fa ' + currentIcon + '"></i>' +
                 '</button>' +
-                '<div class="dropdown-menu kpi-icon-dropdown">' +
+                '<div class="dropdown-menu block-adeptus-kpi-icon-dropdown">' +
                 '<div class="px-2 py-1">' +
                 '<small class="text-muted">Select an icon</small>' +
                 '</div>' +
                 '<div class="dropdown-divider"></div>' +
-                '<div class="kpi-icon-grid px-2">';
+                '<div class="block-adeptus-kpi-icon-grid px-2">';
 
             // Group icons by category
             var categories = {};
@@ -676,13 +676,13 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
 
             // Render icons grouped by category
             Object.keys(categories).forEach(function(category) {
-                html += '<div class="kpi-icon-category mb-1">' +
+                html += '<div class="block-adeptus-kpi-icon-category mb-1">' +
                     '<small class="text-muted d-block mb-1">' + category + '</small>' +
                     '<div class="d-flex flex-wrap">';
 
                 categories[category].forEach(function(icon) {
                     var isActive = icon.id === currentIcon ? ' active' : '';
-                    html += '<button type="button" class="btn btn-sm btn-light kpi-icon-option m-1' + isActive + '" ' +
+                    html += '<button type="button" class="btn btn-sm btn-light block-adeptus-kpi-icon-option m-1' + isActive + '" ' +
                         'data-icon="' + icon.id + '" title="' + icon.label + '">' +
                         '<i class="fa ' + icon.id + '"></i>' +
                         '</button>';
@@ -704,18 +704,18 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
             var self = this;
 
             // Handle dropdown toggle (manual implementation for dynamic content)
-            this.container.find('.kpi-icon-picker .dropdown-toggle').off('click.iconpicker').on('click.iconpicker', function(e) {
+            this.container.find('.block-adeptus-kpi-icon-picker .dropdown-toggle').off('click.iconpicker').on('click.iconpicker', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
 
                 var $btn = $(this);
-                var $picker = $btn.closest('.kpi-icon-picker');
+                var $picker = $btn.closest('.block-adeptus-kpi-icon-picker');
                 var $menu = $picker.find('.dropdown-menu');
                 var isOpen = $menu.hasClass('show');
 
                 // Close all other open dropdowns first
-                self.container.find('.kpi-icon-picker .dropdown-menu.show').removeClass('show');
-                self.container.find('.kpi-icon-picker .dropdown-toggle').attr('aria-expanded', 'false');
+                self.container.find('.block-adeptus-kpi-icon-picker .dropdown-menu.show').removeClass('show');
+                self.container.find('.block-adeptus-kpi-icon-picker .dropdown-toggle').attr('aria-expanded', 'false');
 
                 if (!isOpen) {
                     // Calculate if dropdown would overflow - use dropup if needed
@@ -737,12 +737,12 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
             });
 
             // Handle icon selection
-            this.container.find('.kpi-icon-option').off('click.iconpicker').on('click.iconpicker', function(e) {
+            this.container.find('.block-adeptus-kpi-icon-option').off('click.iconpicker').on('click.iconpicker', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
 
                 var $btn = $(this);
-                var $picker = $btn.closest('.kpi-icon-picker');
+                var $picker = $btn.closest('.block-adeptus-kpi-icon-picker');
                 var index = parseInt($picker.data('index'), 10);
                 var newIcon = $btn.data('icon');
 
@@ -755,7 +755,7 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                     $picker.find('.dropdown-toggle i').removeClass().addClass('fa ' + newIcon);
 
                     // Update active state
-                    $picker.find('.kpi-icon-option').removeClass('active');
+                    $picker.find('.block-adeptus-kpi-icon-option').removeClass('active');
                     $btn.addClass('active');
 
                     // Close dropdown
@@ -766,9 +766,9 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
 
             // Close dropdown when clicking outside
             $(document).off('click.iconpicker-close').on('click.iconpicker-close', function(e) {
-                if (!$(e.target).closest('.kpi-icon-picker').length) {
-                    self.container.find('.kpi-icon-picker .dropdown-menu.show').removeClass('show');
-                    self.container.find('.kpi-icon-picker .dropdown-toggle').attr('aria-expanded', 'false');
+                if (!$(e.target).closest('.block-adeptus-kpi-icon-picker').length) {
+                    self.container.find('.block-adeptus-kpi-icon-picker .dropdown-menu.show').removeClass('show');
+                    self.container.find('.block-adeptus-kpi-icon-picker .dropdown-toggle').attr('aria-expanded', 'false');
                 }
             });
         },
@@ -795,7 +795,7 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
         updateSelectedCount: function() {
             var count = this.selectedReports.length;
             var text = count === 1 ? '1 selected' : count + ' selected';
-            this.container.find('.report-count').text(text);
+            this.container.find('.block-adeptus-report-count').text(text);
         },
 
         /**
@@ -2336,22 +2336,22 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
              */
             var tryInitialize = function() {
                 // Initialize KPI report selector.
-                if (!initialized.kpi && $('#kpi-report-selector-container').length) {
+                if (!initialized.kpi && $('#block-adeptus-kpi-report-selector-container').length) {
                     new ReportSelector({
                         mode: 'kpi',
                         apiKey: options.apiKey,
-                        containerId: 'kpi-report-selector-container',
+                        containerId: 'block-adeptus-kpi-report-selector-container',
                         textareaName: 'config_kpi_selected_reports'
                     });
                     initialized.kpi = true;
                 }
 
                 // Initialize Tabs report selector.
-                if (!initialized.tabs && $('#tabs-report-selector-container').length) {
+                if (!initialized.tabs && $('#block-adeptus-tabs-report-selector-container').length) {
                     new ReportSelector({
                         mode: 'tabs',
                         apiKey: options.apiKey,
-                        containerId: 'tabs-report-selector-container',
+                        containerId: 'block-adeptus-tabs-report-selector-container',
                         textareaName: 'config_tabs_selected_reports'
                     });
                     initialized.tabs = true;
@@ -2368,7 +2368,7 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                 // Handle Alert Configuration notice visibility based on display mode.
                 // Shows a notice when non-KPI mode is selected, hides it for KPI mode.
                 var displayModeSelect = $('[name="config_display_mode"]');
-                var alertsNotice = $('#alerts-kpi-only-notice');
+                var alertsNotice = $('#block-adeptus-alerts-kpi-only-notice');
                 if (displayModeSelect.length && alertsNotice.length && !displayModeSelect.data('alerts-notice-bound')) {
 
                     var updateAlertNoticeVisibility = function() {

@@ -40,58 +40,58 @@
      data-selected-reports="{{selected_reports_json}}">
 
     {{! Toolbar with filters }}
-    <div class="block-adeptus-toolbar embedded-toolbar">
+    <div class="block-adeptus-toolbar block-adeptus-embedded-toolbar">
         <div class="block-adeptus-filters d-flex gap-2 flex-grow-1">
             {{! Category filter - Searchable dropdown }}
             <div class="block-adeptus-category-filter">
-                <div class="searchable-dropdown category-dropdown" data-placeholder="{{#str}}allcategories, block_adeptus_insights{{/str}}">
-                    <button type="button" class="searchable-dropdown-toggle" aria-haspopup="listbox" aria-expanded="false">
-                        <span class="searchable-dropdown-text">{{#str}}allcategories, block_adeptus_insights{{/str}}</span>
-                        <i class="fa fa-chevron-down searchable-dropdown-arrow"></i>
+                <div class="block-adeptus-searchable-dropdown block-adeptus-category-dropdown" data-placeholder="{{#str}}allcategories, block_adeptus_insights{{/str}}">
+                    <button type="button" class="block-adeptus-searchable-dropdown-toggle" aria-haspopup="listbox" aria-expanded="false">
+                        <span class="block-adeptus-searchable-dropdown-text">{{#str}}allcategories, block_adeptus_insights{{/str}}</span>
+                        <i class="fa fa-chevron-down block-adeptus-searchable-dropdown-arrow"></i>
                     </button>
-                    <div class="searchable-dropdown-menu" role="listbox">
-                        <div class="searchable-dropdown-search">
+                    <div class="block-adeptus-searchable-dropdown-menu" role="listbox">
+                        <div class="block-adeptus-searchable-dropdown-search">
                             <i class="fa fa-search"></i>
-                            <input type="text" class="searchable-dropdown-input" placeholder="{{#str}}searchcategories, block_adeptus_insights{{/str}}" aria-label="{{#str}}aria_searchcategories, block_adeptus_insights{{/str}}">
+                            <input type="text" class="block-adeptus-searchable-dropdown-input" placeholder="{{#str}}searchcategories, block_adeptus_insights{{/str}}" aria-label="{{#str}}aria_searchcategories, block_adeptus_insights{{/str}}">
                         </div>
-                        <ul class="searchable-dropdown-list">
+                        <ul class="block-adeptus-searchable-dropdown-list">
                             {{! Options populated by JavaScript }}
                         </ul>
-                        <div class="searchable-dropdown-empty d-none">
+                        <div class="block-adeptus-searchable-dropdown-empty d-none">
                             <i class="fa fa-folder-open"></i>
                             <span>{{#str}}nocategoriesfound, block_adeptus_insights{{/str}}</span>
                         </div>
                     </div>
                 </div>
                 {{! Hidden select for form compatibility }}
-                <select class="category-filter-select d-none" aria-label="Filter by category">
+                <select class="block-adeptus-category-filter-select d-none" aria-label="Filter by category">
                     <option value="">{{#str}}allcategories, block_adeptus_insights{{/str}}</option>
                 </select>
             </div>
 
             {{! Report selector - Searchable dropdown }}
             <div class="block-adeptus-report-selector flex-grow-1">
-                <div class="searchable-dropdown" data-placeholder="{{#str}}selectreport, block_adeptus_insights{{/str}}">
-                    <button type="button" class="searchable-dropdown-toggle" aria-haspopup="listbox" aria-expanded="false">
-                        <span class="searchable-dropdown-text">{{#str}}selectreport, block_adeptus_insights{{/str}}</span>
-                        <i class="fa fa-chevron-down searchable-dropdown-arrow"></i>
+                <div class="block-adeptus-searchable-dropdown" data-placeholder="{{#str}}selectreport, block_adeptus_insights{{/str}}">
+                    <button type="button" class="block-adeptus-searchable-dropdown-toggle" aria-haspopup="listbox" aria-expanded="false">
+                        <span class="block-adeptus-searchable-dropdown-text">{{#str}}selectreport, block_adeptus_insights{{/str}}</span>
+                        <i class="fa fa-chevron-down block-adeptus-searchable-dropdown-arrow"></i>
                     </button>
-                    <div class="searchable-dropdown-menu" role="listbox">
-                        <div class="searchable-dropdown-search">
+                    <div class="block-adeptus-searchable-dropdown-menu" role="listbox">
+                        <div class="block-adeptus-searchable-dropdown-search">
                             <i class="fa fa-search"></i>
-                            <input type="text" class="searchable-dropdown-input" placeholder="{{#str}}searchreports, block_adeptus_insights{{/str}}" aria-label="{{#str}}aria_searchreports, block_adeptus_insights{{/str}}">
+                            <input type="text" class="block-adeptus-searchable-dropdown-input" placeholder="{{#str}}searchreports, block_adeptus_insights{{/str}}" aria-label="{{#str}}aria_searchreports, block_adeptus_insights{{/str}}">
                         </div>
-                        <ul class="searchable-dropdown-list">
+                        <ul class="block-adeptus-searchable-dropdown-list">
                             {{! Options populated by JavaScript }}
                         </ul>
-                        <div class="searchable-dropdown-empty d-none">
+                        <div class="block-adeptus-searchable-dropdown-empty d-none">
                             <i class="fa fa-inbox"></i>
                             <span>{{#str}}noreportsfound, block_adeptus_insights{{/str}}</span>
                         </div>
                     </div>
                 </div>
                 {{! Hidden select for form compatibility }}
-                <select class="report-selector-select d-none" aria-label="Select report">
+                <select class="block-adeptus-report-selector-select d-none" aria-label="Select report">
                     <option value="">{{#str}}selectreport, block_adeptus_insights{{/str}}</option>
                 </select>
             </div>
@@ -119,65 +119,65 @@
     {{! Content area - mirrors modal design }}
     <div class="block-adeptus-content d-none">
         {{! Loading overlay for report switching }}
-        <div class="embedded-loading-overlay d-none">
-            <div class="embedded-loading-spinner">
+        <div class="block-adeptus-embedded-loading-overlay d-none">
+            <div class="block-adeptus-embedded-loading-spinner">
                 <i class="fa fa-spinner fa-spin"></i>
                 <span>{{#str}}loadingreport, block_adeptus_insights{{/str}}</span>
             </div>
         </div>
 
         {{! Report meta bar }}
-        <div class="embedded-meta-bar d-flex justify-content-between align-items-center mb-2">
-            <div class="report-badges">
-                <span class="report-category badge"></span>
-                <span class="report-rowcount badge bg-secondary"><i class="fa fa-table"></i> <span class="row-count-num">0</span> {{#str}}rows, block_adeptus_insights{{/str}}</span>
+        <div class="block-adeptus-embedded-meta-bar d-flex justify-content-between align-items-center mb-2">
+            <div class="block-adeptus-report-badges">
+                <span class="block-adeptus-report-category badge"></span>
+                <span class="block-adeptus-report-rowcount badge bg-secondary"><i class="fa fa-table"></i> <span class="block-adeptus-row-count-num">0</span> {{#str}}rows, block_adeptus_insights{{/str}}</span>
             </div>
-            <span class="report-date text-muted small"></span>
+            <span class="block-adeptus-report-date text-muted small"></span>
         </div>
 
         {{! Action bar with view toggle }}
-        <div class="embedded-action-bar d-flex justify-content-between align-items-center mb-2">
+        <div class="block-adeptus-embedded-action-bar d-flex justify-content-between align-items-center mb-2">
             {{! View toggle buttons }}
-            <div class="view-toggle btn-group" role="group">
-                <button type="button" class="btn btn-sm btn-outline-secondary embedded-view-toggle-btn active" data-view="table">
+            <div class="block-adeptus-view-toggle btn-group" role="group">
+                <button type="button" class="btn btn-sm btn-outline-secondary block-adeptus-embedded-view-toggle-btn active" data-view="table">
                     <i class="fa fa-table"></i> {{#str}}table, block_adeptus_insights{{/str}}
                 </button>
-                <button type="button" class="btn btn-sm btn-outline-secondary embedded-view-toggle-btn" data-view="chart">
+                <button type="button" class="btn btn-sm btn-outline-secondary block-adeptus-embedded-view-toggle-btn" data-view="chart">
                     <i class="fa fa-bar-chart"></i> {{#str}}chart, block_adeptus_insights{{/str}}
                 </button>
             </div>
 
             {{! Export buttons - visibility controlled by JavaScript based on subscription }}
-            <div class="export-buttons d-flex gap-1">
-                <button class="btn btn-outline-danger btn-sm embedded-export" data-format="pdf" title="{{#str}}exportas_pdf, block_adeptus_insights{{/str}}">
+            <div class="block-adeptus-export-buttons d-flex gap-1">
+                <button class="btn btn-outline-danger btn-sm block-adeptus-embedded-export" data-format="pdf" title="{{#str}}exportas_pdf, block_adeptus_insights{{/str}}">
                     <i class="fa fa-file-pdf-o"></i> {{#str}}exportformat_pdf, block_adeptus_insights{{/str}}
                 </button>
-                <button class="btn btn-outline-primary btn-sm embedded-export" data-format="csv" title="{{#str}}exportas_csv, block_adeptus_insights{{/str}}">
+                <button class="btn btn-outline-primary btn-sm block-adeptus-embedded-export" data-format="csv" title="{{#str}}exportas_csv, block_adeptus_insights{{/str}}">
                     <i class="fa fa-file-excel-o"></i> {{#str}}exportformat_csv, block_adeptus_insights{{/str}}
                 </button>
-                <button class="btn btn-outline-secondary btn-sm embedded-export" data-format="json" title="{{#str}}exportas_json, block_adeptus_insights{{/str}}">
+                <button class="btn btn-outline-secondary btn-sm block-adeptus-embedded-export" data-format="json" title="{{#str}}exportas_json, block_adeptus_insights{{/str}}">
                     <i class="fa fa-file-code-o"></i> {{#str}}exportformat_json, block_adeptus_insights{{/str}}
                 </button>
             </div>
         </div>
 
         {{! Table View }}
-        <div class="embedded-table-view embedded-view">
-            <div class="embedded-table-container">
+        <div class="block-adeptus-embedded-table-view block-adeptus-embedded-view">
+            <div class="block-adeptus-embedded-table-container">
                 <div class="table-responsive">
-                    <table class="table table-striped table-hover table-sm embedded-table">
+                    <table class="table table-striped table-hover table-sm block-adeptus-embedded-table">
                         <thead class="table-light"></thead>
                         <tbody></tbody>
                     </table>
                 </div>
-                <div class="embedded-table-footer mt-2 d-flex justify-content-between align-items-center">
-                    <span class="row-count text-muted small"></span>
-                    <div class="embedded-table-pagination">
-                        <button type="button" class="btn btn-sm btn-outline-secondary embedded-pagination-prev" disabled>
+                <div class="block-adeptus-embedded-table-footer mt-2 d-flex justify-content-between align-items-center">
+                    <span class="block-adeptus-row-count text-muted small"></span>
+                    <div class="block-adeptus-embedded-table-pagination">
+                        <button type="button" class="btn btn-sm btn-outline-secondary block-adeptus-embedded-pagination-prev" disabled>
                             <i class="fa fa-chevron-left"></i>
                         </button>
-                        <span class="embedded-pagination-info mx-2 small text-muted"></span>
-                        <button type="button" class="btn btn-sm btn-outline-secondary embedded-pagination-next">
+                        <span class="block-adeptus-embedded-pagination-info mx-2 small text-muted"></span>
+                        <button type="button" class="btn btn-sm btn-outline-secondary block-adeptus-embedded-pagination-next">
                             <i class="fa fa-chevron-right"></i>
                         </button>
                     </div>
@@ -186,14 +186,14 @@
         </div>
 
         {{! Chart View }}
-        <div class="embedded-chart-view embedded-view d-none">
+        <div class="block-adeptus-embedded-chart-view block-adeptus-embedded-view d-none">
             {{! Chart controls }}
-            <div class="chart-controls-wrapper mb-2">
-                <div class="chart-controls d-flex flex-wrap align-items-end gap-2">
+            <div class="block-adeptus-block-adeptus-chart-controls-wrapper mb-2">
+                <div class="block-adeptus-chart-controls d-flex flex-wrap align-items-end gap-2">
                     {{! Chart type selector }}
-                    <div class="control-group">
+                    <div class="block-adeptus-control-group">
                         <label class="form-label small mb-1">{{#str}}charttype, block_adeptus_insights{{/str}}</label>
-                        <select class="form-select form-select-sm embedded-chart-type">
+                        <select class="form-select form-select-sm block-adeptus-embedded-chart-type">
                             <option value="bar">{{#str}}charttype_bar, block_adeptus_insights{{/str}}</option>
                             <option value="line">{{#str}}charttype_line, block_adeptus_insights{{/str}}</option>
                             <option value="pie">{{#str}}charttype_pie, block_adeptus_insights{{/str}}</option>
@@ -202,24 +202,24 @@
                     </div>
 
                     {{! X-Axis selector }}
-                    <div class="control-group">
+                    <div class="block-adeptus-control-group">
                         <label class="form-label small mb-1">{{#str}}xaxis, block_adeptus_insights{{/str}}</label>
-                        <select class="form-select form-select-sm embedded-chart-x-axis">
+                        <select class="form-select form-select-sm block-adeptus-embedded-chart-x-axis">
                         </select>
                     </div>
 
                     {{! Y-Axis selector }}
-                    <div class="control-group">
+                    <div class="block-adeptus-control-group">
                         <label class="form-label small mb-1">{{#str}}yaxis, block_adeptus_insights{{/str}}</label>
-                        <select class="form-select form-select-sm embedded-chart-y-axis">
+                        <select class="form-select form-select-sm block-adeptus-embedded-chart-y-axis">
                         </select>
                     </div>
                 </div>
             </div>
 
             {{! Chart container }}
-            <div class="embedded-chart-container" style="position: relative; height: {{chart_height}}px;">
-                <canvas class="embedded-chart"></canvas>
+            <div class="block-adeptus-embedded-block-adeptus-chart-container" style="position: relative; height: {{chart_height}}px;">
+                <canvas class="block-adeptus-embedded-chart"></canvas>
             </div>
         </div>
     </div>

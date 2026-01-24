@@ -107,7 +107,7 @@ class block_adeptus_insights_edit_form extends block_edit_form {
             'textarea',
             'config_kpi_selected_reports',
             get_string('configkpireports', 'block_adeptus_insights'),
-            ['rows' => 4, 'class' => 'kpi-reports-selector d-none']
+            ['rows' => 4, 'class' => 'block-adeptus-kpi-reports-selector d-none']
         );
         $mform->setType('config_kpi_selected_reports', PARAM_RAW);
         $mform->hideIf('config_kpi_selected_reports', 'config_display_mode', 'neq', 'kpi');
@@ -117,8 +117,8 @@ class block_adeptus_insights_edit_form extends block_edit_form {
             'static',
             'kpi_report_selector_container',
             '',
-            '<div id="kpi-report-selector-container" class="kpi-report-selector-ui mb-3">' .
-            '<div class="kpi-selector-loading text-center py-3">' .
+            '<div id="block-adeptus-kpi-report-selector-container" class="block-adeptus-kpi-report-selector-ui mb-3">' .
+            '<div class="block-adeptus-kpi-selector-loading text-center py-3">' .
             '<i class="fa fa-spinner fa-spin"></i> ' . get_string('loadingreportselector', 'block_adeptus_insights') . '</div></div>'
         );
         $mform->hideIf('kpi_report_selector_container', 'config_display_mode', 'neq', 'kpi');
@@ -140,7 +140,7 @@ class block_adeptus_insights_edit_form extends block_edit_form {
             'textarea',
             'config_tabs_selected_reports',
             get_string('configtabsreports', 'block_adeptus_insights'),
-            ['rows' => 4, 'class' => 'tabs-reports-selector d-none']
+            ['rows' => 4, 'class' => 'block-adeptus-tabs-reports-selector d-none']
         );
         $mform->setType('config_tabs_selected_reports', PARAM_RAW);
         $mform->hideIf('config_tabs_selected_reports', 'config_display_mode', 'neq', 'tabs');
@@ -150,8 +150,8 @@ class block_adeptus_insights_edit_form extends block_edit_form {
             'static',
             'tabs_report_selector_container',
             '',
-            '<div id="tabs-report-selector-container" class="tabs-report-selector-ui mb-3">' .
-            '<div class="tabs-selector-loading text-center py-3">' .
+            '<div id="block-adeptus-tabs-report-selector-container" class="block-adeptus-tabs-report-selector-ui mb-3">' .
+            '<div class="block-adeptus-tabs-selector-loading text-center py-3">' .
             '<i class="fa fa-spinner fa-spin"></i> ' . get_string('loadingreportselector', 'block_adeptus_insights') . '</div></div>'
         );
         $mform->hideIf('tabs_report_selector_container', 'config_display_mode', 'neq', 'tabs');
@@ -223,7 +223,7 @@ class block_adeptus_insights_edit_form extends block_edit_form {
             'static',
             'alerts_kpi_only_notice',
             '',
-            '<div id="alerts-kpi-only-notice" class="alert alert-info">' .
+            '<div id="block-adeptus-alerts-kpi-only-notice" class="alert alert-info">' .
             '<i class="fa fa-info-circle mr-2"></i>' .
             get_string('alerts_kpi_only_notice', 'block_adeptus_insights') .
             '</div>'
