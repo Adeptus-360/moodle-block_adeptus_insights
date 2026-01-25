@@ -22,8 +22,6 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Adeptus Insights block class.
  *
@@ -78,13 +76,13 @@ class block_adeptus_insights extends block_base {
         if (!empty($this->config->title)) {
             $this->title = format_string($this->config->title);
         } else if (!empty($this->config->display_mode)) {
-            // Set a contextual title based on display mode
+            // Set a contextual title based on display mode.
             switch ($this->config->display_mode) {
                 case 'embedded':
                     if (!empty($this->config->selected_reports)) {
                         $reports = $this->config->selected_reports;
                         if (is_array($reports) && count($reports) === 1) {
-                            // Single report - use its name as title
+                            // Single report - use its name as title.
                             $this->title = get_string('pluginname', 'block_adeptus_insights');
                         }
                     }
@@ -115,13 +113,13 @@ class block_adeptus_insights extends block_base {
         $this->content->text = '';
         $this->content->footer = '';
 
-        // Check if parent plugin is available
+        // Check if parent plugin is available.
         if (!$this->is_parent_plugin_available()) {
             $this->content->text = $this->render_error_state('parentpluginmissing');
             return $this->content;
         }
 
-        // Check capability
+        // Check capability.
         if (!has_capability('report/adeptus_insights:view', $this->context)) {
             $this->content->text = $this->render_error_state('nopermission');
             return $this->content;
@@ -132,13 +130,13 @@ class block_adeptus_insights extends block_base {
             $this->config = new stdClass();
         }
 
-        // Get display mode from config (default to 'links')
+        // Get display mode from config (default to 'links').
         $displaymode = $this->config->display_mode ?? 'links';
 
-        // Build context data for templates
+        // Build context data for templates.
         $contextdata = $this->build_context_data();
 
-        // Render based on display mode
+        // Render based on display mode.
         switch ($displaymode) {
             case 'embedded':
                 $this->content->text = $this->render_embedded_mode($contextdata);
@@ -155,7 +153,7 @@ class block_adeptus_insights extends block_base {
                 break;
         }
 
-        // Initialize JavaScript for the block (must be done in get_content to ensure instance is available)
+        // Initialize JavaScript for the block (must be done in get_content to ensure instance is available).
         $this->init_block_javascript();
 
         return $this->content;
@@ -203,14 +201,6 @@ class block_adeptus_insights extends block_base {
     }
 
     /**
-     * Load required JavaScript for the block.
-     */
-    public function get_required_javascript() {
-        parent::get_required_javascript();
-        // JS initialization moved to init_block_javascript() called from get_content()
-    }
-
-    /**
      * Check if the parent Adeptus Insights report plugin is available.
      *
      * @return bool
@@ -236,19 +226,19 @@ class block_adeptus_insights extends block_base {
             'userid' => $this->page->context->instanceid ?? 0,
         ];
 
-        // Add context filtering data
+        // Add context filtering data.
         $contextfilter = $this->get_context_filter();
         $data['context_type'] = $contextfilter['type'];
         $data['context_id'] = $contextfilter['id'];
         $data['context_name'] = $contextfilter['name'];
 
-        // Add course info if on course page
+        // Add course info if on course page.
         if ($COURSE && $COURSE->id > 1) {
             $data['courseid'] = $COURSE->id;
             $data['coursename'] = format_string($COURSE->fullname);
         }
 
-        // Add configuration
+        // Add configuration.
         $data['display_mode'] = $this->config->display_mode ?? 'links';
         $data['report_category'] = $this->config->report_category ?? '';
 
@@ -278,19 +268,19 @@ class block_adeptus_insights extends block_base {
             'name' => get_string('sitelevel', 'block_adeptus_insights'),
         ];
 
-        // Check if manual context override is set
+        // Check if manual context override is set.
         if (!empty($this->config->context_filter) && $this->config->context_filter !== 'auto') {
             if ($this->config->context_filter === 'course' && !empty($this->config->context_course)) {
                 $filter['type'] = 'course';
                 $filter['id'] = $this->config->context_course;
-                // Get course name
+                // Get course name.
                 global $DB;
                 $course = $DB->get_record('course', ['id' => $this->config->context_course], 'fullname');
                 $filter['name'] = $course ? format_string($course->fullname) : '';
             } else if ($this->config->context_filter === 'category' && !empty($this->config->context_category)) {
                 $filter['type'] = 'category';
                 $filter['id'] = $this->config->context_category;
-                // Get category name
+                // Get category name.
                 global $DB;
                 $category = $DB->get_record('course_categories', ['id' => $this->config->context_category], 'name');
                 $filter['name'] = $category ? format_string($category->name) : '';
@@ -421,7 +411,7 @@ class block_adeptus_insights extends block_base {
         }
 
         // Alert status is now managed via backend API - no local status checking needed
-        // The frontend JavaScript handles alert display from backend API responses
+        // The frontend JavaScript handles alert display from backend API responses.
 
         return $status;
     }
@@ -569,7 +559,7 @@ class block_adeptus_insights extends block_base {
     private function save_alerts_from_json($alertsjson) {
         // Alerts are now managed via backend API - no local storage needed
         // Alert configurations are saved directly to backend via JavaScript (edit_form.js)
-        // This function is kept as a stub for backward compatibility
+        // This function is kept as a stub for backward compatibility.
         return;
     }
 
@@ -577,7 +567,7 @@ class block_adeptus_insights extends block_base {
      * Disable all alerts for this block instance.
      */
     private function disable_all_alerts() {
-        // Alerts are now managed via backend API - no local database to disable
+        // Alerts are now managed via backend API - no local database to disable.
         return;
     }
 
@@ -588,7 +578,7 @@ class block_adeptus_insights extends block_base {
      */
     public function instance_delete() {
         // Alerts and KPI history are now managed via backend API
-        // No local cleanup needed - data is stored at backend.adeptus360.com
+        // No local cleanup needed - data is stored at backend.adeptus360.com.
         return true;
     }
 }

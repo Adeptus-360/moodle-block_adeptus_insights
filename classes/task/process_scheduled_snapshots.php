@@ -27,8 +27,6 @@
 
 namespace block_adeptus_insights\task;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Process scheduled snapshots task.
  *

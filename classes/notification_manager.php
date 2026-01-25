@@ -26,8 +26,6 @@
 
 namespace block_adeptus_insights;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Notification manager class.
  *
@@ -261,9 +259,11 @@ class notification_manager {
             'Oxygen, Ubuntu, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff;">';
 
         // Header banner with logo.
-        $html .= '<div style="background-color: #f8f9fa; padding: 30px; border-radius: 8px 8px 0 0; text-align: center; border-bottom: 1px solid #e9ecef;">';
+        $html .= '<div style="background-color: #f8f9fa; padding: 30px; border-radius: 8px 8px 0 0; ' .
+            'text-align: center; border-bottom: 1px solid #e9ecef;">';
         if ($logo) {
-            $html .= '<img src="' . $logo . '" alt="Adeptus Insights" style="max-height: 90px; width: auto;" />';
+            $html .= '<img src="' . $logo . '" alt="Adeptus Insights" ' .
+                'style="max-height: 90px; width: auto;" />';
         } else {
             $html .= '<span style="color: #1a1a2e; font-size: 24px; font-weight: 600;">Adeptus Insights</span>';
         }
@@ -331,14 +331,16 @@ class notification_manager {
         }
 
         // Site footer.
-        $html .= '<div style="border-top: 1px solid #e9ecef; padding-top: 20px; font-size: 12px; color: #6c757d; text-align: center; line-height: 1.6;">';
+        $html .= '<div style="border-top: 1px solid #e9ecef; padding-top: 20px; font-size: 12px; ' .
+            'color: #6c757d; text-align: center; line-height: 1.6;">';
         $html .= get_string('alert_notification_footer', 'block_adeptus_insights', htmlspecialchars($SITE->fullname));
         $html .= '</div>';
 
         $html .= '</div>'; // End main content area.
 
         // Powered by footer.
-        $html .= '<div style="background-color: #f8f9fa; padding: 15px 30px; border-radius: 0 0 8px 8px; border: 1px solid #e9ecef; border-top: none; text-align: center;">';
+        $html .= '<div style="background-color: #f8f9fa; padding: 15px 30px; border-radius: 0 0 8px 8px; ' .
+            'border: 1px solid #e9ecef; border-top: none; text-align: center;">';
         $html .= '<span style="font-size: 11px; color: #6c757d;">';
         $html .= get_string('alert_powered_by', 'block_adeptus_insights');
         $html .= '</span>';

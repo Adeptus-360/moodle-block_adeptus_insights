@@ -26,8 +26,6 @@
 
 namespace block_adeptus_insights;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Snapshot scheduler manager class.
  *
@@ -378,7 +376,13 @@ class snapshot_scheduler {
      * @param int $blockinstanceid Block instance ID for alert tracking
      * @return bool True on success
      */
-    private function post_snapshot_to_backend($reportslug, $rowcount, $executiontimems, $reportsource = 'wizard', $blockinstanceid = 0) {
+    private function post_snapshot_to_backend(
+        $reportslug,
+        $rowcount,
+        $executiontimems,
+        $reportsource = 'wizard',
+        $blockinstanceid = 0
+    ) {
         global $CFG, $DB;
 
         // Get baseline period from block config (default: all_time).
@@ -515,8 +519,8 @@ class snapshot_scheduler {
             }
 
             // Build a meaningful message with context and trend info.
-            // Format: "Your {report_name} has reached {value}, exceeding your {severity} threshold ({threshold}).
-            // {alert_name} increased/decreased by X (Y%) since last measurement."
+            // Format: "Your {report_name} has reached {value}, exceeding your {severity} threshold ({threshold})."
+            // Example: "{alert_name} increased/decreased by X (Y%) since last measurement".
             $message = "Your {$displayreportname} has reached {$value}, exceeding your {$severity} threshold ({$thresholdvalue}).";
 
             // Add trend information if available.
@@ -565,7 +569,8 @@ class snapshot_scheduler {
                     );
                 }
 
-                mtrace("    Alert '{$alert['alert_name']}' ({$severity}) triggered - {$sendresult['sent_count']} notification(s) sent");
+                mtrace("    Alert '{$alert['alert_name']}' ({$severity}) triggered - " .
+                    "{$sendresult['sent_count']} notification(s) sent");
             }
         }
 
