@@ -358,13 +358,13 @@ define([
             this.container.on('click', '.block-adeptus-searchable-dropdown-toggle', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
-                var dropdown = $(this).closest('.searchable-dropdown');
+                var dropdown = $(this).closest('.block-adeptus-searchable-dropdown');
                 self.toggleSearchableDropdown(dropdown);
             });
 
             // Searchable dropdown - Search input.
-            this.container.on('input', '.searchable-dropdown-input', function() {
-                var dropdown = $(this).closest('.searchable-dropdown');
+            this.container.on('input', '.block-adeptus-searchable-dropdown-input', function() {
+                var dropdown = $(this).closest('.block-adeptus-searchable-dropdown');
                 var query = $(this).val().toLowerCase().trim();
                 self.filterSearchableDropdown(dropdown, query);
             });
@@ -373,15 +373,15 @@ define([
             this.container.on('click', '.block-adeptus-searchable-dropdown-item', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
-                var dropdown = $(this).closest('.searchable-dropdown');
+                var dropdown = $(this).closest('.block-adeptus-searchable-dropdown');
                 var value = $(this).data('value');
-                var text = $(this).find('.dropdown-item-name').text();
+                var text = $(this).find('.block-adeptus-dropdown-item-name').text();
                 self.selectSearchableDropdownItem(dropdown, value, text);
             });
 
             // Searchable dropdown - Keyboard navigation.
-            this.container.on('keydown', '.searchable-dropdown-input', function(e) {
-                var dropdown = $(this).closest('.searchable-dropdown');
+            this.container.on('keydown', '.block-adeptus-searchable-dropdown-input', function(e) {
+                var dropdown = $(this).closest('.block-adeptus-searchable-dropdown');
                 var items = dropdown.find('.block-adeptus-searchable-dropdown-item:visible');
                 var focused = dropdown.find('.block-adeptus-searchable-dropdown-item.focused');
 
@@ -421,8 +421,8 @@ define([
 
             // Close dropdown when clicking outside.
             $(document).on('click', function(e) {
-                if (!$(e.target).closest('.searchable-dropdown').length) {
-                    self.container.find('.searchable-dropdown.open').each(function() {
+                if (!$(e.target).closest('.block-adeptus-searchable-dropdown').length) {
+                    self.container.find('.block-adeptus-searchable-dropdown.open').each(function() {
                         self.closeSearchableDropdown($(this));
                     });
                 }
@@ -1036,7 +1036,7 @@ define([
                 var allSelected = !this.selectedCategory ? 'selected' : '';
                 var allItemHtml = '<li class="block-adeptus-searchable-dropdown-item ' + allSelected + '" data-value="" ' +
                     'data-search="all categories" role="option">' +
-                    '<span class="dropdown-item-name">All Categories</span>' +
+                    '<span class="block-adeptus-dropdown-item-name">All Categories</span>' +
                     '</li>';
                 dropdownList.append(allItemHtml);
 
@@ -1045,8 +1045,8 @@ define([
                     var isSelected = self.selectedCategory === cat.slug ? 'selected' : '';
                     var itemHtml = '<li class="block-adeptus-searchable-dropdown-item ' + isSelected + '" data-value="' + cat.slug + '" ' +
                         'data-search="' + cat.name.toLowerCase() + '" role="option">' +
-                        '<span class="dropdown-item-name">' + self.escapeHtml(cat.name) + '</span>' +
-                        '<span class="dropdown-item-category" style="background-color: ' + cat.color + '">' +
+                        '<span class="block-adeptus-dropdown-item-name">' + self.escapeHtml(cat.name) + '</span>' +
+                        '<span class="block-adeptus-dropdown-item-category" style="background-color: ' + cat.color + '">' +
                         '<i class="fa fa-circle" style="font-size: 0.5rem;"></i></span>' +
                         '</li>';
                     dropdownList.append(itemHtml);
@@ -1062,7 +1062,7 @@ define([
                         selectedText = selectedCat.name;
                     }
                 }
-                dropdown.find('.searchable-dropdown-text').text(selectedText);
+                dropdown.find('.block-adeptus-searchable-dropdown-text').text(selectedText);
 
                 // If category is locked via config, hide the entire category filter
                 if (categoryLocked) {
@@ -1078,7 +1078,7 @@ define([
         populateReportSelector: function() {
             var self = this;
             var select = this.container.find('.block-adeptus-report-selector-select');
-            var dropdown = this.container.find('.block-adeptus-report-selector .searchable-dropdown');
+            var dropdown = this.container.find('.block-adeptus-report-selector .block-adeptus-searchable-dropdown');
             var dropdownList = dropdown.find('.block-adeptus-searchable-dropdown-list');
 
             if (!select.length) {
@@ -1106,8 +1106,8 @@ define([
                 // Searchable dropdown item
                 var itemHtml = '<li class="block-adeptus-searchable-dropdown-item" data-value="' + value + '" data-search="' +
                     reportName.toLowerCase() + ' ' + categoryInfo.name.toLowerCase() + '" role="option">' +
-                    '<span class="dropdown-item-name">' + self.escapeHtml(reportName) + '</span>' +
-                    '<span class="dropdown-item-category" style="background-color: ' + categoryInfo.color + '">' +
+                    '<span class="block-adeptus-dropdown-item-name">' + self.escapeHtml(reportName) + '</span>' +
+                    '<span class="block-adeptus-dropdown-item-category" style="background-color: ' + categoryInfo.color + '">' +
                     self.escapeHtml(categoryInfo.name) + '</span>' +
                     '</li>';
                 dropdownList.append(itemHtml);
@@ -1130,7 +1130,7 @@ define([
                 this.selectedReportSlug = firstReport.slug;
                 this.selectedReportSource = firstReport.source;
                 // Update searchable dropdown display
-                dropdown.find('.searchable-dropdown-text').text(firstName);
+                dropdown.find('.block-adeptus-searchable-dropdown-text').text(firstName);
                 dropdown.find('.block-adeptus-searchable-dropdown-item').removeClass('selected');
                 dropdown.find('.block-adeptus-searchable-dropdown-item[data-value="' + firstValue + '"]').addClass('selected');
                 // Load the first report
@@ -1141,14 +1141,14 @@ define([
                 var selectedReport = reports.find(function(r) { return r.slug === parts[0]; });
                 if (selectedReport) {
                     var selectedName = selectedReport.name || selectedReport.title || selectedReport.display_name || selectedReport.slug || 'Untitled';
-                    dropdown.find('.searchable-dropdown-text').text(selectedName);
+                    dropdown.find('.block-adeptus-searchable-dropdown-text').text(selectedName);
                     dropdown.find('.block-adeptus-searchable-dropdown-item').removeClass('selected');
                     dropdown.find('.block-adeptus-searchable-dropdown-item[data-value="' + select.val() + '"]').addClass('selected');
                 }
                 this.loadEmbeddedReport(parts[0], parts[1] || 'wizard');
             } else {
                 // No reports available
-                dropdown.find('.searchable-dropdown-text').text(this.strings.noReports);
+                dropdown.find('.block-adeptus-searchable-dropdown-text').text(this.strings.noReports);
                 this.showEmpty();
             }
         },
@@ -5006,7 +5006,7 @@ define([
         openSearchableDropdown: function(dropdown) {
             // Close any other open dropdowns first
             var self = this;
-            this.container.find('.searchable-dropdown.open').each(function() {
+            this.container.find('.block-adeptus-searchable-dropdown.open').each(function() {
                 if (!$(this).is(dropdown)) {
                     self.closeSearchableDropdown($(this));
                 }
@@ -5016,10 +5016,10 @@ define([
             dropdown.find('.block-adeptus-searchable-dropdown-toggle').attr('aria-expanded', 'true');
 
             // Clear search and show all items
-            var input = dropdown.find('.searchable-dropdown-input');
+            var input = dropdown.find('.block-adeptus-searchable-dropdown-input');
             input.val('');
             dropdown.find('.block-adeptus-searchable-dropdown-item').show().removeClass('focused');
-            dropdown.find('.searchable-dropdown-empty').addClass('d-none');
+            dropdown.find('.block-adeptus-searchable-dropdown-empty').addClass('d-none');
 
             // Focus search input
             setTimeout(function() {
@@ -5046,7 +5046,7 @@ define([
          */
         filterSearchableDropdown: function(dropdown, query) {
             var items = dropdown.find('.block-adeptus-searchable-dropdown-item');
-            var emptyState = dropdown.find('.searchable-dropdown-empty');
+            var emptyState = dropdown.find('.block-adeptus-searchable-dropdown-empty');
             var visibleCount = 0;
 
             items.each(function() {
@@ -5079,7 +5079,7 @@ define([
          */
         selectSearchableDropdownItem: function(dropdown, value, text) {
             // Update display text
-            dropdown.find('.searchable-dropdown-text').text(text);
+            dropdown.find('.block-adeptus-searchable-dropdown-text').text(text);
 
             // Mark item as selected
             dropdown.find('.block-adeptus-searchable-dropdown-item').removeClass('selected');

@@ -88,7 +88,7 @@
     max-width: 280px;
 }
 
-/* Category dropdown uses same searchable-dropdown styles */
+/* Category dropdown uses same block-adeptus-searchable-dropdown styles */
 .block-adeptus-category-filter .block-adeptus-category-dropdown {
     width: 100%;
 }
@@ -1212,6 +1212,15 @@
     color: var(--adeptus-primary);
     border-bottom-color: var(--adeptus-primary);
     background-color: transparent;
+}
+
+/* Tab pane visibility - mimics Bootstrap tab-pane behavior */
+.block-adeptus-tab-pane {
+    display: none;
+}
+
+.block-adeptus-tab-pane.show.active {
+    display: block;
 }
 
 .block-adeptus-tab-content {

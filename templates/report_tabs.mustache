@@ -54,13 +54,13 @@
 
     {{! Loading state }}
     <div class="block-adeptus-loading {{^loading}}d-none{{/loading}}">
-        <div class="block-adeptus-block-adeptus-skeleton-tabs">
+        <div class="block-adeptus-skeleton-tabs">
             <div class="block-adeptus-skeleton-tab-bar">
                 <div class="block-adeptus-skeleton-tab"></div>
                 <div class="block-adeptus-skeleton-tab"></div>
                 <div class="block-adeptus-skeleton-tab"></div>
             </div>
-            <div class="block-adeptus-skeleton-block-adeptus-tab-content" style="height: 200px;">
+            <div class="block-adeptus-skeleton-tab-content" style="height: 200px;">
                 <div class="block-adeptus-skeleton-chart-placeholder">
                     <i class="fa fa-bar-chart fa-3x text-muted"></i>
                 </div>
@@ -76,7 +76,7 @@
         </ul>
 
         {{! Tab content }}
-        <div class="block-adeptus-tab-content block-adeptus-block-adeptus-tab-content">
+        <div class="block-adeptus-tab-content">
             {{! Tab panes will be inserted here by JavaScript }}
         </div>
     </div>
@@ -114,15 +114,15 @@
 </template>
 
 {{! Tab pane template with consistent design - mirrors embedded/modal design }}
-<template id="block-adeptus-block-adeptus-tab-pane-template-{{blockid}}">
-    <div class="block-adeptus-tab-pane fade" role="tabpanel">
+<template id="block-adeptus-tab-pane-template-{{blockid}}">
+    <div class="tab-pane block-adeptus-tab-pane fade" role="tabpanel">
         {{! Loading state for tab }}
-        <div class="block-adeptus-block-adeptus-tab-pane-loading text-center py-3">
+        <div class="block-adeptus-tab-pane-loading text-center py-3">
             <i class="fa fa-spinner fa-spin"></i> {{#str}}loading, block_adeptus_insights{{/str}}
         </div>
 
         {{! Tab pane content wrapper }}
-        <div class="block-adeptus-block-adeptus-tab-pane-content d-none">
+        <div class="block-adeptus-tab-pane-content d-none">
             {{! Meta bar with badges and date }}
             <div class="block-adeptus-tab-meta-bar d-flex justify-content-between align-items-center mb-2">
                 <div class="block-adeptus-report-badges">
@@ -136,10 +136,10 @@
             <div class="block-adeptus-tab-action-bar d-flex justify-content-between align-items-center mb-2">
                 {{! View toggle buttons }}
                 <div class="block-adeptus-view-toggle btn-group" role="group">
-                    <button type="button" class="btn btn-sm btn-outline-secondary block-adeptus-block-adeptus-tab-view-toggle-btn active" data-view="table">
+                    <button type="button" class="btn btn-sm btn-outline-secondary block-adeptus-tab-view-toggle-btn active" data-view="table">
                         <i class="fa fa-table"></i> {{#str}}table, block_adeptus_insights{{/str}}
                     </button>
-                    <button type="button" class="btn btn-sm btn-outline-secondary block-adeptus-block-adeptus-tab-view-toggle-btn" data-view="chart">
+                    <button type="button" class="btn btn-sm btn-outline-secondary block-adeptus-tab-view-toggle-btn" data-view="chart">
                         <i class="fa fa-bar-chart"></i> {{#str}}chart, block_adeptus_insights{{/str}}
                     </button>
                 </div>
@@ -185,7 +185,7 @@
             {{! Chart View }}
             <div class="block-adeptus-tab-chart-view block-adeptus-tab-view d-none">
                 {{! Chart controls }}
-                <div class="block-adeptus-block-adeptus-chart-controls-wrapper mb-2">
+                <div class="block-adeptus-chart-controls-wrapper mb-2">
                     <div class="block-adeptus-chart-controls d-flex flex-wrap align-items-end gap-2">
                         {{! Chart type selector }}
                         <div class="block-adeptus-control-group">
@@ -215,7 +215,7 @@
                 </div>
 
                 {{! Chart container }}
-                <div class="block-adeptus-tab-block-adeptus-chart-container" style="position: relative; height: {{chart_height}}px;">
+                <div class="block-adeptus-tab-chart-container" style="position: relative; height: {{chart_height}}px;">
                     <canvas class="block-adeptus-tab-chart"></canvas>
                 </div>
             </div>
