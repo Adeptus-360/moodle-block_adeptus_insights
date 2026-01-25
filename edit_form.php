@@ -22,8 +22,6 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Form for editing Adeptus Insights block instances.
  */
@@ -36,9 +34,7 @@ class block_adeptus_insights_edit_form extends block_edit_form {
     protected function specific_definition($mform) {
         global $CFG, $DB;
 
-        // =====================================
-        // GENERAL SETTINGS
-        // =====================================
+        // General settings section.
         $mform->addElement('header', 'config_header_general', get_string('settings_general', 'block_adeptus_insights'));
 
         // Block title.
@@ -53,22 +49,30 @@ class block_adeptus_insights_edit_form extends block_edit_form {
             'links' => get_string('displaymode_links', 'block_adeptus_insights'),
             'tabs' => get_string('displaymode_tabs', 'block_adeptus_insights'),
         ];
-        $mform->addElement('select', 'config_display_mode', get_string('configdisplaymode', 'block_adeptus_insights'), $displaymodes);
+        $mform->addElement(
+            'select',
+            'config_display_mode',
+            get_string('configdisplaymode', 'block_adeptus_insights'),
+            $displaymodes
+        );
         $mform->setDefault('config_display_mode', 'links');
         $mform->addHelpButton('config_display_mode', 'configdisplaymode', 'block_adeptus_insights');
 
         // Report category filter - filters reports shown in this block.
         // Only applicable to Report Links and Embedded modes (KPI and Tabs have their own report selectors).
         $reportcategories = $this->get_report_category_options();
-        $mform->addElement('select', 'config_report_category', get_string('configselectedcategory', 'block_adeptus_insights'), $reportcategories);
+        $mform->addElement(
+            'select',
+            'config_report_category',
+            get_string('configselectedcategory', 'block_adeptus_insights'),
+            $reportcategories
+        );
         $mform->setDefault('config_report_category', '');
         $mform->addHelpButton('config_report_category', 'configselectedcategory', 'block_adeptus_insights');
         $mform->hideIf('config_report_category', 'config_display_mode', 'eq', 'kpi');
         $mform->hideIf('config_report_category', 'config_display_mode', 'eq', 'tabs');
 
-        // =====================================
-        // DISPLAY OPTIONS
-        // =====================================
+        // Display options section.
         $mform->addElement('header', 'config_header_display', get_string('settings_display', 'block_adeptus_insights'));
 
         // Chart height.
@@ -76,11 +80,20 @@ class block_adeptus_insights_edit_form extends block_edit_form {
         for ($h = 150; $h <= 400; $h += 50) {
             $chartheights[$h] = $h . 'px';
         }
-        $mform->addElement('select', 'config_chart_height', get_string('configchartheight', 'block_adeptus_insights'), $chartheights);
+        $mform->addElement(
+            'select',
+            'config_chart_height',
+            get_string('configchartheight', 'block_adeptus_insights'),
+            $chartheights
+        );
         $mform->setDefault('config_chart_height', 250);
 
         // Show category badges (links mode only).
-        $mform->addElement('advcheckbox', 'config_show_category_badges', get_string('configshowcategorybadges', 'block_adeptus_insights'));
+        $mform->addElement(
+            'advcheckbox',
+            'config_show_category_badges',
+            get_string('configshowcategorybadges', 'block_adeptus_insights')
+        );
         $mform->setDefault('config_show_category_badges', 1);
         $mform->hideIf('config_show_category_badges', 'config_display_mode', 'neq', 'links');
 
@@ -117,9 +130,11 @@ class block_adeptus_insights_edit_form extends block_edit_form {
             'static',
             'kpi_report_selector_container',
             '',
-            '<div id="block-adeptus-kpi-report-selector-container" class="block-adeptus-kpi-report-selector-ui mb-3">' .
-            '<div class="block-adeptus-kpi-selector-loading text-center py-3">' .
-            '<i class="fa fa-spinner fa-spin"></i> ' . get_string('loadingreportselector', 'block_adeptus_insights') . '</div></div>'
+            '<div id="block-adeptus-kpi-report-selector-container" ' .
+                'class="block-adeptus-kpi-report-selector-ui mb-3">' .
+                '<div class="block-adeptus-kpi-selector-loading text-center py-3">' .
+                '<i class="fa fa-spinner fa-spin"></i> ' .
+                get_string('loadingreportselector', 'block_adeptus_insights') . '</div></div>'
         );
         $mform->hideIf('kpi_report_selector_container', 'config_display_mode', 'neq', 'kpi');
 
@@ -150,21 +165,26 @@ class block_adeptus_insights_edit_form extends block_edit_form {
             'static',
             'tabs_report_selector_container',
             '',
-            '<div id="block-adeptus-tabs-report-selector-container" class="block-adeptus-tabs-report-selector-ui mb-3">' .
-            '<div class="block-adeptus-tabs-selector-loading text-center py-3">' .
-            '<i class="fa fa-spinner fa-spin"></i> ' . get_string('loadingreportselector', 'block_adeptus_insights') . '</div></div>'
+            '<div id="block-adeptus-tabs-report-selector-container" ' .
+                'class="block-adeptus-tabs-report-selector-ui mb-3">' .
+                '<div class="block-adeptus-tabs-selector-loading text-center py-3">' .
+                '<i class="fa fa-spinner fa-spin"></i> ' .
+                get_string('loadingreportselector', 'block_adeptus_insights') . '</div></div>'
         );
         $mform->hideIf('tabs_report_selector_container', 'config_display_mode', 'neq', 'tabs');
 
         // Max link items (for links mode).
         $maxitems = [5 => '5', 10 => '10', 15 => '15', 20 => '20'];
-        $mform->addElement('select', 'config_max_link_items', get_string('configmaxlinkitems', 'block_adeptus_insights'), $maxitems);
+        $mform->addElement(
+            'select',
+            'config_max_link_items',
+            get_string('configmaxlinkitems', 'block_adeptus_insights'),
+            $maxitems
+        );
         $mform->setDefault('config_max_link_items', 10);
         $mform->hideIf('config_max_link_items', 'config_display_mode', 'neq', 'links');
 
-        // =====================================
-        // DATA REFRESH SETTINGS
-        // =====================================
+        // Data refresh settings section.
         $mform->addElement('header', 'config_header_behavior', get_string('settings_datarefresh', 'block_adeptus_insights'));
 
         // Auto-refresh.
@@ -175,20 +195,31 @@ class block_adeptus_insights_edit_form extends block_edit_form {
             '30m' => get_string('autorefresh_30m', 'block_adeptus_insights'),
             '1h' => get_string('autorefresh_1h', 'block_adeptus_insights'),
         ];
-        $mform->addElement('select', 'config_auto_refresh', get_string('configautorefresh', 'block_adeptus_insights'), $refreshintervals);
+        $mform->addElement(
+            'select',
+            'config_auto_refresh',
+            get_string('configautorefresh', 'block_adeptus_insights'),
+            $refreshintervals
+        );
         $mform->setDefault('config_auto_refresh', 'never');
 
         // Show refresh button.
-        $mform->addElement('advcheckbox', 'config_show_refresh_button', get_string('configshowrefreshbutton', 'block_adeptus_insights'));
+        $mform->addElement(
+            'advcheckbox',
+            'config_show_refresh_button',
+            get_string('configshowrefreshbutton', 'block_adeptus_insights')
+        );
         $mform->setDefault('config_show_refresh_button', 1);
 
         // Show timestamp.
-        $mform->addElement('advcheckbox', 'config_show_timestamp', get_string('configshowtimestamp', 'block_adeptus_insights'));
+        $mform->addElement(
+            'advcheckbox',
+            'config_show_timestamp',
+            get_string('configshowtimestamp', 'block_adeptus_insights')
+        );
         $mform->setDefault('config_show_timestamp', 1);
 
-        // =====================================
-        // CONTEXT FILTERING
-        // =====================================
+        // Context filtering section.
         $mform->addElement('header', 'config_header_context', get_string('configcontextfilter', 'block_adeptus_insights'));
 
         // Context filter mode.
@@ -198,23 +229,36 @@ class block_adeptus_insights_edit_form extends block_edit_form {
             'category' => get_string('configcontextcategory', 'block_adeptus_insights'),
             'none' => get_string('contextfilter_none', 'block_adeptus_insights'),
         ];
-        $mform->addElement('select', 'config_context_filter', get_string('configcontextfilter', 'block_adeptus_insights'), $contextmodes);
+        $mform->addElement(
+            'select',
+            'config_context_filter',
+            get_string('configcontextfilter', 'block_adeptus_insights'),
+            $contextmodes
+        );
         $mform->setDefault('config_context_filter', 'auto');
         $mform->addHelpButton('config_context_filter', 'configcontextfilter', 'block_adeptus_insights');
 
         // Course selector (for manual course context).
         $courses = $this->get_course_options();
-        $mform->addElement('autocomplete', 'config_context_course', get_string('configcontextcourse', 'block_adeptus_insights'), $courses);
+        $mform->addElement(
+            'autocomplete',
+            'config_context_course',
+            get_string('configcontextcourse', 'block_adeptus_insights'),
+            $courses
+        );
         $mform->hideIf('config_context_course', 'config_context_filter', 'neq', 'course');
 
         // Category selector (for manual category context).
         $categories = $this->get_category_options();
-        $mform->addElement('autocomplete', 'config_context_category', get_string('configcontextcategory', 'block_adeptus_insights'), $categories);
+        $mform->addElement(
+            'autocomplete',
+            'config_context_category',
+            get_string('configcontextcategory', 'block_adeptus_insights'),
+            $categories
+        );
         $mform->hideIf('config_context_category', 'config_context_filter', 'neq', 'category');
 
-        // =====================================
-        // ALERT CONFIGURATION (for KPI mode)
-        // =====================================
+        // Alert configuration section (for KPI mode).
         $mform->addElement('header', 'config_header_alerts', get_string('config_header_alerts', 'block_adeptus_insights'));
         $mform->addHelpButton('config_header_alerts', 'config_header_alerts', 'block_adeptus_insights');
 
@@ -283,7 +327,8 @@ class block_adeptus_insights_edit_form extends block_edit_form {
                 '<strong>' . get_string('feature_locked', 'block_adeptus_insights') . '</strong><br>' .
                 get_string('alerts_upgrade_required', 'block_adeptus_insights') .
                 '<br><br>' .
-                '<a href="' . $upgradeurl->out() . '" class="btn btn-primary btn-sm" style="color: #fff; background-color: #0f6cbf; border-color: #0f6cbf;">' .
+                '<a href="' . $upgradeurl->out() . '" class="btn btn-primary btn-sm" ' .
+                    'style="color: #fff; background-color: #0f6cbf; border-color: #0f6cbf;">' .
                 '<i class="fa fa-arrow-up mr-1"></i>' .
                 get_string('upgrade_to_unlock', 'block_adeptus_insights') .
                 '</a>' .
@@ -371,20 +416,28 @@ class block_adeptus_insights_edit_form extends block_edit_form {
                 </div>
 
                 <!-- Alert edit modal/panel template -->
-                <div id="alert-edit-panel" class="alert-edit-panel card mb-3" style="display:none;">
+                <div id="alert-edit-panel" class="alert-edit-panel card mb-3"
+                     style="display:none;">
                     <div class="card-header d-flex justify-content-between align-items-center">
-                        <span class="font-weight-bold alert-panel-title">' . get_string('config_add_alert', 'block_adeptus_insights') . '</span>
+                        <span class="font-weight-bold alert-panel-title">' .
+                            get_string('config_add_alert', 'block_adeptus_insights') . '</span>
                         <button type="button" class="close alert-panel-close" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
                         </button>
                     </div>
                     <div class="card-body">
                         <div class="form-group">
-                            <label for="alert-edit-report">' . get_string('config_alert_report', 'block_adeptus_insights') . ' <span class="text-danger">*</span></label>
-                            <input type="text" id="alert-edit-report-search" class="form-control"
-                                   placeholder="' . get_string('config_alert_report_placeholder', 'block_adeptus_insights') . '">
-                            <div id="alert-report-dropdown" class="alert-report-dropdown position-absolute bg-white border rounded shadow-sm"
-                                 style="display:none; z-index:1050; max-height:250px; overflow-y:auto;"></div>
+                            <label for="alert-edit-report">' .
+                                get_string('config_alert_report', 'block_adeptus_insights') .
+                                ' <span class="text-danger">*</span></label>
+                            <input type="text" id="alert-edit-report-search"
+                                   class="form-control"
+                                   placeholder="' .
+                                get_string('config_alert_report_placeholder', 'block_adeptus_insights') . '">
+                            <div id="alert-report-dropdown"
+                                 class="alert-report-dropdown position-absolute bg-white border rounded shadow-sm"
+                                 style="display:none; z-index:1050; max-height:250px; overflow-y:auto;">
+                            </div>
                             <input type="hidden" id="alert-edit-report" value="">
                             <small class="form-text text-muted" id="alert-edit-report-display"></small>
                         </div>
@@ -393,25 +446,32 @@ class block_adeptus_insights_edit_form extends block_edit_form {
                             <label for="alert-edit-name">' .
                                 get_string('config_alert_name', 'block_adeptus_insights') . '</label>
                             <input type="text" id="alert-edit-name" class="form-control"
-                                placeholder="' . get_string('config_alert_name_placeholder', 'block_adeptus_insights') . '">
+                                placeholder="' .
+                                get_string('config_alert_name_placeholder', 'block_adeptus_insights') . '">
                         </div>
 
                         <div class="row">
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    <label for="alert-edit-operator">' . get_string('config_alert_operator', 'block_adeptus_insights') . '</label>
+                                    <label for="alert-edit-operator">' .
+                                        get_string('config_alert_operator', 'block_adeptus_insights') .
+                                        '</label>
                                     <select id="alert-edit-operator" class="form-control"></select>
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    <label for="alert-edit-warning">' . get_string('config_alert_warning_value', 'block_adeptus_insights') . '</label>
+                                    <label for="alert-edit-warning">' .
+                                        get_string('config_alert_warning_value', 'block_adeptus_insights') .
+                                        '</label>
                                     <input type="number" step="any" id="alert-edit-warning" class="form-control">
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    <label for="alert-edit-critical">' . get_string('config_alert_critical_value', 'block_adeptus_insights') . '</label>
+                                    <label for="alert-edit-critical">' .
+                                        get_string('config_alert_critical_value', 'block_adeptus_insights') .
+                                        '</label>
                                     <input type="number" step="any" id="alert-edit-critical" class="form-control">
                                 </div>
                             </div>
@@ -420,13 +480,17 @@ class block_adeptus_insights_edit_form extends block_edit_form {
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="alert-edit-interval">' . get_string('config_alert_check_interval', 'block_adeptus_insights') . '</label>
+                                    <label for="alert-edit-interval">' .
+                                        get_string('config_alert_check_interval', 'block_adeptus_insights') .
+                                        '</label>
                                     <select id="alert-edit-interval" class="form-control"></select>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="alert-edit-cooldown">' . get_string('config_alert_cooldown', 'block_adeptus_insights') . '</label>
+                                    <label for="alert-edit-cooldown">' .
+                                        get_string('config_alert_cooldown', 'block_adeptus_insights') .
+                                        '</label>
                                     <select id="alert-edit-cooldown" class="form-control"></select>
                                 </div>
                             </div>
@@ -457,41 +521,53 @@ class block_adeptus_insights_edit_form extends block_edit_form {
                         </div>
 
                         <hr class="my-3">
-                        <h6 class="text-muted mb-3"><i class="fa fa-envelope mr-1"></i> ' . get_string('email_notifications_header', 'block_adeptus_insights') . '</h6>
+                        <h6 class="text-muted mb-3"><i class="fa fa-envelope mr-1"></i> ' .
+                            get_string('email_notifications_header', 'block_adeptus_insights') . '</h6>
 
                         <div class="form-group">
                             <div class="custom-control custom-checkbox">
                                 <input type="checkbox" class="custom-control-input" id="alert-edit-notify-email">
-                                <label class="custom-control-label" for="alert-edit-notify-email">' . get_string('config_alert_notify_email', 'block_adeptus_insights') . '</label>
+                                <label class="custom-control-label" for="alert-edit-notify-email">' .
+                                    get_string('config_alert_notify_email', 'block_adeptus_insights') . '</label>
                             </div>
-                            <small class="form-text text-muted">' . get_string('config_alert_notify_email_desc', 'block_adeptus_insights') . '</small>
+                            <small class="form-text text-muted">' .
+                                get_string('config_alert_notify_email_desc', 'block_adeptus_insights') . '</small>
                         </div>
 
                         <div class="form-group" id="email-addresses-group" style="display: none;">
                             <label for="alert-edit-email-addresses">' .
                                 get_string('config_alert_notify_email_addresses', 'block_adeptus_insights') . '</label>
                             <textarea id="alert-edit-email-addresses" class="form-control" rows="3"
-                                placeholder="' . get_string('config_alert_notify_email_addresses_placeholder', 'block_adeptus_insights') . '"></textarea>
+                                placeholder="' .
+                                get_string('config_alert_notify_email_addresses_placeholder', 'block_adeptus_insights') .
+                                '"></textarea>
                             <small class="form-text text-muted">' .
                                 get_string('config_alert_notify_email_addresses_desc', 'block_adeptus_insights') . '</small>
                         </div>
 
                         <hr class="my-3">
-                        <h6 class="text-muted mb-3"><i class="fa fa-comment mr-1"></i> ' . get_string('moodle_notifications_header', 'block_adeptus_insights') . '</h6>
+                        <h6 class="text-muted mb-3"><i class="fa fa-comment mr-1"></i> ' .
+                            get_string('moodle_notifications_header', 'block_adeptus_insights') . '</h6>
 
                         <div class="form-group">
-                            <label for="alert-edit-role-filter">' . get_string('config_alert_role_filter', 'block_adeptus_insights') . '</label>
+                            <label for="alert-edit-role-filter">' .
+                                get_string('config_alert_role_filter', 'block_adeptus_insights') . '</label>
                             <select id="alert-edit-role-filter" class="form-control">
-                                <option value="">' . get_string('config_alert_role_filter_all', 'block_adeptus_insights') . '</option>
+                                <option value="">' .
+                                    get_string('config_alert_role_filter_all', 'block_adeptus_insights') .
+                                    '</option>
                             </select>
-                            <small class="form-text text-muted">' . get_string('config_alert_role_filter_desc', 'block_adeptus_insights') . '</small>
+                            <small class="form-text text-muted">' .
+                                get_string('config_alert_role_filter_desc', 'block_adeptus_insights') . '</small>
                         </div>
 
                         <div class="form-group">
-                            <label for="alert-edit-notify-users">' . get_string('config_alert_notify_users', 'block_adeptus_insights') . '</label>
+                            <label for="alert-edit-notify-users">' .
+                                get_string('config_alert_notify_users', 'block_adeptus_insights') . '</label>
                             <div class="alert-users-search-container position-relative mb-2">
                                 <input type="text" id="alert-edit-user-search" class="form-control"
-                                    placeholder="' . get_string('config_alert_user_search_placeholder', 'block_adeptus_insights') . '"
+                                    placeholder="' .
+                                    get_string('config_alert_user_search_placeholder', 'block_adeptus_insights') . '"
                                     autocomplete="off">
                                 <div id="alert-user-dropdown" class="position-absolute w-100 bg-white border rounded shadow-sm"
                                     style="display:none; z-index:1050; max-height:250px; overflow-y:auto; top:100%; left:0;">
@@ -499,7 +575,8 @@ class block_adeptus_insights_edit_form extends block_edit_form {
                             </div>
                             <div id="alert-selected-users" class="selected-users-list mb-2"></div>
                             <input type="hidden" id="alert-edit-notify-users-data" value="[]">
-                            <small class="form-text text-muted">' . get_string('config_alert_notify_users_desc', 'block_adeptus_insights') . '</small>
+                            <small class="form-text text-muted">' .
+                                get_string('config_alert_notify_users_desc', 'block_adeptus_insights') . '</small>
                         </div>
                     </div>
                     <div class="card-footer text-right">

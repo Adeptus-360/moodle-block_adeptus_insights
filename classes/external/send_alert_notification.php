@@ -49,7 +49,12 @@ class send_alert_notification extends external_api {
                     'alert_id' => new external_value(PARAM_INT, 'Backend alert ID', VALUE_DEFAULT, 0),
                     'alert_name' => new external_value(PARAM_TEXT, 'Alert name'),
                     'message' => new external_value(PARAM_RAW, 'Alert message'),
-                    'severity' => new external_value(PARAM_ALPHA, 'Severity: warning, critical, or recovery', VALUE_DEFAULT, 'warning'),
+                    'severity' => new external_value(
+                        PARAM_ALPHA,
+                        'Severity: warning, critical, or recovery',
+                        VALUE_DEFAULT,
+                        'warning'
+                    ),
                     'report_name' => new external_value(PARAM_TEXT, 'Report name', VALUE_DEFAULT, ''),
                     'report_slug' => new external_value(PARAM_RAW, 'Report slug', VALUE_DEFAULT, ''),
                     'current_value' => new external_value(PARAM_RAW, 'Current metric value', VALUE_DEFAULT, ''),
