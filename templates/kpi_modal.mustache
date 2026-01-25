@@ -26,9 +26,9 @@
         "blockid": 123
     }
 }}
-<div class="block-adeptus-block-adeptus-kpi-modal-content" data-blockid="{{blockid}}">
+<div class="block-adeptus-kpi-modal-content" data-blockid="{{blockid}}">
     {{! Loading state }}
-    <div class="block-adeptus-kpi-block-adeptus-modal-loading">
+    <div class="block-adeptus-kpi-modal-loading">
         <div class="text-center py-5">
             <i class="fa fa-spinner fa-spin fa-3x text-primary"></i>
             <p class="text-muted mt-3">{{#str}}loading, block_adeptus_insights{{/str}}</p>
@@ -36,7 +36,7 @@
     </div>
 
     {{! Content }}
-    <div class="block-adeptus-kpi-block-adeptus-modal-content-area d-none">
+    <div class="block-adeptus-kpi-modal-content-area d-none">
         {{! Header with metric and date range }}
         <div class="block-adeptus-kpi-modal-header d-flex justify-content-between align-items-start mb-4">
             {{! Current metric value }}
@@ -64,8 +64,8 @@
         </div>
 
         {{! Interactive chart }}
-        <div class="block-adeptus-kpi-modal-block-adeptus-chart-container mb-4">
-            <canvas class="block-adeptus-kpi-block-adeptus-modal-chart"></canvas>
+        <div class="block-adeptus-kpi-modal-chart-container mb-4">
+            <canvas class="block-adeptus-kpi-modal-chart"></canvas>
         </div>
 
         {{! Statistics row }}
@@ -102,11 +102,11 @@
     </div>
 
     {{! Error state }}
-    <div class="block-adeptus-kpi-block-adeptus-modal-error d-none">
+    <div class="block-adeptus-kpi-modal-error d-none">
         <div class="text-center py-5">
             <i class="fa fa-exclamation-triangle fa-3x text-warning"></i>
             <p class="text-muted mt-3">{{#str}}errorloadingkpi, block_adeptus_insights{{/str}}</p>
-            <button type="button" class="btn btn-outline-secondary block-adeptus-kpi-block-adeptus-modal-retry">
+            <button type="button" class="btn btn-outline-secondary block-adeptus-kpi-modal-retry">
                 <i class="fa fa-refresh"></i> {{#str}}refresh, block_adeptus_insights{{/str}}
             </button>
         </div>
