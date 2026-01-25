@@ -687,20 +687,19 @@ class block_adeptus_insights_edit_form extends block_edit_form {
             $apiurl = \report_adeptus_insights\api_config::get_backend_url();
 
             if (!empty($apikey) && !empty($apiurl)) {
-                $ch = curl_init();
-                curl_setopt($ch, CURLOPT_URL, $apiurl . '/reports/categories');
-                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
-                curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                    'Content-Type: application/json',
-                    'Accept: application/json',
-                    'Authorization: Bearer ' . $apikey,
-                ]);
+                $curl = new \curl();
+                $curl->setHeader('Content-Type: application/json');
+                $curl->setHeader('Accept: application/json');
+                $curl->setHeader('Authorization: Bearer ' . $apikey);
 
-                $response = curl_exec($ch);
-                $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-                curl_close($ch);
+                $options = [
+                    'CURLOPT_TIMEOUT' => 10,
+                    'CURLOPT_SSL_VERIFYPEER' => true,
+                ];
+
+                $response = $curl->get($apiurl . '/reports/categories', [], $options);
+                $info = $curl->get_info();
+                $httpcode = $info['http_code'] ?? 0;
 
                 if ($httpcode === 200 && $response) {
                     $data = json_decode($response, true);
@@ -791,20 +790,19 @@ class block_adeptus_insights_edit_form extends block_edit_form {
             $apiurl = \report_adeptus_insights\api_config::get_backend_url();
 
             if (!empty($apikey) && !empty($apiurl)) {
-                $ch = curl_init();
-                curl_setopt($ch, CURLOPT_URL, $apiurl . '/reports/definitions');
-                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
-                curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                    'Content-Type: application/json',
-                    'Accept: application/json',
-                    'X-API-Key: ' . $apikey,
-                ]);
+                $curl = new \curl();
+                $curl->setHeader('Content-Type: application/json');
+                $curl->setHeader('Accept: application/json');
+                $curl->setHeader('X-API-Key: ' . $apikey);
 
-                $response = curl_exec($ch);
-                $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-                curl_close($ch);
+                $options = [
+                    'CURLOPT_TIMEOUT' => 10,
+                    'CURLOPT_SSL_VERIFYPEER' => true,
+                ];
+
+                $response = $curl->get($apiurl . '/reports/definitions', [], $options);
+                $info = $curl->get_info();
+                $httpcode = $info['http_code'] ?? 0;
 
                 if ($httpcode === 200 && $response) {
                     $data = json_decode($response, true);
@@ -852,20 +850,19 @@ class block_adeptus_insights_edit_form extends block_edit_form {
             }
 
             // Try wizard reports first.
-            $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, $apiurl . '/wizard-reports/' . urlencode($slug));
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 5);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
-            curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                'Content-Type: application/json',
-                'Accept: application/json',
-                'Authorization: Bearer ' . $apikey,
-            ]);
+            $curl = new \curl();
+            $curl->setHeader('Content-Type: application/json');
+            $curl->setHeader('Accept: application/json');
+            $curl->setHeader('Authorization: Bearer ' . $apikey);
 
-            $response = curl_exec($ch);
-            $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            curl_close($ch);
+            $options = [
+                'CURLOPT_TIMEOUT' => 5,
+                'CURLOPT_SSL_VERIFYPEER' => true,
+            ];
+
+            $response = $curl->get($apiurl . '/wizard-reports/' . urlencode($slug), [], $options);
+            $info = $curl->get_info();
+            $httpcode = $info['http_code'] ?? 0;
 
             if ($httpcode === 200 && $response) {
                 $data = json_decode($response, true);
@@ -878,20 +875,14 @@ class block_adeptus_insights_edit_form extends block_edit_form {
             }
 
             // Try AI reports.
-            $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, $apiurl . '/ai-reports/' . urlencode($slug));
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 5);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
-            curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                'Content-Type: application/json',
-                'Accept: application/json',
-                'Authorization: Bearer ' . $apikey,
-            ]);
+            $curl = new \curl();
+            $curl->setHeader('Content-Type: application/json');
+            $curl->setHeader('Accept: application/json');
+            $curl->setHeader('Authorization: Bearer ' . $apikey);
 
-            $response = curl_exec($ch);
-            $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            curl_close($ch);
+            $response = $curl->get($apiurl . '/ai-reports/' . urlencode($slug), [], $options);
+            $info = $curl->get_info();
+            $httpcode = $info['http_code'] ?? 0;
 
             if ($httpcode === 200 && $response) {
                 $data = json_decode($response, true);

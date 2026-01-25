@@ -708,39 +708,41 @@ class snapshot_scheduler {
      * @return array|null Response data or null
      */
     private function make_api_request($url, $method = 'GET', $data = [], $extraheaders = []) {
-        $ch = curl_init();
+        $curl = new \curl();
 
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
-
-        $headers = [
-            'Content-Type: application/json',
-            'Accept: application/json',
-            'Authorization: Bearer ' . $this->apikey,
-        ];
+        // Set headers.
+        $curl->setHeader('Content-Type: application/json');
+        $curl->setHeader('Accept: application/json');
+        $curl->setHeader('Authorization: Bearer ' . $this->apikey);
 
         foreach ($extraheaders as $key => $value) {
-            $headers[] = $key . ': ' . $value;
+            $curl->setHeader($key . ': ' . $value);
         }
 
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        // Set options.
+        $options = [
+            'CURLOPT_TIMEOUT' => 30,
+            'CURLOPT_SSL_VERIFYPEER' => true,
+        ];
 
+        // Make the request based on method.
         if ($method === 'POST') {
-            curl_setopt($ch, CURLOPT_POST, true);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-        } else if ($method !== 'GET') {
-            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
+            $response = $curl->post($url, json_encode($data), $options);
+        } else if ($method === 'GET') {
+            $response = $curl->get($url, [], $options);
+        } else {
+            // For other methods (PUT, DELETE, etc.).
+            $options['CURLOPT_CUSTOMREQUEST'] = $method;
             if (!empty($data)) {
-                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+                $response = $curl->post($url, json_encode($data), $options);
+            } else {
+                $response = $curl->get($url, [], $options);
             }
         }
 
-        $response = curl_exec($ch);
-        $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $error = curl_error($ch);
-        curl_close($ch);
+        $info = $curl->get_info();
+        $httpcode = $info['http_code'] ?? 0;
+        $error = $curl->get_errno() ? $curl->error : '';
 
         if ($error || $httpcode < 200 || $httpcode >= 300) {
             debugging("API request failed: $url, HTTP $httpcode, Error: $error", DEBUG_DEVELOPER);

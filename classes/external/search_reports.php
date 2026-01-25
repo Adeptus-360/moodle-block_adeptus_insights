@@ -210,20 +210,23 @@ class search_reports extends external_api {
      * @return array Reports data
      */
     private static function fetch_reports_from_api(string $url, string $apikey): array {
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 15);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Content-Type: application/json',
-            'Accept: application/json',
-            'Authorization: Bearer ' . $apikey,
-        ]);
+        $curl = new \curl();
 
-        $response = curl_exec($ch);
-        $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
+        // Set headers.
+        $curl->setHeader('Content-Type: application/json');
+        $curl->setHeader('Accept: application/json');
+        $curl->setHeader('Authorization: Bearer ' . $apikey);
+
+        // Set options and make request.
+        $options = [
+            'CURLOPT_TIMEOUT' => 15,
+            'CURLOPT_SSL_VERIFYPEER' => true,
+        ];
+
+        $response = $curl->get($url, [], $options);
+
+        $info = $curl->get_info();
+        $httpcode = $info['http_code'] ?? 0;
 
         if ($httpcode !== 200 || empty($response)) {
             return [];
