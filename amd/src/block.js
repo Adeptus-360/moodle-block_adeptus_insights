@@ -834,11 +834,14 @@ define([
                         // Determine report source: for sources that fetch both APIs (all, manual, category),
                         // the second promise (i === 1) is AI reports.
                         var fetchesBoth = (source === 'all' || source === 'manual' || source === 'category');
-                        var reportSource = (source === 'ai' || (i === 1 && fetchesBoth)) ? 'ai' : 'wizard';
-                        reports.forEach(function(report) {
-                            report.source = report.source || reportSource;
-                            allReports.push(report);
-                        });
+                        var currentSource = (source === 'ai' || (i === 1 && fetchesBoth)) ? 'ai' : 'wizard';
+                        // Use Array.prototype.forEach with bound source to avoid loop-func issue.
+                        (function(reportSource) {
+                            reports.forEach(function(report) {
+                                report.source = report.source || reportSource;
+                                allReports.push(report);
+                            });
+                        }(currentSource));
                     }
                 }
 
@@ -894,7 +897,7 @@ define([
 
             switch (mode) {
                 case 'embedded':
-                    this.renderEmbedded(filteredReports);
+                    this.renderEmbedded();
                     break;
                 case 'kpi':
                     // For KPI mode, use ALL reports for matching since user explicitly selected them
@@ -1211,7 +1214,6 @@ define([
          * Render the current page of reports.
          */
         renderCurrentPage: function() {
-            var self = this;
             var reports = this.filteredReports || [];
             var listContainer = this.container.find('.block-adeptus-report-list');
             var template = $('#block-adeptus-report-item-template-' + this.blockId);
@@ -1231,8 +1233,9 @@ define([
                 $item.attr('data-slug', report.slug);
                 $item.attr('data-source', report.source);
 
-                // Try multiple possible name fields (API may use different field names)
-                var reportName = report.name || report.title || report.display_name || report.report_name || report.slug || 'Untitled Report';
+                // Try multiple possible name fields (API may use different field names).
+                var reportName = report.name || report.title || report.display_name ||
+                    report.report_name || report.slug || 'Untitled Report';
                 $item.find('.block-adeptus-report-item-name').text(reportName);
 
                 // Set category badge with color
@@ -1269,10 +1272,8 @@ define([
 
         /**
          * Render embedded report mode.
-         *
-         * @param {Array} reports
          */
-        renderEmbedded: function(reports) {
+        renderEmbedded: function() {
             // Initialize embedded report state
             this.embeddedReport = null;
             this.embeddedData = null;
@@ -1392,7 +1393,7 @@ define([
                                     self.embeddedData = localData;
                                     self.renderEmbeddedContent(reportData, localData);
                                 })
-                                .catch(function(error) {
+                                .catch(function() {
                                     self.hideEmbeddedLoadingOverlay();
                                     self.showError(self.strings.errorFailedExecuteReport);
                                 });
@@ -1496,7 +1497,9 @@ define([
          * @param {Array} data
          */
         populateEmbeddedChartControls: function(data) {
-            if (!data || data.length === 0) return;
+            if (!data || data.length === 0) {
+                return;
+            }
 
             var headers = Object.keys(data[0]);
             var numericCols = this.detectNumericColumns(data, headers);
@@ -1564,7 +1567,9 @@ define([
                 var tr = $('<tr>');
                 headers.forEach(function(h) {
                     var val = row[h];
-                    if (val === null || val === undefined) val = '';
+                    if (val === null || val === undefined) {
+                        val = '';
+                    }
                     var displayVal = String(val);
                     if (displayVal.length > 50) {
                         displayVal = displayVal.substring(0, 50) + '...';
@@ -1608,7 +1613,9 @@ define([
             var chartData = data.slice(0, 30);
             var labels = chartData.map(function(row) {
                 var label = row[xAxis];
-                if (label === null || label === undefined) return this.strings.unknown;
+                if (label === null || label === undefined) {
+                    return this.strings.unknown;
+                }
                 var labelStr = String(label);
                 return labelStr.length > 20 ? labelStr.substring(0, 20) + '...' : labelStr;
             });
@@ -1791,7 +1798,6 @@ define([
          */
         loadKpiBatch: function(reports, cardMap) {
             var self = this;
-            var startTime = performance.now();
 
             // Get report IDs (names) for batch request
             var reportIds = reports.map(function(r) {
@@ -1869,7 +1875,6 @@ define([
             var cacheKey = report.slug + '_' + report.source;
             retryCount = retryCount || 0;
             var maxRetries = 2;
-            var startTime = performance.now();
 
             // Check cache first
             if (this.reportDataCache[cacheKey]) {
@@ -1951,7 +1956,7 @@ define([
                                     };
                                     self.renderKpiValue($card, localData);
                                 })
-                                .catch(function(error) {
+                                .catch(function() {
                                     $card.find('.block-adeptus-kpi-card-value').text('--');
                                     $card.find('.block-adeptus-kpi-card-trend').addClass('d-none');
                                 });
@@ -2071,8 +2076,6 @@ define([
          * @param {number} executionTimeMs Execution time in milliseconds (optional)
          */
         saveKpiHistoryToServer: function($card, slug, value, source, label, rowCount, executionTimeMs) {
-            var self = this;
-
             // Check if snapshots feature is enabled (enterprise feature)
             if (!this.config.snapshotsEnabled) {
                 // Feature not enabled - hide trend and sparkline
@@ -2959,7 +2962,7 @@ define([
                                     };
                                     self.renderTabContent(pane, reportData, localData);
                                 })
-                                .catch(function(error) {
+                                .catch(function() {
                                     pane.find('.block-adeptus-tab-pane-loading').addClass('d-none');
                                     pane.find('.block-adeptus-tab-pane-content')
                                         .removeClass('d-none')
@@ -3111,7 +3114,9 @@ define([
         switchTabView: function(pane, view) {
             var tabId = pane.attr('id');
             var state = this.tabPaneStates[tabId];
-            if (!state) return;
+            if (!state) {
+                return;
+            }
 
             state.currentView = view;
 
@@ -3167,7 +3172,9 @@ define([
                 var tr = $('<tr>');
                 headers.forEach(function(h) {
                     var val = row[h];
-                    if (val === null || val === undefined) val = '';
+                    if (val === null || val === undefined) {
+                        val = '';
+                    }
                     var displayVal = String(val);
                     if (displayVal.length > 50) {
                         displayVal = displayVal.substring(0, 50) + '...';
@@ -3222,7 +3229,9 @@ define([
             var chartData = data.slice(0, 20);
             var labels = chartData.map(function(row) {
                 var label = row[xAxis];
-                if (label === null || label === undefined) return this.strings.unknown;
+                if (label === null || label === undefined) {
+                    return this.strings.unknown;
+                }
                 var labelStr = String(label);
                 return labelStr.length > 20 ? labelStr.substring(0, 20) + '...' : labelStr;
             });
@@ -3346,7 +3355,9 @@ define([
                 var tr = $('<tr>');
                 headers.forEach(function(h) {
                     var val = row[h];
-                    if (val === null || val === undefined) val = '';
+                    if (val === null || val === undefined) {
+                        val = '';
+                    }
                     var displayVal = String(val);
                     if (displayVal.length > 40) {
                         displayVal = displayVal.substring(0, 40) + '...';
@@ -4124,7 +4135,7 @@ define([
                                     };
                                     self.renderModalContent(modalBody, reportData, localData, null, null);
                                 })
-                                .catch(function(error) {
+                                .catch(function() {
                                     modalBody.find('.block-adeptus-modal-loading').addClass('d-none');
                                     modalBody.find('.block-adeptus-modal-error').removeClass('d-none');
                                 });
@@ -4161,8 +4172,6 @@ define([
          * @param {string} chartType - Chart type from backend (unused, we use controls)
          */
         renderModalContent: function(modalBody, report, data, chartData, chartType) {
-            var self = this;
-
             // Store data for chart re-rendering
             this.modalData = data || [];
             this.modalReport = report;
@@ -4305,8 +4314,8 @@ define([
                             });
                         }
                     },
-                    error: function(xhr, status, error) {
-                        reject(new Error('Failed to execute report: ' + error));
+                    error: function(jqXhr, textStatus, errorThrown) {
+                        reject(new Error('Failed to execute report: ' + errorThrown));
                     }
                 });
             });
@@ -4357,7 +4366,9 @@ define([
             var chartData = data.slice(0, 50);
             var labels = chartData.map(function(row) {
                 var label = row[labelKey];
-                if (label === null || label === undefined) return this.strings.unknown;
+                if (label === null || label === undefined) {
+                    return self.strings.unknown;
+                }
                 var labelStr = String(label);
                 return labelStr.length > 30 ? labelStr.substring(0, 30) + '...' : labelStr;
             });

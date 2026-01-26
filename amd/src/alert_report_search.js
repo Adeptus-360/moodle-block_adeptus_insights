@@ -21,7 +21,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-define(['jquery', 'core/ajax', 'core/notification'], function($, Ajax, Notification) {
+define(['jquery', 'core/ajax'], function($, Ajax) {
     'use strict';
 
     return /** @alias module:block_adeptus_insights/alert_report_search */ {
@@ -60,8 +60,11 @@ define(['jquery', 'core/ajax', 'core/notification'], function($, Ajax, Notificat
                     });
                 }
 
+                return options;
+            }).then(function(options) {
                 callback(options);
-            }).fail(function(ex) {
+                return options;
+            }).catch(function(ex) {
                 // If web service fails, try to fetch locally from existing data.
                 failure(ex);
             });
