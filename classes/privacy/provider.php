@@ -25,9 +25,12 @@
 namespace block_adeptus_insights\privacy;
 
 use core_privacy\local\metadata\collection;
+use core_privacy\local\metadata\provider as metadata_provider;
 use core_privacy\local\request\approved_contextlist;
 use core_privacy\local\request\approved_userlist;
 use core_privacy\local\request\contextlist;
+use core_privacy\local\request\core_userlist_provider;
+use core_privacy\local\request\plugin\provider as plugin_provider;
 use core_privacy\local\request\userlist;
 
 /**
@@ -42,9 +45,9 @@ use core_privacy\local\request\userlist;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class provider implements
-    \core_privacy\local\metadata\provider,
-    \core_privacy\local\request\core_userlist_provider,
-    \core_privacy\local\request\plugin\provider
+    core_userlist_provider,
+    metadata_provider,
+    plugin_provider
 {
     /**
      * Returns metadata about the data stored by this plugin.
