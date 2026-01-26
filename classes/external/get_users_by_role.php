@@ -61,7 +61,7 @@ class get_users_by_role extends external_api {
      * @return array Users data
      */
     public static function execute($roleid = 0, $search = '', $limit = 50) {
-        global $DB, $CFG;
+        global $DB, $CFG, $PAGE;
 
         // Parameter validation.
         $params = self::validate_parameters(self::execute_parameters(), [
@@ -126,7 +126,7 @@ class get_users_by_role extends external_api {
                 'lastname' => $user->lastname,
                 'fullname' => fullname($user),
                 'email' => $user->email,
-                'profileimageurl' => $userpicture->get_url($GLOBALS['PAGE'])->out(false),
+                'profileimageurl' => $userpicture->get_url($PAGE)->out(false),
             ];
         }
 

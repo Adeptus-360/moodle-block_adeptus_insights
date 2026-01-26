@@ -60,14 +60,9 @@ define(['jquery', 'core/ajax'], function($, Ajax) {
                     });
                 }
 
+                // Return options - callback will be handled separately.
                 return options;
-            }).then(function(options) {
-                callback(options);
-                return options;
-            }).catch(function(ex) {
-                // If web service fails, try to fetch locally from existing data.
-                failure(ex);
-            });
+            }).then(callback).catch(failure);
         },
 
         /**
