@@ -1327,6 +1327,7 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
             // Delete alert button.
             this.container.on('click', '.alert-delete-btn', function() {
                 var index = $(this).closest('.alert-item').data('index');
+                // eslint-disable-next-line no-alert
                 if (confirm(self.strings.deleteConfirm)) {
                     self.deleteAlert(index);
                 }
@@ -1661,6 +1662,7 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
             // Moodle handles fire-once logic per severity (warning/critical/recovery)
             // via the block_adeptus_insights_alert_log table.
             var notifyEmail = $('#alert-edit-notify-email').is(':checked');
+            /* eslint-disable camelcase */
             var backendPayload = {
                 name: $('#alert-edit-name').val() || reportName,
                 condition_type: conditionType,
@@ -1691,6 +1693,7 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                 notify_users: this.selectedUsers,
                 enabled: true
             };
+            /* eslint-enable camelcase */
 
             var isUpdate = this.editingIndex >= 0 && this.alerts[this.editingIndex] &&
                            this.alerts[this.editingIndex].backend_id;
@@ -1730,8 +1733,10 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
             }).done(function(response) {
                 if (response.success && response.alert) {
                     // Store backend ID for future updates.
+                    /* eslint-disable camelcase */
                     alertData.backend_id = response.alert.id;
                     alertData.current_status = 'ok';
+                    /* eslint-enable camelcase */
 
                     if (self.editingIndex >= 0) {
                         self.alerts[self.editingIndex] = alertData;
@@ -1807,8 +1812,10 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                 timeout: 15000
             }).done(function(response) {
                 if (response.success) {
+                    /* eslint-disable camelcase */
                     alertData.backend_id = alertId;
                     alertData.current_status = self.alerts[self.editingIndex].current_status;
+                    /* eslint-enable camelcase */
                     alertData.enabled = self.alerts[self.editingIndex].enabled;
                     self.alerts[self.editingIndex] = alertData;
 
