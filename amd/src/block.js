@@ -788,12 +788,14 @@ define([
             // Use API key passed directly from PHP (preferred - no AJAX needed)
             if (this.apiKey) {
                 window.adeptusAuthData = window.adeptusAuthData || {};
+                // eslint-disable-next-line camelcase
                 window.adeptusAuthData.api_key = this.apiKey;
                 callback();
                 return;
             }
 
             // Fallback: Check if already authenticated via parent plugin
+            // eslint-disable-next-line camelcase
             if (window.adeptusAuthData && window.adeptusAuthData.api_key) {
                 callback();
                 return;
@@ -2181,12 +2183,14 @@ define([
                     'Content-Type': 'application/json',
                     'Accept': 'application/json'
                 },
+                /* eslint-disable camelcase */
                 data: JSON.stringify({
                     row_count: metricValue,
                     execution_time_ms: executionTimeMs,
                     evaluate_alerts: true,
                     baseline_period: baselinePeriod
                 }),
+                /* eslint-enable camelcase */
                 timeout: 15000
             }).done(function(response) {
                 if (response.success) {
@@ -2539,6 +2543,7 @@ define([
          * @param {Object} trend Trend data from snapshot response (optional)
          * @param {string} reportName Human-readable report name (optional)
          */
+        // eslint-disable-next-line complexity
         handleTriggeredAlerts: function(triggeredAlerts, reportSlug, currentValue, trend, reportName) {
             var self = this;
 
@@ -2607,6 +2612,7 @@ define([
                     }
                 }
 
+                /* eslint-disable camelcase */
                 return {
                     alert_id: alertId,
                     alert_name: alertName,
@@ -2618,6 +2624,7 @@ define([
                     threshold: String(thresholdValue),
                     notify_users: JSON.stringify(alert.notify_users || [])
                 };
+                /* eslint-enable camelcase */
             });
 
             // Send notifications via Moodle's messaging system (silent - no on-page alerts).
@@ -3323,9 +3330,15 @@ define([
                         data: values,
                         backgroundColor: chartType === 'pie' || chartType === 'doughnut'
                             ? colors : colors[0],
-                        borderColor: chartType === 'line'
-                            ? colors[0]
-                            : (chartType === 'pie' || chartType === 'doughnut' ? '#fff' : colors[0]),
+                        borderColor: (function() {
+                            if (chartType === 'line') {
+                                return colors[0];
+                            }
+                            if (chartType === 'pie' || chartType === 'doughnut') {
+                                return '#fff';
+                            }
+                            return colors[0];
+                        }()),
                         borderWidth: chartType === 'pie' || chartType === 'doughnut' ? 2 : 1,
                         fill: chartType === 'line' ? false : undefined,
                         tension: chartType === 'line' ? 0.1 : undefined
@@ -3676,12 +3689,14 @@ define([
                     'Content-Type': 'application/json',
                     'Accept': 'application/json'
                 },
+                /* eslint-disable camelcase */
                 data: JSON.stringify({
                     row_count: currentValue,
                     execution_time_ms: 0,
                     evaluate_alerts: false, // Don't trigger alerts from modal refresh
                     baseline_period: baselinePeriod
                 }),
+                /* eslint-enable camelcase */
                 timeout: 15000,
                 success: function(response) {
                     if (response && response.success && response.history) {
@@ -3836,13 +3851,15 @@ define([
          */
         renderKpiModalTrends: function(modalContent, vsBaseline, vsPrevious) {
             // Format baseline trend (vs overall baseline)
+            // Helper for direction sign lookup.
+            var directionSigns = {increase: '+', decrease: '-'};
+
             var baselineHtml = '--';
             if (vsBaseline && vsBaseline.has_baseline) {
                 var baselinePct = this.formatPercentage(Math.abs(vsBaseline.change_percent || 0));
                 var baselineIcon = this.getTrendIcon(vsBaseline.direction);
                 var baselineClass = 'trend-' + (vsBaseline.direction || 'neutral');
-                var baselineSign = vsBaseline.direction === 'increase' ? '+' :
-                    (vsBaseline.direction === 'decrease' ? '-' : '');
+                var baselineSign = directionSigns[vsBaseline.direction] || '';
                 baselineHtml = '<span class="' + baselineClass + '">' +
                     baselineIcon + ' ' + baselineSign + baselinePct + ' overall</span>';
             }
@@ -3854,8 +3871,7 @@ define([
                 var previousPct = this.formatPercentage(Math.abs(vsPrevious.change_percent || 0));
                 var previousIcon = this.getTrendIcon(vsPrevious.direction);
                 var previousClass = 'trend-' + (vsPrevious.direction || 'neutral');
-                var previousSign = vsPrevious.direction === 'increase' ? '+' :
-                    (vsPrevious.direction === 'decrease' ? '-' : '');
+                var previousSign = directionSigns[vsPrevious.direction] || '';
                 previousHtml = '<span class="' + previousClass + '">' +
                     previousIcon + ' ' + previousSign + previousPct + ' since last</span>';
             }
@@ -4379,6 +4395,7 @@ define([
                     }),
                     timeout: 60000,
                     success: function(response) {
+                        /* eslint-disable camelcase */
                         if (response.success) {
                             resolve({
                                 data: response.data || [],
@@ -4394,6 +4411,7 @@ define([
                                 error: response.message || 'Query execution failed'
                             });
                         }
+                        /* eslint-enable camelcase */
                     },
                     error: function(_jqXhr, _textStatus, errorThrown) {
                         reject(new Error('Failed to execute report: ' + errorThrown));
@@ -4724,12 +4742,14 @@ define([
 
             // Prepare report data for export endpoint
             var headers = data.length > 0 ? Object.keys(data[0]) : [];
+            /* eslint-disable camelcase */
             var reportData = {
                 results: data,
                 headers: headers,
                 report_name: report ? report.name : 'Report',
                 report_category: report ? (report.category || '') : ''
             };
+            /* eslint-enable camelcase */
 
             // For PDF in chart view, capture chart image first
             var chartPromise = Promise.resolve(null);
@@ -4772,11 +4792,13 @@ define([
                 $.ajax({
                     url: M.cfg.wwwroot + '/report/adeptus_insights/ajax/track_export.php',
                     method: 'POST',
+                    /* eslint-disable camelcase */
                     data: {
                         format: format,
                         report_name: report ? report.name : 'Block Export',
                         sesskey: M.cfg.sesskey
                     }
+                    /* eslint-enable camelcase */
                 });
                 return true;
             }).catch(function() {
