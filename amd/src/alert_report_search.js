@@ -28,12 +28,12 @@ define(['jquery', 'core/ajax'], function($, Ajax) {
         /**
          * List of reports matching the query.
          *
-         * @param {String} selector The selector of the autocomplete element.
+         * @param {String} _selector The selector of the autocomplete element.
          * @param {String} query The query string.
          * @param {Function} callback A callback function receiving an array of results.
          * @param {Function} failure A function to call when AJAX fails.
          */
-        transport: function(selector, query, callback, failure) {
+        transport: function(_selector, query, callback, failure) {
             var promise;
 
             // Build the args for the web service.
@@ -47,8 +47,7 @@ define(['jquery', 'core/ajax'], function($, Ajax) {
                 args: args
             }]);
 
-            // Moodle autocomplete API requires callback pattern - disable promise rule.
-            // eslint-disable-next-line promise/no-callback-in-promise
+            // Moodle autocomplete API requires callback pattern.
             promise[0].then(function(results) {
                 var options = [];
 
@@ -63,18 +62,18 @@ define(['jquery', 'core/ajax'], function($, Ajax) {
                 }
 
                 callback(options);
+                return options;
             }).catch(failure);
         },
 
         /**
          * Process the results for display.
          *
-         * @param {String} selector The selector for the autocomplete element.
+         * @param {String} _selector The selector for the autocomplete element.
          * @param {Array} results The results from transport.
          * @return {Array} The processed results.
          */
-        // eslint-disable-next-line no-unused-vars
-        processResults: function(selector, results) {
+        processResults: function(_selector, results) {
             return results;
         }
     };
