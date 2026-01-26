@@ -164,7 +164,7 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                 if (value) {
                     this.selectedReports = JSON.parse(value);
                 }
-            } catch (e) {
+            } catch (_e) {
                 this.selectedReports = [];
             }
         },
@@ -682,7 +682,9 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
 
                 categories[category].forEach(function(icon) {
                     var isActive = icon.id === currentIcon ? ' active' : '';
-                    html += '<button type="button" class="btn btn-sm btn-light block-adeptus-kpi-icon-option m-1' + isActive + '" ' +
+                    html += '<button type="button" ' +
+                        'class="btn btn-sm btn-light block-adeptus-kpi-icon-option m-1' +
+                        isActive + '" ' +
                         'data-icon="' + icon.id + '" title="' + icon.label + '">' +
                         '<i class="fa ' + icon.id + '"></i>' +
                         '</button>';
@@ -704,7 +706,8 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
             var self = this;
 
             // Handle dropdown toggle (manual implementation for dynamic content)
-            this.container.find('.block-adeptus-kpi-icon-picker .dropdown-toggle').off('click.iconpicker').on('click.iconpicker', function(e) {
+            var iconPickerSelector = '.block-adeptus-kpi-icon-picker .dropdown-toggle';
+            this.container.find(iconPickerSelector).off('click.iconpicker').on('click.iconpicker', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
 
@@ -1185,10 +1188,8 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                 $.each(this.roles, function(key, value) {
                     roleFilter.append($('<option>', {value: key, text: value}));
                 });
-            } else {
-                // Element not found yet, might be in a modal - will be populated on openEditPanel.
-                console.warn('Role filter element not found during init, will populate on panel open');
             }
+            // Element not found yet, might be in a modal - will be populated on openEditPanel.
         },
 
         /**
@@ -1209,11 +1210,13 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                     if (Array.isArray(kpiReports)) {
                         kpiReports.forEach(function(r) {
                             r.displayName = r.name || r.title || r.display_name || r.slug;
-                            r.categoryName = r.category_info ? r.category_info.name : (r.source === 'ai' ? 'AI Generated' : 'General');
+                            var catInfo = r.category_info;
+                            var isAi = r.source === 'ai';
+                            r.categoryName = catInfo ? catInfo.name : (isAi ? 'AI Generated' : 'General');
                             allReports.push(r);
                         });
                     }
-                } catch (e) {
+                } catch (_e) {
                     // Invalid JSON, ignore.
                 }
             }
@@ -1231,12 +1234,14 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                             });
                             if (!exists) {
                                 r.displayName = r.name || r.title || r.display_name || r.slug;
-                                r.categoryName = r.category_info ? r.category_info.name : (r.source === 'ai' ? 'AI Generated' : 'General');
+                                var catInfo = r.category_info;
+                                var isAi = r.source === 'ai';
+                                r.categoryName = catInfo ? catInfo.name : (isAi ? 'AI Generated' : 'General');
                                 allReports.push(r);
                             }
                         });
                     }
-                } catch (e) {
+                } catch (_e) {
                     // Invalid JSON, ignore.
                 }
             }
@@ -1394,8 +1399,7 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
             });
 
             userSearchInput.on('input', function() {
-                var query = $(this).val();
-                self.handleUserSearch(query);
+                self.handleUserSearch();
             });
 
             userSearchInput.on('keydown', function(e) {
@@ -1481,10 +1485,14 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                         'id="alert-enabled-' + index + '"' + (alert.enabled ? ' checked' : '') + '>' +
                         '<label class="custom-control-label" for="alert-enabled-' + index + '"></label>' +
                         '</div>' +
-                        '<button type="button" class="btn btn-sm btn-outline-primary alert-edit-btn mr-1" title="' + self.strings.editAlert + '">' +
+                        '<button type="button" ' +
+                        'class="btn btn-sm btn-outline-primary alert-edit-btn mr-1" ' +
+                        'title="' + self.strings.editAlert + '">' +
                         '<i class="fa fa-pencil"></i>' +
                         '</button>' +
-                        '<button type="button" class="btn btn-sm btn-outline-danger alert-delete-btn" title="' + self.strings.deleteAlert + '">' +
+                        '<button type="button" ' +
+                        'class="btn btn-sm btn-outline-danger alert-delete-btn" ' +
+                        'title="' + self.strings.deleteAlert + '">' +
                         '<i class="fa fa-trash"></i>' +
                         '</button>' +
                         '</div>' +
@@ -1756,7 +1764,6 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                         }
                     }
                 }
-                console.error('Alert creation failed:', xhr.responseJSON);
                 Notification.addNotification({
                     message: message,
                     type: 'error'
@@ -1845,7 +1852,7 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                         'Accept': 'application/json'
                     },
                     timeout: 15000
-                }).done(function(response) {
+                }).done(function() {
                     // Remove from local list.
                     self.alerts.splice(index, 1);
                     self.saveToTextarea();
@@ -1924,7 +1931,6 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                     }
                 }).fail(function() {
                     // Silently fail - orphan cleanup is best-effort.
-                    console.warn('Failed to fetch backend alerts for orphan cleanup:', reportSlug);
                 });
             });
         },
@@ -1948,9 +1954,9 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                 },
                 timeout: 10000
             }).done(function() {
-                console.log('Cleaned up orphaned backend alert:', alertId, 'for report:', reportSlug);
+                // Orphaned backend alert cleaned up successfully.
             }).fail(function() {
-                console.warn('Failed to delete orphaned alert:', alertId, 'for report:', reportSlug);
+                // Failed to delete orphaned alert - non-critical, continue silently.
             });
         },
 
@@ -2155,10 +2161,8 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
 
         /**
          * Handle user search input with debouncing.
-         *
-         * @param {string} query Search query
          */
-        handleUserSearch: function(query) {
+        handleUserSearch: function() {
             var self = this;
 
             if (this.userSearchTimeout) {
@@ -2277,9 +2281,12 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
             }
 
             this.selectedUsers.forEach(function(user) {
-                var html = '<div class="selected-user-chip d-inline-flex align-items-center bg-light border rounded px-2 py-1 mr-2 mb-2">' +
+                var chipClass = 'selected-user-chip d-inline-flex align-items-center ';
+                chipClass += 'bg-light border rounded px-2 py-1 mr-2 mb-2';
+                var html = '<div class="' + chipClass + '">' +
                     '<span class="mr-2">' + self.escapeHtml(user.name) + '</span>' +
-                    '<button type="button" class="btn btn-sm btn-link p-0 text-danger remove-selected-user" ' +
+                    '<button type="button" ' +
+                    'class="btn btn-sm btn-link p-0 text-danger remove-selected-user" ' +
                     'data-userid="' + user.id + '" title="Remove">' +
                     '<i class="fa fa-times"></i>' +
                     '</button>' +

@@ -47,6 +47,8 @@ define(['jquery', 'core/ajax'], function($, Ajax) {
                 args: args
             }]);
 
+            // Moodle autocomplete API requires callback pattern - disable promise rule.
+            // eslint-disable-next-line promise/no-callback-in-promise
             promise[0].then(function(results) {
                 var options = [];
 
@@ -60,9 +62,8 @@ define(['jquery', 'core/ajax'], function($, Ajax) {
                     });
                 }
 
-                // Return options - callback will be handled separately.
-                return options;
-            }).then(callback).catch(failure);
+                callback(options);
+            }).catch(failure);
         },
 
         /**
@@ -72,6 +73,7 @@ define(['jquery', 'core/ajax'], function($, Ajax) {
          * @param {Array} results The results from transport.
          * @return {Array} The processed results.
          */
+        // eslint-disable-next-line no-unused-vars
         processResults: function(selector, results) {
             return results;
         }

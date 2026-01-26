@@ -623,7 +623,7 @@ define([
                     // Cache expired, remove it
                     sessionStorage.removeItem(this.cacheKey);
                 }
-            } catch (e) {
+            } catch (_e) {
                 // Ignore storage errors
             }
             return null;
@@ -640,7 +640,7 @@ define([
                     timestamp: Date.now(),
                     reports: reports
                 }));
-            } catch (e) {
+            } catch (_e) {
                 // Ignore storage errors (quota exceeded, etc.)
             }
         },
@@ -1675,9 +1675,10 @@ define([
 
             try {
                 this.embeddedChartInstance = new Chart(canvas.getContext('2d'), config);
-            } catch (error) {
+            } catch (_error) {
                 this.container.find('.block-adeptus-embedded-chart-container').html(
-                    '<div class="alert alert-warning text-center"><i class="fa fa-exclamation-circle"></i> Could not render chart</div>'
+                    '<div class="alert alert-warning text-center">' +
+                    '<i class="fa fa-exclamation-circle"></i> Could not render chart</div>'
                 );
             }
         },
@@ -2632,7 +2633,7 @@ define([
                     }).fail(function() {
                         // Silent fail - notifications will appear on next page load.
                     });
-                } catch (e) {
+                } catch (_e) {
                     // Silent fail.
                 }
             });
@@ -2790,7 +2791,7 @@ define([
                         animation: { duration: 500 }
                     }
                 });
-            } catch (e) {
+            } catch (_e) {
                 // Chart.js not available or error
                 sparklineContainer.addClass('d-none');
             }
@@ -2894,7 +2895,9 @@ define([
                 pane.find('.block-adeptus-tab-pane-loading').addClass('d-none');
                 pane.find('.block-adeptus-tab-pane-content')
                     .removeClass('d-none')
-                    .html('<div class="text-center text-muted py-4"><i class="fa fa-exclamation-circle"></i><p class="mt-2">Report not found</p></div>');
+                    .html('<div class="text-center text-muted py-4">' +
+                        '<i class="fa fa-exclamation-circle"></i>' +
+                        '<p class="mt-2">Report not found</p></div>');
                 return;
             }
 
@@ -2920,13 +2923,18 @@ define([
                         pane.find('.block-adeptus-tab-pane-loading').addClass('d-none');
                         pane.find('.block-adeptus-tab-pane-content')
                             .removeClass('d-none')
-                            .html('<div class="text-center text-muted py-4"><i class="fa fa-exclamation-circle"></i><p class="mt-2">' + (response.message || 'Failed to load') + '</p></div>');
+                            .html('<div class="text-center text-muted py-4">' +
+                                '<i class="fa fa-exclamation-circle"></i>' +
+                                '<p class="mt-2">' + (response.message || 'Failed to load') +
+                                '</p></div>');
                     }
                 }).fail(function() {
                     pane.find('.block-adeptus-tab-pane-loading').addClass('d-none');
                     pane.find('.block-adeptus-tab-pane-content')
                         .removeClass('d-none')
-                        .html('<div class="text-center text-muted py-4"><i class="fa fa-exclamation-circle"></i><p class="mt-2">Connection error</p></div>');
+                        .html('<div class="text-center text-muted py-4">' +
+                            '<i class="fa fa-exclamation-circle"></i>' +
+                            '<p class="mt-2">Connection error</p></div>');
                 });
             } else {
                 // AI reports
@@ -2935,7 +2943,9 @@ define([
                     pane.find('.block-adeptus-tab-pane-loading').addClass('d-none');
                     pane.find('.block-adeptus-tab-pane-content')
                         .removeClass('d-none')
-                        .html('<div class="text-center text-muted py-4"><i class="fa fa-exclamation-circle"></i><p class="mt-2">Authentication required</p></div>');
+                        .html('<div class="text-center text-muted py-4">' +
+                            '<i class="fa fa-exclamation-circle"></i>' +
+                            '<p class="mt-2">Authentication required</p></div>');
                     return;
                 }
 
@@ -2971,7 +2981,9 @@ define([
                                     pane.find('.block-adeptus-tab-pane-loading').addClass('d-none');
                                     pane.find('.block-adeptus-tab-pane-content')
                                         .removeClass('d-none')
-                                        .html('<div class="text-center text-muted py-4"><i class="fa fa-exclamation-circle"></i><p class="mt-2">Failed to execute report</p></div>');
+                                        .html('<div class="text-center text-muted py-4">' +
+                                            '<i class="fa fa-exclamation-circle"></i>' +
+                                            '<p class="mt-2">Failed to execute report</p></div>');
                                 });
                             return;
                         }
@@ -2985,13 +2997,17 @@ define([
                         pane.find('.block-adeptus-tab-pane-loading').addClass('d-none');
                         pane.find('.block-adeptus-tab-pane-content')
                             .removeClass('d-none')
-                            .html('<div class="text-center text-muted py-4"><i class="fa fa-exclamation-circle"></i><p class="mt-2">Failed to load report</p></div>');
+                            .html('<div class="text-center text-muted py-4">' +
+                                '<i class="fa fa-exclamation-circle"></i>' +
+                                '<p class="mt-2">Failed to load report</p></div>');
                     }
                 }).fail(function() {
                     pane.find('.block-adeptus-tab-pane-loading').addClass('d-none');
                     pane.find('.block-adeptus-tab-pane-content')
                         .removeClass('d-none')
-                        .html('<div class="text-center text-muted py-4"><i class="fa fa-exclamation-circle"></i><p class="mt-2">Connection error</p></div>');
+                        .html('<div class="text-center text-muted py-4">' +
+                            '<i class="fa fa-exclamation-circle"></i>' +
+                            '<p class="mt-2">Connection error</p></div>');
                 });
             }
         },
@@ -3010,7 +3026,9 @@ define([
 
             if (!data || data.length === 0) {
                 contentArea.removeClass('d-none')
-                    .html('<div class="text-center text-muted py-4"><i class="fa fa-inbox"></i><p class="mt-2">No data available</p></div>');
+                    .html('<div class="text-center text-muted py-4">' +
+                        '<i class="fa fa-inbox"></i>' +
+                        '<p class="mt-2">No data available</p></div>');
                 return;
             }
 
@@ -3254,8 +3272,11 @@ define([
                     datasets: [{
                         label: yAxisFormatted,
                         data: values,
-                        backgroundColor: chartType === 'pie' || chartType === 'doughnut' ? colors : colors[0],
-                        borderColor: chartType === 'line' ? colors[0] : (chartType === 'pie' || chartType === 'doughnut' ? '#fff' : colors[0]),
+                        backgroundColor: chartType === 'pie' || chartType === 'doughnut'
+                            ? colors : colors[0],
+                        borderColor: chartType === 'line'
+                            ? colors[0]
+                            : (chartType === 'pie' || chartType === 'doughnut' ? '#fff' : colors[0]),
                         borderWidth: chartType === 'pie' || chartType === 'doughnut' ? 2 : 1,
                         fill: chartType === 'line' ? false : undefined,
                         tension: chartType === 'line' ? 0.1 : undefined
@@ -3280,9 +3301,10 @@ define([
             try {
                 this.tabChartInstances = this.tabChartInstances || {};
                 this.tabChartInstances[tabId] = new Chart(canvas.getContext('2d'), config);
-            } catch (error) {
+            } catch (_error) {
                 pane.find('.block-adeptus-tab-chart-container').html(
-                    '<div class="alert alert-warning text-center"><i class="fa fa-exclamation-circle"></i> Could not render chart</div>'
+                    '<div class="alert alert-warning text-center">' +
+                    '<i class="fa fa-exclamation-circle"></i> Could not render chart</div>'
                 );
             }
         },
@@ -4090,7 +4112,10 @@ define([
                             chartData: response.chart_data,
                             chartType: response.chart_type
                         };
-                        self.renderModalContent(modalBody, report, response.results || [], response.chart_data, response.chart_type);
+                        self.renderModalContent(
+                            modalBody, report, response.results || [],
+                            response.chart_data, response.chart_type
+                        );
                     } else {
                         modalBody.find('.block-adeptus-modal-error').removeClass('d-none');
                         modalBody.find('.block-adeptus-modal-error p').text(response.message || self.strings.errorFailedLoadReport);
@@ -4336,7 +4361,8 @@ define([
 
             if (!data || data.length === 0) {
                 modalBody.find('.block-adeptus-chart-container').html(
-                    '<div class="alert alert-warning text-center"><i class="fa fa-info-circle"></i> No data available for chart</div>'
+                    '<div class="alert alert-warning text-center">' +
+                    '<i class="fa fa-info-circle"></i> No data available for chart</div>'
                 );
                 return;
             }
@@ -4389,9 +4415,10 @@ define([
 
             try {
                 this.chartInstance = new Chart(canvas.getContext('2d'), config);
-            } catch (error) {
+            } catch (_error) {
                 modalBody.find('.block-adeptus-chart-container').html(
-                    '<div class="alert alert-danger"><i class="fa fa-exclamation-triangle"></i> Error rendering chart</div>'
+                    '<div class="alert alert-danger">' +
+                    '<i class="fa fa-exclamation-triangle"></i> Error rendering chart</div>'
                 );
             }
         },
@@ -4607,7 +4634,11 @@ define([
 
                     // 4. Fallback - any visible chart
                     if (!canvas) {
-                        canvas = document.querySelector('.block-adeptus-modal-chart, .block-adeptus-embedded-chart, .block-adeptus-tab-chart');
+                        canvas = document.querySelector(
+                            '.block-adeptus-modal-chart, ' +
+                            '.block-adeptus-embedded-chart, ' +
+                            '.block-adeptus-tab-chart'
+                        );
                     }
 
                     if (!canvas) {
@@ -4622,7 +4653,7 @@ define([
                         } else {
                             resolve(null);
                         }
-                    } catch (e) {
+                    } catch (_e) {
                         resolve(null);
                     }
                 }, 300);
@@ -4854,7 +4885,7 @@ define([
             // Clear sessionStorage cache
             try {
                 sessionStorage.removeItem(this.cacheKey);
-            } catch (e) {
+            } catch (_e) {
                 // Ignore
             }
             // Clear in-memory report data cache
@@ -4902,7 +4933,10 @@ define([
          */
         showLoading: function() {
             this.container.find('.block-adeptus-loading').removeClass('d-none');
-            this.container.find('.block-adeptus-report-list, .block-adeptus-kpi-grid, .block-adeptus-tabs-container, .block-adeptus-content').addClass('d-none');
+            this.container.find(
+                '.block-adeptus-report-list, .block-adeptus-kpi-grid, ' +
+                '.block-adeptus-tabs-container, .block-adeptus-content'
+            ).addClass('d-none');
             this.container.find('.block-adeptus-empty, .block-adeptus-error').addClass('d-none');
         },
 
