@@ -2039,7 +2039,7 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
         /**
          * Render the report dropdown.
          *
-         * @param {string} query Current search query
+         * @param {string} _query Current search query (unused, uses filteredReports)
          */
         renderReportDropdown: function(_query) {
             var dropdown = $('#alert-report-dropdown');

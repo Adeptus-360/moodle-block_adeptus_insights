@@ -2642,12 +2642,10 @@ define([
         /**
          * Load KPI history from server for sparkline (legacy - kept for backward compatibility).
          *
-         * @param {jQuery} $card
-         * @param {string} slug
-         * @param {number} currentValue
+         * @param {jQuery} $card The KPI card element
          * @deprecated Use postSnapshotToBackend instead which returns history in response
          */
-        loadKpiSparklineFromServer: function($card, _slug, _currentValue) {
+        loadKpiSparklineFromServer: function($card) {
             // This is now handled by postSnapshotToBackend which returns history in response
             // Keeping this method for any legacy code paths
             if (!this.config.snapshotsEnabled) {
@@ -2696,11 +2694,9 @@ define([
         /**
          * Legacy method for backwards compatibility.
          *
-         * @param {jQuery} $card
-         * @param {string} slug
-         * @param {number} currentValue
+         * @param {jQuery} $card The KPI card element
          */
-        updateKpiTrend: function($card, _slug, _currentValue) {
+        updateKpiTrend: function($card) {
             // Show neutral trend initially, server call will update
             var trendContainer = $card.find('.block-adeptus-kpi-card-trend');
             trendContainer.removeClass('d-none');
@@ -2798,13 +2794,9 @@ define([
         },
 
         /**
-         * Legacy method for backwards compatibility.
-         *
-         * @param {jQuery} $card
-         * @param {string} slug
-         * @param {number} currentValue
+         * Legacy method for backwards compatibility - no longer used.
          */
-        renderKpiSparkline: function(_$card, _slug, _currentValue) {
+        renderKpiSparkline: function() {
             // Sparkline is loaded via loadKpiSparklineFromServer
             // This is a no-op for backwards compatibility
         },
@@ -4195,11 +4187,11 @@ define([
         /**
          * Render modal content with report data.
          *
-         * @param {jQuery} modalBody
-         * @param {Object} report
-         * @param {Array} data
-         * @param {Object} chartData - Pre-configured chart data from backend (unused, we use controls)
-         * @param {string} chartType - Chart type from backend (unused, we use controls)
+         * @param {jQuery} modalBody The modal body element
+         * @param {Object} report The report metadata
+         * @param {Array} data The report data rows
+         * @param {Object} _chartData Pre-configured chart data (unused)
+         * @param {string} _chartType Chart type from backend (unused)
          */
         renderModalContent: function(modalBody, report, data, _chartData, _chartType) {
             // Store data for chart re-rendering
@@ -4505,9 +4497,9 @@ define([
         /**
          * Generate chart colors.
          *
-         * @param {number} count
-         * @param {string} chartType
-         * @return {Array}
+         * @param {number} count Number of colors needed
+         * @param {string} _chartType Chart type (unused, kept for API compatibility)
+         * @return {Array} Array of color strings
          */
         generateChartColors: function(count, _chartType) {
             var baseColors = [
@@ -4827,8 +4819,8 @@ define([
         /**
          * Open report in new tab.
          *
-         * @param {string} slug
-         * @param {string} source
+         * @param {string} slug The report slug
+         * @param {string} _source Report source (unused)
          */
         openReportNewTab: function(slug, _source) {
             var url = M.cfg.wwwroot + '/report/adeptus_insights/generated_reports.php?slug=' +
@@ -4839,8 +4831,8 @@ define([
         /**
          * Expand report inline.
          *
-         * @param {string} slug
-         * @param {string} source
+         * @param {string} _slug The report slug (unused, not implemented)
+         * @param {string} _source Report source (unused, not implemented)
          */
         expandReportInline: function(_slug, _source) {
             // TODO: Implement inline expansion.
@@ -4961,7 +4953,7 @@ define([
         /**
          * Show error state.
          *
-         * @param {string} message
+         * @param {string} _message Error message (unused, generic error shown)
          */
         showError: function(_message) {
             this.hideLoading();
