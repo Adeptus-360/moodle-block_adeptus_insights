@@ -48,6 +48,7 @@ define(['jquery', 'core/ajax'], function($, Ajax) {
             }]);
 
             // Moodle autocomplete API requires callback pattern.
+            // eslint-disable-next-line promise/no-callback-in-promise
             promise[0].then(function(results) {
                 var options = [];
 
