@@ -2647,7 +2647,7 @@ define([
          * @param {number} currentValue
          * @deprecated Use postSnapshotToBackend instead which returns history in response
          */
-        loadKpiSparklineFromServer: function($card, slug, currentValue) {
+        loadKpiSparklineFromServer: function($card, _slug, _currentValue) {
             // This is now handled by postSnapshotToBackend which returns history in response
             // Keeping this method for any legacy code paths
             if (!this.config.snapshotsEnabled) {
@@ -2700,7 +2700,7 @@ define([
          * @param {string} slug
          * @param {number} currentValue
          */
-        updateKpiTrend: function($card, slug, currentValue) {
+        updateKpiTrend: function($card, _slug, _currentValue) {
             // Show neutral trend initially, server call will update
             var trendContainer = $card.find('.block-adeptus-kpi-card-trend');
             trendContainer.removeClass('d-none');
@@ -2804,7 +2804,7 @@ define([
          * @param {string} slug
          * @param {number} currentValue
          */
-        renderKpiSparkline: function($card, slug, currentValue) {
+        renderKpiSparkline: function(_$card, _slug, _currentValue) {
             // Sparkline is loaded via loadKpiSparklineFromServer
             // This is a no-op for backwards compatibility
         },
@@ -4201,7 +4201,7 @@ define([
          * @param {Object} chartData - Pre-configured chart data from backend (unused, we use controls)
          * @param {string} chartType - Chart type from backend (unused, we use controls)
          */
-        renderModalContent: function(modalBody, report, data, chartData, chartType) {
+        renderModalContent: function(modalBody, report, data, _chartData, _chartType) {
             // Store data for chart re-rendering
             this.modalData = data || [];
             this.modalReport = report;
@@ -4509,7 +4509,7 @@ define([
          * @param {string} chartType
          * @return {Array}
          */
-        generateChartColors: function(count, chartType) {
+        generateChartColors: function(count, _chartType) {
             var baseColors = [
                 'rgba(37, 99, 235, 0.7)',   // Blue
                 'rgba(16, 185, 129, 0.7)',  // Green
@@ -4792,7 +4792,9 @@ define([
                 var tr = $('<tr>');
                 headers.forEach(function(h) {
                     var val = row[h];
-                    if (val === null || val === undefined) val = '';
+                    if (val === null || val === undefined) {
+                        val = '';
+                    }
                     // Truncate long values
                     var displayVal = String(val);
                     if (displayVal.length > 100) {
@@ -4828,8 +4830,9 @@ define([
          * @param {string} slug
          * @param {string} source
          */
-        openReportNewTab: function(slug, source) {
-            var url = M.cfg.wwwroot + '/report/adeptus_insights/generated_reports.php?slug=' + encodeURIComponent(slug);
+        openReportNewTab: function(slug, _source) {
+            var url = M.cfg.wwwroot + '/report/adeptus_insights/generated_reports.php?slug=' +
+                encodeURIComponent(slug);
             window.open(url, '_blank');
         },
 
@@ -4839,7 +4842,7 @@ define([
          * @param {string} slug
          * @param {string} source
          */
-        expandReportInline: function(slug, source) {
+        expandReportInline: function(_slug, _source) {
             // TODO: Implement inline expansion.
         },
 
@@ -4960,7 +4963,7 @@ define([
          *
          * @param {string} message
          */
-        showError: function(message) {
+        showError: function(_message) {
             this.hideLoading();
             this.container.find('.block-adeptus-error').removeClass('d-none');
         },

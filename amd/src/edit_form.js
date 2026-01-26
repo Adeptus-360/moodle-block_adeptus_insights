@@ -1158,8 +1158,6 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
          * Populate select element options.
          */
         populateSelectOptions: function() {
-            var self = this;
-
             // Populate operators.
             var operatorSelect = $('#alert-edit-operator');
             operatorSelect.empty();
@@ -1199,7 +1197,6 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
          * KPI or Tabs report selectors, not all available reports.
          */
         fetchReports: function() {
-            var self = this;
             var allReports = [];
 
             // Get selected reports from the KPI report selector textarea.
@@ -1514,7 +1511,6 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
          * @param {number} index Alert index (-1 for new)
          */
         openEditPanel: function(index) {
-            var self = this;
             var panel = $('#alert-edit-panel');
             this.editingIndex = index;
 
@@ -1609,7 +1605,6 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
          * Save the edit panel data - syncs to backend API.
          */
         saveEditPanel: function() {
-            var self = this;
             var reportSlug = $('#alert-edit-report').val();
             var reportName = $('#alert-edit-report-search').val();
             var thresholdValue = $('#alert-edit-warning').val() || $('#alert-edit-critical').val();
@@ -2046,8 +2041,7 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
          *
          * @param {string} query Current search query
          */
-        renderReportDropdown: function(query) {
-            var self = this;
+        renderReportDropdown: function(_query) {
             var dropdown = $('#alert-report-dropdown');
             dropdown.empty();
 
