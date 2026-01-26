@@ -795,7 +795,6 @@ define([
             }
 
             // Fallback: Check if already authenticated via parent plugin
-            // eslint-disable-next-line camelcase
             if (window.adeptusAuthData && window.adeptusAuthData.api_key) {
                 callback();
                 return;
@@ -2543,7 +2542,6 @@ define([
          * @param {Object} trend Trend data from snapshot response (optional)
          * @param {string} reportName Human-readable report name (optional)
          */
-        // eslint-disable-next-line complexity
         handleTriggeredAlerts: function(triggeredAlerts, reportSlug, currentValue, trend, reportName) {
             var self = this;
 
@@ -2556,6 +2554,7 @@ define([
             // Use context values (reportSlug, currentValue) as fallbacks since backend may not include them.
             var alertsConfig = self.config.alertsConfig || [];
 
+            // eslint-disable-next-line complexity
             var alertsToSend = triggeredAlerts.map(function(alert) {
                 var alertName = alert.alert_name || alert.name || 'Alert';
                 var value = parseFloat(alert.current_value || alert.actual_value || alert.value || currentValue || 0);
