@@ -1221,7 +1221,8 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                             r.displayName = r.name || r.title || r.display_name || r.slug;
                             var catInfo = r.category_info;
                             var isAi = r.source === 'ai';
-                            r.categoryName = catInfo ? catInfo.name : (isAi ? 'AI Generated' : 'General');
+                            var defaultCategory = isAi ? 'AI Generated' : 'General';
+                            r.categoryName = catInfo ? catInfo.name : defaultCategory;
                             allReports.push(r);
                         });
                     }
@@ -1245,7 +1246,8 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                                 r.displayName = r.name || r.title || r.display_name || r.slug;
                                 var catInfo = r.category_info;
                                 var isAi = r.source === 'ai';
-                                r.categoryName = catInfo ? catInfo.name : (isAi ? 'AI Generated' : 'General');
+                                var defaultCategory = isAi ? 'AI Generated' : 'General';
+                                r.categoryName = catInfo ? catInfo.name : defaultCategory;
                                 allReports.push(r);
                             }
                         });
@@ -2001,7 +2003,7 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
             dropdown.show();
 
             this.filteredReports = this.reports;
-            this.renderReportDropdown('');
+            this.renderReportDropdown();
         },
 
         /**
@@ -2026,7 +2028,7 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
 
             this.searchTimeout = setTimeout(function() {
                 self.filteredReports = self.filterReports(query);
-                self.renderReportDropdown(query);
+                self.renderReportDropdown();
             }, 150);
         },
 
@@ -2060,10 +2062,8 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
 
         /**
          * Render the report dropdown.
-         *
-         * @param {string} _query Current search query (unused, uses filteredReports)
          */
-        renderReportDropdown: function(_query) {
+        renderReportDropdown: function() {
             var dropdown = $('#alert-report-dropdown');
             dropdown.empty();
 
@@ -2106,8 +2106,12 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
 
             // Add hover effects.
             dropdown.find('.report-dropdown-item').hover(
-                function() { $(this).addClass('bg-light'); },
-                function() { $(this).removeClass('bg-light'); }
+                function() {
+                    $(this).addClass('bg-light');
+                },
+                function() {
+                    $(this).removeClass('bg-light');
+                }
             );
         },
 
@@ -2239,8 +2243,12 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
 
             // Add hover effects.
             dropdown.find('.user-dropdown-item').hover(
-                function() { $(this).addClass('bg-light'); },
-                function() { $(this).removeClass('bg-light'); }
+                function() {
+                    $(this).addClass('bg-light');
+                },
+                function() {
+                    $(this).removeClass('bg-light');
+                }
             );
         },
 

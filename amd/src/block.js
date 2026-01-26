@@ -114,6 +114,20 @@ define([
 
     BlockController.prototype = {
         /**
+         * Capitalize each word in a string (replace underscores/dashes with spaces first).
+         *
+         * @param {string} str The string to capitalize
+         * @return {string} The capitalized string
+         */
+        capitalizeWords: function(str) {
+            return str
+                .replace(/[-_]/g, ' ')
+                .replace(/\b\w/g, function(letter) {
+                    return letter.toUpperCase();
+                });
+        },
+
+        /**
          * Initialize the block.
          */
         init: function() {
@@ -1016,7 +1030,9 @@ define([
                 // Format slug as display name (capitalize, replace dashes/underscores with spaces).
                 var displayName = config.reportCategory
                     .replace(/[-_]/g, ' ')
-                    .replace(/\b\w/g, function(l) { return l.toUpperCase(); });
+                    .replace(/\b\w/g, function(letter) {
+                        return letter.toUpperCase();
+                    });
                 categoryMap[config.reportCategory] = {
                     slug: config.reportCategory,
                     name: displayName,
@@ -1156,7 +1172,9 @@ define([
             } else if (select.val()) {
                 // A report is selected, load it and update display
                 var parts = select.val().split('::');
-                var selectedReport = reports.find(function(r) { return r.slug === parts[0]; });
+                var selectedReport = reports.find(function(r) {
+                    return r.slug === parts[0];
+                });
                 if (selectedReport) {
                     var selectedName = selectedReport.name || selectedReport.title ||
                         selectedReport.display_name || selectedReport.slug || 'Untitled';
@@ -1531,14 +1549,18 @@ define([
 
             // Populate X-axis (all columns)
             headers.forEach(function(h) {
-                var formatted = h.replace(/_/g, ' ').replace(/\b\w/g, function(l) { return l.toUpperCase(); });
+                var formatted = h.replace(/_/g, ' ').replace(/\b\w/g, function(letter) {
+                    return letter.toUpperCase();
+                });
                 xAxisSelect.append('<option value="' + h + '">' + formatted + '</option>');
             });
 
             // Populate Y-axis (prefer numeric columns)
             var yOptions = numericCols.length > 0 ? numericCols : headers;
             yOptions.forEach(function(h) {
-                var formatted = h.replace(/_/g, ' ').replace(/\b\w/g, function(l) { return l.toUpperCase(); });
+                var formatted = h.replace(/_/g, ' ').replace(/\b\w/g, function(letter) {
+                    return letter.toUpperCase();
+                });
                 yAxisSelect.append('<option value="' + h + '">' + formatted + '</option>');
             });
 
@@ -1570,7 +1592,9 @@ define([
             var headers = Object.keys(data[0]);
             var headerRow = $('<tr>');
             headers.forEach(function(h) {
-                var formatted = h.replace(/_/g, ' ').replace(/\b\w/g, function(l) { return l.toUpperCase(); });
+                var formatted = h.replace(/_/g, ' ').replace(/\b\w/g, function(letter) {
+                    return letter.toUpperCase();
+                });
                 headerRow.append($('<th>').text(formatted));
             });
             thead.append(headerRow);
@@ -1645,11 +1669,13 @@ define([
             });
 
             // Generate colors
-            var colors = this.generateChartColors(values.length, chartType);
+            var colors = this.generateChartColors(values.length);
 
             // Build dataset config
             var datasetConfig = {
-                label: yAxis.replace(/_/g, ' ').replace(/\b\w/g, function(l) { return l.toUpperCase(); }),
+                label: yAxis.replace(/_/g, ' ').replace(/\b\w/g, function(letter) {
+                    return letter.toUpperCase();
+                }),
                 data: values
             };
 
@@ -2779,7 +2805,9 @@ define([
                 this.kpiSparklineCharts[chartKey] = new Chart(canvas.getContext('2d'), {
                     type: 'line',
                     data: {
-                        labels: dataPoints.map(function() { return ''; }),
+                        labels: dataPoints.map(function() {
+                            return '';
+                        }),
                         datasets: [{
                             data: dataPoints,
                             borderColor: trendColor,
@@ -3133,7 +3161,9 @@ define([
             yAxisSelect.empty();
 
             state.headers.forEach(function(header) {
-                var formatted = header.replace(/_/g, ' ').replace(/\b\w/g, function(l) { return l.toUpperCase(); });
+                var formatted = header.replace(/_/g, ' ').replace(/\b\w/g, function(letter) {
+                    return letter.toUpperCase();
+                });
                 xAxisSelect.append($('<option>').val(header).text(formatted));
                 yAxisSelect.append($('<option>').val(header).text(formatted));
             });
@@ -3193,7 +3223,9 @@ define([
             // Build header row
             var headerRow = $('<tr>');
             headers.forEach(function(h) {
-                var formatted = h.replace(/_/g, ' ').replace(/\b\w/g, function(l) { return l.toUpperCase(); });
+                var formatted = h.replace(/_/g, ' ').replace(/\b\w/g, function(letter) {
+                    return letter.toUpperCase();
+                });
                 headerRow.append($('<th>').text(formatted));
             });
             thead.append(headerRow);
@@ -3277,8 +3309,10 @@ define([
                 return parseFloat(row[yAxis]) || 0;
             });
 
-            var colors = this.generateChartColors(values.length, chartType);
-            var yAxisFormatted = yAxis.replace(/_/g, ' ').replace(/\b\w/g, function(l) { return l.toUpperCase(); });
+            var colors = this.generateChartColors(values.length);
+            var yAxisFormatted = yAxis.replace(/_/g, ' ').replace(/\b\w/g, function(letter) {
+                    return letter.toUpperCase();
+                });
 
             var config = {
                 type: chartType,
@@ -3388,7 +3422,9 @@ define([
             var headers = Object.keys(data[0]);
             var headerRow = $('<tr>');
             headers.forEach(function(h) {
-                var formatted = h.replace(/_/g, ' ').replace(/\b\w/g, function(l) { return l.toUpperCase(); });
+                var formatted = h.replace(/_/g, ' ').replace(/\b\w/g, function(letter) {
+                    return letter.toUpperCase();
+                });
                 headerRow.append($('<th>').text(formatted));
             });
             thead.append(headerRow);
@@ -3431,10 +3467,7 @@ define([
                     this.openReportModal(slug, source);
                     break;
                 case 'newtab':
-                    this.openReportNewTab(slug, source);
-                    break;
-                case 'expand':
-                    this.expandReportInline(slug, source);
+                    this.openReportNewTab(slug);
                     break;
             }
         },
@@ -3846,7 +3879,9 @@ define([
 
             var min = Math.min.apply(null, values);
             var max = Math.max.apply(null, values);
-            var sum = values.reduce(function(a, b) { return a + b; }, 0);
+            var sum = values.reduce(function(a, b) {
+                return a + b;
+            }, 0);
             var avg = Math.round(sum / values.length);
 
             return {min: min, max: max, avg: avg};
@@ -4088,7 +4123,7 @@ define([
             if (this.reportDataCache[cacheKey]) {
                 var cached = this.reportDataCache[cacheKey];
                 modalBody.find('.block-adeptus-modal-loading').addClass('d-none');
-                this.renderModalContent(modalBody, cached.report, cached.results, cached.chartData, cached.chartType);
+                this.renderModalContent(modalBody, cached.report, cached.results);
                 return;
             }
 
@@ -4127,10 +4162,7 @@ define([
                             chartData: response.chart_data,
                             chartType: response.chart_type
                         };
-                        self.renderModalContent(
-                            modalBody, report, response.results || [],
-                            response.chart_data, response.chart_type
-                        );
+                        self.renderModalContent(modalBody, report, response.results || []);
                     } else {
                         modalBody.find('.block-adeptus-modal-error').removeClass('d-none');
                         modalBody.find('.block-adeptus-modal-error p').text(response.message || self.strings.errorFailedLoadReport);
@@ -4178,7 +4210,7 @@ define([
                                         chartData: null,
                                         chartType: null
                                     };
-                                    self.renderModalContent(modalBody, reportData, localData, null, null);
+                                    self.renderModalContent(modalBody, reportData, localData);
                                     return localData;
                                 })
                                 .catch(function() {
@@ -4197,7 +4229,7 @@ define([
                             chartData: null,
                             chartType: null
                         };
-                        self.renderModalContent(modalBody, reportData, data, null, null);
+                        self.renderModalContent(modalBody, reportData, data);
                     } else {
                         modalBody.find('.block-adeptus-modal-loading').addClass('d-none');
                         modalBody.find('.block-adeptus-modal-error').removeClass('d-none');
@@ -4215,10 +4247,8 @@ define([
          * @param {jQuery} modalBody The modal body element
          * @param {Object} report The report metadata
          * @param {Array} data The report data rows
-         * @param {Object} _chartData Pre-configured chart data (unused)
-         * @param {string} _chartType Chart type from backend (unused)
          */
-        renderModalContent: function(modalBody, report, data, _chartData, _chartType) {
+        renderModalContent: function(modalBody, report, data) {
             // Store data for chart re-rendering
             this.modalData = data || [];
             this.modalReport = report;
@@ -4274,7 +4304,9 @@ define([
 
             // Populate X-axis with all columns
             headers.forEach(function(header, idx) {
-                var formattedHeader = header.replace(/_/g, ' ').replace(/\b\w/g, function(l) { return l.toUpperCase(); });
+                var formattedHeader = header.replace(/_/g, ' ').replace(/\b\w/g, function(letter) {
+                    return letter.toUpperCase();
+                });
                 var selected = idx === 0 ? ' selected' : '';
                 xAxisSelect.append('<option value="' + header + '"' + selected + '>' + formattedHeader + '</option>');
             });
@@ -4282,7 +4314,9 @@ define([
             // Populate Y-axis with numeric columns (or all if none detected)
             var yAxisOptions = numericCols.length > 0 ? numericCols : headers;
             yAxisOptions.forEach(function(col, idx) {
-                var formattedHeader = col.replace(/_/g, ' ').replace(/\b\w/g, function(l) { return l.toUpperCase(); });
+                var formattedHeader = col.replace(/_/g, ' ').replace(/\b\w/g, function(letter) {
+                    return letter.toUpperCase();
+                });
                 // Select the last numeric column by default (usually the main value)
                 var selected = idx === yAxisOptions.length - 1 ? ' selected' : '';
                 yAxisSelect.append('<option value="' + col + '"' + selected + '>' + formattedHeader + '</option>');
@@ -4408,7 +4442,9 @@ define([
             }
 
             // Format value key for display
-            var valueKeyFormatted = valueKey.replace(/_/g, ' ').replace(/\b\w/g, function(l) { return l.toUpperCase(); });
+            var valueKeyFormatted = valueKey.replace(/_/g, ' ').replace(/\b\w/g, function(letter) {
+                    return letter.toUpperCase();
+                });
 
             // Limit data for chart readability (max 50 items)
             var chartData = data.slice(0, 50);
@@ -4425,7 +4461,7 @@ define([
             });
 
             // Generate colors
-            var colors = this.generateChartColors(values.length, chartType);
+            var colors = this.generateChartColors(values.length);
 
             // Create chart config
             var config = this.createChartConfig(chartType, labels, values, valueKeyFormatted, colors);
@@ -4523,10 +4559,9 @@ define([
          * Generate chart colors.
          *
          * @param {number} count Number of colors needed
-         * @param {string} _chartType Chart type (unused, kept for API compatibility)
          * @return {Array} Array of color strings
          */
-        generateChartColors: function(count, _chartType) {
+        generateChartColors: function(count) {
             var baseColors = [
                 'rgba(37, 99, 235, 0.7)', // Blue.
                 'rgba(16, 185, 129, 0.7)', // Green.
@@ -4777,7 +4812,9 @@ define([
             var headerRow = $('<tr>');
             headers.forEach(function(h) {
                 // Format header nicely
-                var formatted = h.replace(/_/g, ' ').replace(/\b\w/g, function(l) { return l.toUpperCase(); });
+                var formatted = h.replace(/_/g, ' ').replace(/\b\w/g, function(letter) {
+                    return letter.toUpperCase();
+                });
                 headerRow.append($('<th>').text(formatted));
             });
             thead.append(headerRow);
@@ -4849,23 +4886,13 @@ define([
          * Open report in new tab.
          *
          * @param {string} slug The report slug
-         * @param {string} _source Report source (unused)
          */
-        openReportNewTab: function(slug, _source) {
+        openReportNewTab: function(slug) {
             var url = M.cfg.wwwroot + '/report/adeptus_insights/generated_reports.php?slug=' +
                 encodeURIComponent(slug);
             window.open(url, '_blank');
         },
 
-        /**
-         * Expand report inline.
-         *
-         * @param {string} _slug The report slug (unused, not implemented)
-         * @param {string} _source Report source (unused, not implemented)
-         */
-        expandReportInline: function(_slug, _source) {
-            // TODO: Implement inline expansion.
-        },
 
         /**
          * Export report.
@@ -4982,11 +5009,15 @@ define([
         /**
          * Show error state.
          *
-         * @param {string} _message Error message (unused, generic error shown)
+         * @param {string} message Error message to display
          */
-        showError: function(_message) {
+        showError: function(message) {
             this.hideLoading();
-            this.container.find('.block-adeptus-error').removeClass('d-none');
+            var errorDiv = this.container.find('.block-adeptus-error');
+            if (message) {
+                errorDiv.find('p').text(message);
+            }
+            errorDiv.removeClass('d-none');
         },
 
         /**
