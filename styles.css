@@ -11,7 +11,7 @@
    ========================================================================== */
 
 .block_adeptus_insights {
-    --adeptus-primary: #0066cc;
+    --adeptus-primary: #06c;
     --adeptus-secondary: #6c757d;
     --adeptus-success: #28a745;
     --adeptus-warning: #ffc107;
@@ -29,7 +29,9 @@
     position: relative;
     min-height: 100px;
     /* Enable container queries for responsive block width detection */
+    /* stylelint-disable-next-line csstree/validator */
     container-type: inline-size;
+    /* stylelint-disable-next-line csstree/validator */
     container-name: adeptus-block;
 }
 
@@ -1930,6 +1932,7 @@
    ========================================================================== */
 
 /* Narrow container (< 350px) - typically side columns */
+/* stylelint-disable-next-line csstree/validator */
 @container adeptus-block (max-width: 350px) {
     /* Toolbar - keep items inline but allow wrapping */
     .block-adeptus-toolbar {
@@ -2117,6 +2120,7 @@
 }
 
 /* Medium container (350px - 500px) */
+/* stylelint-disable-next-line csstree/validator */
 @container adeptus-block (min-width: 351px) and (max-width: 500px) {
     .block-adeptus-filters {
         flex-direction: column !important;
@@ -2362,8 +2366,8 @@
 }
 
 .block-adeptus-kpi-icon-option.active {
-    background-color: #0066cc;
-    border-color: #0066cc;
+    background-color: #06c;
+    border-color: #06c;
     color: #fff;
 }
 

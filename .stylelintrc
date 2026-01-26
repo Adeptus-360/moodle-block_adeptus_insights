@@ -1,0 +1,11 @@
+{
+    "extends": "../../.stylelintrc",
+    "rules": {
+        "declaration-no-important": null,
+        "csstree/validator": {
+            "syntaxExtensions": ["sass"],
+            "ignoreProperties": ["container-type", "container-name"],
+            "ignoreAtrules": ["container"]
+        }
+    }
+}
