@@ -42,17 +42,17 @@ define([
         this.blockId = options.blockid;
         this.contextId = options.contextid;
         this.config = options.config || {};
-        this.apiKey = options.apiKey || '';  // API key passed directly from PHP
-        this.isAdmin = options.isAdmin || false;  // Site admin flag
+        this.apiKey = options.apiKey || ''; // API key passed directly from PHP.
+        this.isAdmin = options.isAdmin || false; // Site admin flag.
         this.container = null;
         this.reports = [];
         this.lastUpdated = null;
         this.refreshTimer = null;
         this.modal = null;
-        this.modalData = null;      // Current modal report data
-        this.modalReport = null;    // Current modal report metadata
-        this.chartInstance = null;  // Current Chart.js instance
-        this.currentView = 'table'; // Current view mode
+        this.modalData = null; // Current modal report data.
+        this.modalReport = null; // Current modal report metadata.
+        this.chartInstance = null; // Current Chart.js instance.
+        this.currentView = 'table'; // Current view mode.
 
         // Pagination state for report list
         this.listCurrentPage = 1;
@@ -135,6 +135,10 @@ define([
 
                 // Setup auto-refresh if configured.
                 self.setupAutoRefresh();
+                return true;
+            }).catch(function() {
+                // String loading handled in loadStrings, continue anyway.
+                return false;
             });
         },
 
@@ -213,6 +217,7 @@ define([
                     exportNotOnPlan: strings[29],
                     ok: strings[30]
                 };
+                return self.strings;
             }).catch(function() {
                 // Fallback to English if string loading fails.
                 self.strings = {
@@ -248,6 +253,7 @@ define([
                     exportNotOnPlan: '{$a} export is not available on your current plan.',
                     ok: 'OK'
                 };
+                return self.strings;
             });
         },
 
@@ -692,8 +698,10 @@ define([
                         };
                     }
                     self.preloadingSlug = null;
+                    return response;
                 }).fail(function() {
                     self.preloadingSlug = null;
+                    return null;
                 });
             } else {
                 // Preload AI report
@@ -731,9 +739,11 @@ define([
                                         chartType: null
                                     };
                                     self.preloadingSlug = null;
+                                    return localData;
                                 })
                                 .catch(function() {
                                     self.preloadingSlug = null;
+                                    return null;
                                 });
                             return;
                         }
@@ -788,8 +798,10 @@ define([
                 } else {
                     self.showError(self.strings.errorAuthFailed);
                 }
+                return response;
             }).fail(function() {
                 self.showError(self.strings.errorCouldNotAuth);
+                return null;
             });
         },
 
@@ -849,8 +861,10 @@ define([
                 self.lastUpdated = new Date();
                 self.saveToCache(allReports);
                 self.renderReports();
+                return allReports;
             }).fail(function() {
                 self.showError();
+                return null;
             });
         },
 
@@ -1395,10 +1409,12 @@ define([
                                     };
                                     self.embeddedData = localData;
                                     self.renderEmbeddedContent(reportData, localData);
+                                    return localData;
                                 })
                                 .catch(function() {
                                     self.hideEmbeddedLoadingOverlay();
                                     self.showError(self.strings.errorFailedExecuteReport);
+                                    return null;
                                 });
                             return;
                         }
@@ -1668,8 +1684,8 @@ define([
             // Add scales for bar/line charts
             if (chartType === 'bar' || chartType === 'line') {
                 config.options.scales = {
-                    y: { beginAtZero: true },
-                    x: { display: data.length <= 15 }
+                    y: {beginAtZero: true},
+                    x: {display: data.length <= 15}
                 };
             }
 
@@ -1961,10 +1977,12 @@ define([
                                         results: localData
                                     };
                                     self.renderKpiValue($card, localData);
+                                    return localData;
                                 })
                                 .catch(function() {
                                     $card.find('.block-adeptus-kpi-card-value').text('--');
                                     $card.find('.block-adeptus-kpi-card-trend').addClass('d-none');
+                                    return null;
                                 });
                             return;
                         }
@@ -2077,11 +2095,11 @@ define([
          * @param {string} slug
          * @param {number} value
          * @param {string} source Report source (wizard/ai)
-         * @param {string} label Metric label
-         * @param {number} rowCount Number of data rows
+         * @param {string} _label Metric label (unused, for API compatibility)
+         * @param {number} _rowCount Number of data rows (unused, for API compatibility)
          * @param {number} executionTimeMs Execution time in milliseconds (optional)
          */
-        saveKpiHistoryToServer: function($card, slug, value, source, label, rowCount, executionTimeMs) {
+        saveKpiHistoryToServer: function($card, slug, value, source, _label, _rowCount, executionTimeMs) {
             // Check if snapshots feature is enabled (enterprise feature)
             if (!this.config.snapshotsEnabled) {
                 // Feature not enabled - hide trend and sparkline
@@ -2288,11 +2306,14 @@ define([
             // Build the dual trend display: "↑ 25% overall | ↑ 8% since last"
             var parts = [];
 
+            // Helper for direction sign.
+            var directionSigns = {increase: '+', decrease: '-'};
+
             // Overall trend (vs baseline)
             if (hasBaseline) {
                 var baselinePct = this.formatPercentage(Math.abs(vsBaseline.change_percent || 0));
                 var baselineIcon = this.getTrendIcon(vsBaseline.direction);
-                var baselineSign = vsBaseline.direction === 'increase' ? '+' : (vsBaseline.direction === 'decrease' ? '-' : '');
+                var baselineSign = directionSigns[vsBaseline.direction] || '';
                 parts.push(baselineIcon + ' ' + baselineSign + baselinePct + ' overall');
             }
 
@@ -2300,7 +2321,7 @@ define([
             if (hasPrevious) {
                 var previousPct = this.formatPercentage(Math.abs(vsPrevious.change_percent || 0));
                 var previousIcon = this.getTrendIcon(vsPrevious.direction);
-                var previousSign = vsPrevious.direction === 'increase' ? '+' : (vsPrevious.direction === 'decrease' ? '-' : '');
+                var previousSign = directionSigns[vsPrevious.direction] || '';
                 parts.push(previousIcon + ' ' + previousSign + previousPct + ' since last');
             }
 
@@ -2774,17 +2795,17 @@ define([
                         responsive: true,
                         maintainAspectRatio: false,
                         plugins: {
-                            legend: { display: false },
-                            tooltip: { enabled: false }
+                            legend: {display: false},
+                            tooltip: {enabled: false}
                         },
                         scales: {
-                            x: { display: false },
-                            y: { display: false }
+                            x: {display: false},
+                            y: {display: false}
                         },
                         elements: {
-                            line: { borderCapStyle: 'round' }
+                            line: {borderCapStyle: 'round'}
                         },
-                        animation: { duration: 500 }
+                        animation: {duration: 500}
                     }
                 });
             } catch (_e) {
@@ -2968,6 +2989,7 @@ define([
                                         results: localData
                                     };
                                     self.renderTabContent(pane, reportData, localData);
+                                    return localData;
                                 })
                                 .catch(function() {
                                     pane.find('.block-adeptus-tab-pane-loading').addClass('d-none');
@@ -2976,6 +2998,7 @@ define([
                                         .html('<div class="text-center text-muted py-4">' +
                                             '<i class="fa fa-exclamation-circle"></i>' +
                                             '<p class="mt-2">Failed to execute report</p></div>');
+                                    return null;
                                 });
                             return;
                         }
@@ -3284,8 +3307,8 @@ define([
                         }
                     },
                     scales: chartType === 'pie' || chartType === 'doughnut' ? {} : {
-                        y: { beginAtZero: true },
-                        x: { display: data.length <= 10 }
+                        y: {beginAtZero: true},
+                        x: {display: data.length <= 10}
                     }
                 }
             };
@@ -4156,10 +4179,12 @@ define([
                                         chartType: null
                                     };
                                     self.renderModalContent(modalBody, reportData, localData, null, null);
+                                    return localData;
                                 })
                                 .catch(function() {
                                     modalBody.find('.block-adeptus-modal-loading').addClass('d-none');
                                     modalBody.find('.block-adeptus-modal-error').removeClass('d-none');
+                                    return null;
                                 });
                             return;
                         }
@@ -4336,7 +4361,7 @@ define([
                             });
                         }
                     },
-                    error: function(jqXhr, textStatus, errorThrown) {
+                    error: function(_jqXhr, _textStatus, errorThrown) {
                         reject(new Error('Failed to execute report: ' + errorThrown));
                     }
                 });
@@ -4435,8 +4460,8 @@ define([
                     title: {
                         display: true,
                         text: reportName,
-                        font: { size: 14, weight: 'bold' },
-                        padding: { top: 10, bottom: 20 }
+                        font: {size: 14, weight: 'bold'},
+                        padding: {top: 10, bottom: 20}
                     },
                     legend: {
                         display: chartType === 'pie' || chartType === 'doughnut',
@@ -4503,16 +4528,16 @@ define([
          */
         generateChartColors: function(count, _chartType) {
             var baseColors = [
-                'rgba(37, 99, 235, 0.7)',   // Blue
-                'rgba(16, 185, 129, 0.7)',  // Green
-                'rgba(245, 158, 11, 0.7)',  // Amber
-                'rgba(239, 68, 68, 0.7)',   // Red
-                'rgba(139, 92, 246, 0.7)',  // Purple
-                'rgba(6, 182, 212, 0.7)',   // Cyan
-                'rgba(236, 72, 153, 0.7)',  // Pink
-                'rgba(132, 204, 22, 0.7)',  // Lime
-                'rgba(249, 115, 22, 0.7)',  // Orange
-                'rgba(99, 102, 241, 0.7)'   // Indigo
+                'rgba(37, 99, 235, 0.7)', // Blue.
+                'rgba(16, 185, 129, 0.7)', // Green.
+                'rgba(245, 158, 11, 0.7)', // Amber.
+                'rgba(239, 68, 68, 0.7)', // Red.
+                'rgba(139, 92, 246, 0.7)', // Purple.
+                'rgba(6, 182, 212, 0.7)', // Cyan.
+                'rgba(236, 72, 153, 0.7)', // Pink.
+                'rgba(132, 204, 22, 0.7)', // Lime.
+                'rgba(249, 115, 22, 0.7)', // Orange.
+                'rgba(99, 102, 241, 0.7)' // Indigo.
             ];
 
             var colors = [];
@@ -4718,6 +4743,10 @@ define([
                         sesskey: M.cfg.sesskey
                     }
                 });
+                return true;
+            }).catch(function() {
+                // Export capture failed, continue anyway.
+                return false;
             });
         },
 

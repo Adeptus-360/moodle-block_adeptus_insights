@@ -124,6 +124,10 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
 
                 // Show container - Moodle's hideIf handles visibility based on display_mode.
                 self.container.show();
+                return true;
+            }).catch(function() {
+                // String loading failed, continue anyway.
+                return false;
             });
         },
 
@@ -152,6 +156,7 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                     searchplaceholder: strings[5] || 'Search reports by name, category, or type...',
                     failedLoadReports: strings[6]
                 };
+                return self.strings;
             });
         },
 
@@ -302,12 +307,14 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                 self.filteredReports = self.getAvailableReports();
                 self.container.find('.report-search-loading').hide();
                 self.renderSelectedList();
+                return allReports;
             }).fail(function() {
                 self.container.find('.report-search-loading').hide();
                 Notification.addNotification({
                     message: self.strings.failedLoadReports,
                     type: 'error'
                 });
+                return null;
             });
         },
 
@@ -1091,6 +1098,10 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
 
                 // Show/hide based on alerts_enabled checkbox.
                 self.handleAlertsEnabledToggle();
+                return true;
+            }).catch(function() {
+                // String loading failed, continue anyway.
+                return false;
             });
         },
 
@@ -1151,6 +1162,7 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                     selectReport: strings[21],
                     enterThreshold: strings[22]
                 };
+                return self.strings;
             });
         },
 
@@ -1739,6 +1751,7 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                         type: 'error'
                     });
                 }
+                return response;
             }).fail(function(xhr) {
                 var message = self.strings.failedCreateAlert;
                 if (xhr.responseJSON) {
@@ -1763,6 +1776,7 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                     message: message,
                     type: 'error'
                 });
+                return null;
             });
         },
 
@@ -1810,6 +1824,7 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                         type: 'error'
                     });
                 }
+                return response;
             }).fail(function(xhr) {
                 var message = self.strings.failedUpdateAlert;
                 if (xhr.responseJSON && xhr.responseJSON.message) {
@@ -1819,6 +1834,7 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                     message: message,
                     type: 'error'
                 });
+                return null;
             });
         },
 
@@ -1857,6 +1873,7 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                         message: self.strings.alertDeleted,
                         type: 'success'
                     });
+                    return true;
                 }).fail(function(xhr) {
                     var message = self.strings.failedDeleteAlert;
                     if (xhr.responseJSON && xhr.responseJSON.message) {
@@ -1866,6 +1883,7 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                         message: message,
                         type: 'error'
                     });
+                    return false;
                 });
             } else {
                 // No backend ID, just remove locally.
@@ -1924,8 +1942,10 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                             }
                         });
                     }
+                    return response;
                 }).fail(function() {
                     // Silently fail - orphan cleanup is best-effort.
+                    return null;
                 });
             });
         },
@@ -1950,8 +1970,10 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                 timeout: 10000
             }).done(function() {
                 // Orphaned backend alert cleaned up successfully.
+                return true;
             }).fail(function() {
                 // Failed to delete orphaned alert - non-critical, continue silently.
+                return false;
             });
         },
 
@@ -2147,8 +2169,10 @@ define(['jquery', 'core/str', 'core/notification'], function($, Str, Notificatio
                     }
                 }])[0].done(function(response) {
                     self.renderUserDropdown(response.users);
+                    return response.users;
                 }).fail(function() {
                     dropdown.html('<div class="p-3 text-center text-danger">Failed to load users</div>');
+                    return null;
                 });
             });
         },
