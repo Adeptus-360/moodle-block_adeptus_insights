@@ -33,9 +33,9 @@ use core_privacy\local\request\userlist;
 /**
  * Privacy provider implementation for block_adeptus_insights.
  *
- * This plugin stores block configuration data and alert logs that are associated
- * with block instances rather than individual users. No personal user data is
- * collected or stored by this plugin.
+ * This plugin stores block configuration data and alert logs associated with
+ * block instances, not individual users. No personal user data is collected
+ * or stored by this plugin.
  *
  * @package    block_adeptus_insights
  * @copyright  2026 Adeptus 360 <info@adeptus360.com>
