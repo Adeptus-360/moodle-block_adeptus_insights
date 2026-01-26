@@ -835,13 +835,13 @@ define([
                         // the second promise (i === 1) is AI reports.
                         var fetchesBoth = (source === 'all' || source === 'manual' || source === 'category');
                         var currentSource = (source === 'ai' || (i === 1 && fetchesBoth)) ? 'ai' : 'wizard';
-                        // Use Array.prototype.forEach with bound source to avoid loop-func issue.
-                        (function(reportSource) {
-                            reports.forEach(function(report) {
+                        // Use IIFE with bound variables to avoid loop-func issue.
+                        (function(reportSource, reportsArr) {
+                            reportsArr.forEach(function(report) {
                                 report.source = report.source || reportSource;
                                 allReports.push(report);
                             });
-                        }(currentSource));
+                        }(currentSource, reports));
                     }
                 }
 
@@ -1046,7 +1046,8 @@ define([
                 // Add category options
                 this.availableCategories.forEach(function(cat) {
                     var isSelected = self.selectedCategory === cat.slug ? 'selected' : '';
-                    var itemHtml = '<li class="block-adeptus-searchable-dropdown-item ' + isSelected + '" data-value="' + cat.slug + '" ' +
+                    var itemHtml = '<li class="block-adeptus-searchable-dropdown-item ' +
+                        isSelected + '" data-value="' + cat.slug + '" ' +
                         'data-search="' + cat.name.toLowerCase() + '" role="option">' +
                         '<span class="block-adeptus-dropdown-item-name">' + self.escapeHtml(cat.name) + '</span>' +
                         '<span class="block-adeptus-dropdown-item-category" style="background-color: ' + cat.color + '">' +
@@ -1143,10 +1144,12 @@ define([
                 var parts = select.val().split('::');
                 var selectedReport = reports.find(function(r) { return r.slug === parts[0]; });
                 if (selectedReport) {
-                    var selectedName = selectedReport.name || selectedReport.title || selectedReport.display_name || selectedReport.slug || 'Untitled';
+                    var selectedName = selectedReport.name || selectedReport.title ||
+                        selectedReport.display_name || selectedReport.slug || 'Untitled';
                     dropdown.find('.block-adeptus-searchable-dropdown-text').text(selectedName);
                     dropdown.find('.block-adeptus-searchable-dropdown-item').removeClass('selected');
-                    dropdown.find('.block-adeptus-searchable-dropdown-item[data-value="' + select.val() + '"]').addClass('selected');
+                    dropdown.find('.block-adeptus-searchable-dropdown-item[data-value="' +
+                        select.val() + '"]').addClass('selected');
                 }
                 this.loadEmbeddedReport(parts[0], parts[1] || 'wizard');
             } else {
@@ -1580,8 +1583,10 @@ define([
             });
 
             // Update pagination info
-            this.container.find('.block-adeptus-row-count').text(this.formatShowingText(startIndex + 1, endIndex, data.length));
-            this.container.find('.block-adeptus-embedded-pagination-info').text(this.formatPageText(this.embeddedTablePage, totalPages));
+            var showingText = this.formatShowingText(startIndex + 1, endIndex, data.length);
+            this.container.find('.block-adeptus-row-count').text(showingText);
+            var pageText = this.formatPageText(this.embeddedTablePage, totalPages);
+            this.container.find('.block-adeptus-embedded-pagination-info').text(pageText);
 
             // Update button states
             this.container.find('.block-adeptus-embedded-pagination-prev').prop('disabled', this.embeddedTablePage <= 1);
