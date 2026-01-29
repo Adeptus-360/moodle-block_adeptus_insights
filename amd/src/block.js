@@ -1468,6 +1468,9 @@ define([
         renderEmbeddedContent: function(report, data) {
             var contentArea = this.container.find('.block-adeptus-content');
 
+            // Hide any previous error messages
+            this.hideError();
+
             if (!data || data.length === 0) {
                 this.showEmpty();
                 return;
@@ -5039,6 +5042,13 @@ define([
                 errorDiv.find('p').text(message);
             }
             errorDiv.removeClass('d-none');
+        },
+
+        /**
+         * Hide error state.
+         */
+        hideError: function() {
+            this.container.find('.block-adeptus-error').addClass('d-none');
         },
 
         /**
