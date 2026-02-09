@@ -171,7 +171,7 @@
 }
 
 .block-adeptus-refresh.refreshing i {
-    animation: spin 1s linear infinite;
+    animation: adeptus-spin 1s linear infinite;
 }
 
 /* ==========================================================================
@@ -182,7 +182,7 @@
     padding: 1rem 0;
 }
 
-@keyframes skeleton-pulse {
+@keyframes adeptus-skeleton-pulse {
     0% {
         opacity: 1;
     }
@@ -194,7 +194,7 @@
     }
 }
 
-@keyframes spin {
+@keyframes adeptus-spin {
     from {
         transform: rotate(0deg);
     }
@@ -217,7 +217,7 @@
     padding: 0.5rem;
     background-color: var(--adeptus-light);
     border-radius: var(--adeptus-radius);
-    animation: skeleton-pulse 1.5s ease-in-out infinite;
+    animation: adeptus-skeleton-pulse 1.5s ease-in-out infinite;
 }
 
 .block-adeptus-skeleton-icon {
@@ -246,7 +246,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    animation: skeleton-pulse 1.5s ease-in-out infinite;
+    animation: adeptus-skeleton-pulse 1.5s ease-in-out infinite;
 }
 
 .block-adeptus-skeleton-chart-placeholder {
@@ -270,7 +270,7 @@
     gap: 0.5rem;
     padding: 0.5rem;
     border-bottom: 1px solid #e0e0e0;
-    animation: skeleton-pulse 1.5s ease-in-out infinite;
+    animation: adeptus-skeleton-pulse 1.5s ease-in-out infinite;
 }
 
 .block-adeptus-skeleton-table-cell {
@@ -294,7 +294,7 @@
     height: 2rem;
     background-color: #e0e0e0;
     border-radius: var(--adeptus-radius);
-    animation: skeleton-pulse 1.5s ease-in-out infinite;
+    animation: adeptus-skeleton-pulse 1.5s ease-in-out infinite;
 }
 
 .block-adeptus-skeleton-tab-content {
@@ -303,7 +303,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    animation: skeleton-pulse 1.5s ease-in-out infinite;
+    animation: adeptus-skeleton-pulse 1.5s ease-in-out infinite;
 }
 
 /* ==========================================================================
@@ -1036,7 +1036,7 @@
 
 .block-adeptus-kpi-card.block-adeptus-skeleton {
     cursor: default;
-    animation: skeleton-pulse 1.5s ease-in-out infinite;
+    animation: adeptus-skeleton-pulse 1.5s ease-in-out infinite;
 }
 
 .block-adeptus-kpi-card.skeleton:hover {
@@ -1781,10 +1781,10 @@
    ========================================================================== */
 
 .block-adeptus-insights .fade-in {
-    animation: fadeIn 0.3s ease-in-out;
+    animation: adeptus-fadeIn 0.3s ease-in-out;
 }
 
-@keyframes fadeIn {
+@keyframes adeptus-fadeIn {
     from {
         opacity: 0;
     }

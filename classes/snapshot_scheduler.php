@@ -520,10 +520,13 @@ class snapshot_scheduler {
                 }
             }
 
-            // Build a meaningful message with context and trend info.
-            // Format: "Your {report_name} has reached {value}, exceeding your {severity} threshold ({threshold})."
-            // Example: "{alert_name} increased/decreased by X (Y%) since last measurement".
-            $message = "Your {$displayreportname} has reached {$value}, exceeding your {$severity} threshold ({$thresholdvalue}).";
+            // Build a meaningful message with context and trend info using language strings.
+            $msgparams = new \stdClass();
+            $msgparams->report = $displayreportname;
+            $msgparams->value = $value;
+            $msgparams->severity = $severity;
+            $msgparams->threshold = $thresholdvalue;
+            $message = get_string('alert_threshold_exceeded_msg', 'block_adeptus_insights', $msgparams);
 
             // Add trend information if available.
             if ($trend && !empty($trend['has_previous'])) {
@@ -531,12 +534,17 @@ class snapshot_scheduler {
                 $changeabs = abs($trend['change_absolute'] ?? 0);
                 $changepct = number_format(abs($trend['change_percent'] ?? 0), 1);
 
+                $trendparams = new \stdClass();
+                $trendparams->name = $alertname;
+                $trendparams->change = $changeabs;
+                $trendparams->percent = $changepct;
+
                 if ($direction === 'increase') {
-                    $message .= " {$alertname} increased by {$changeabs} ({$changepct}%) since last measurement.";
+                    $message .= ' ' . get_string('alert_trend_increase', 'block_adeptus_insights', $trendparams);
                 } else if ($direction === 'decrease') {
-                    $message .= " {$alertname} decreased by {$changeabs} ({$changepct}%) since last measurement.";
+                    $message .= ' ' . get_string('alert_trend_decrease', 'block_adeptus_insights', $trendparams);
                 } else {
-                    $message .= " {$alertname} has remained stable since last measurement.";
+                    $message .= ' ' . get_string('alert_trend_stable', 'block_adeptus_insights', $alertname);
                 }
             }
 

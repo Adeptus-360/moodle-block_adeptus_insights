@@ -90,7 +90,7 @@ class notification_manager {
             try {
                 $user = $DB->get_record('user', ['id' => $userid, 'deleted' => 0], '*');
                 if (!$user) {
-                    $results['errors'][] = "User $userid not found";
+                    $results['errors'][] = get_string('error_user_not_found', 'block_adeptus_insights', $userid);
                     continue;
                 }
 
@@ -120,10 +120,11 @@ class notification_manager {
                     $results['sent_count']++;
                     $results['message_ids'][] = $messageid;
                 } else {
-                    $results['errors'][] = "Failed to send notification to user $userid";
+                    $results['errors'][] = get_string('error_send_notification_failed', 'block_adeptus_insights', $userid);
                 }
             } catch (\Exception $e) {
-                $results['errors'][] = "Error sending to user $userid: " . $e->getMessage();
+                $results['errors'][] = get_string('error_send_notification_exception', 'block_adeptus_insights',
+                    (object) ['userid' => $userid, 'error' => $e->getMessage()]);
             }
         }
 
@@ -263,11 +264,13 @@ class notification_manager {
         // Header banner with logo.
         $html .= '<div style="background-color: #f8f9fa; padding: 30px; border-radius: 8px 8px 0 0; ' .
             'text-align: center; border-bottom: 1px solid #e9ecef;">';
+        $brandname = get_string('pluginname', 'block_adeptus_insights');
         if ($logo) {
-            $html .= '<img src="' . $logo . '" alt="Adeptus Insights" ' .
+            $html .= '<img src="' . $logo . '" alt="' . s($brandname) . '" ' .
                 'style="max-height: 90px; width: auto;" />';
         } else {
-            $html .= '<span style="color: #1a1a2e; font-size: 24px; font-weight: 600;">Adeptus Insights</span>';
+            $html .= '<span style="color: #1a1a2e; font-size: 24px; font-weight: 600;">' .
+                s($brandname) . '</span>';
         }
         $html .= '</div>';
 
@@ -534,10 +537,11 @@ class notification_manager {
                 if ($success) {
                     $results['sent_count']++;
                 } else {
-                    $results['errors'][] = "Failed to send email to: $email";
+                    $results['errors'][] = get_string('error_send_email_failed', 'block_adeptus_insights', $email);
                 }
             } catch (\Exception $e) {
-                $results['errors'][] = "Error sending email to $email: " . $e->getMessage();
+                $results['errors'][] = get_string('error_send_email_exception', 'block_adeptus_insights',
+                    (object) ['email' => $email, 'error' => $e->getMessage()]);
             }
         }
 
