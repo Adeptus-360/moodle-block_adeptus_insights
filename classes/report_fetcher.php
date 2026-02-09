@@ -26,6 +26,8 @@
 
 namespace block_adeptus_insights;
 
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * Report fetcher class.
  *
